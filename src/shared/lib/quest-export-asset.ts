@@ -8,26 +8,34 @@ function splitRef(ref: string): { namespace: string; path: string } | null {
   return { namespace, path }
 }
 
-/** Resolve quest-export asset URLs for texture refs (items, gui, icons). */
+/**
+ * Resolve closure PNG URLs under {@code quest-export/assets/}.
+ *
+ * Registry item/block ids (e.g. {@code gtceu:wrought_iron_ingot}) are intentionally omitted:
+ * closure stores model-resolved texture paths, not id-named files — those icons use the EMI atlas.
+ */
 export function questExportTextureCandidates(ref?: string): string[] {
   if (!ref) return []
   const parts = splitRef(ref)
   if (!parts) return []
 
   const { namespace, path } = parts
-  const candidates: string[] = []
 
   if (path.startsWith('textures/')) {
     const base = path.endsWith('.png') ? path.slice(0, -4) : path
-    candidates.push(questExportUrl(`assets/${namespace}/${base}.png`))
-    return candidates
+    return [questExportUrl(`assets/${namespace}/${base}.png`)]
   }
 
-  candidates.push(
-    questExportUrl(`assets/${namespace}/textures/item/${path}.png`),
-    questExportUrl(`assets/${namespace}/textures/block/${path}.png`),
-  )
-  return candidates
+  if (
+    path.startsWith('block/')
+    || path.startsWith('item/')
+    || path.startsWith('gui/')
+    || path.startsWith('icons/')
+  ) {
+    return [questExportUrl(`assets/${namespace}/textures/${path}.png`)]
+  }
+
+  return []
 }
 
 export function questExportMcmetaUrl(pngUrl: string): string {

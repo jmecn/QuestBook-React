@@ -9,8 +9,8 @@ export async function loadTextureAnimation(
   pngUrl: string,
 ): Promise<TextureAnimationMeta | null> {
   try {
-    const mcmetaUrl = pngUrl.endsWith('.png') ? `${pngUrl}.mcmeta` : `${pngUrl}.mcmeta`
-    const metaRes = await fetch(mcmetaUrl)
+    const img = await loadImage(pngUrl)
+    const metaRes = await fetch(`${pngUrl}.mcmeta`)
     if (!metaRes.ok) return null
 
     const meta = (await metaRes.json()) as {
@@ -19,7 +19,6 @@ export async function loadTextureAnimation(
     const animation = meta.animation
     if (!animation?.width || !animation?.height) return null
 
-    const img = await loadImage(pngUrl)
     const frameCount = animation.frames?.length
       ?? Math.max(1, Math.floor(img.naturalHeight / animation.height))
 
