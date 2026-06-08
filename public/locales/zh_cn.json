@@ -1,0 +1,20 @@
+{
+  "appTitle": "任务书",
+  "brandTitle": "任务书首页",
+  "labelLang": "语言：",
+  "labelTheme": "主题",
+  "loading": "加载中…",
+  "loadingChapter": "正在加载章节…",
+  "chapters": "章节",
+  "chapterGroups": "章节组",
+  "sidebarExpand": "展开侧栏",
+  "sidebarCollapse": "收起侧栏",
+  "detailClose": "关闭任务详情",
+  "detailSelectQuest": "请在画布上选择一个任务。",
+  "detailTasks": "任务",
+  "detailRewards": "奖励",
+  "detailPrerequisites": "前置任务",
+  "detailDependents": "后置任务",
+  "detailNone": "无",
+  "switchingLanguage": "正在切换语言…"
+}

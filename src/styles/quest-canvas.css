@@ -1,0 +1,519 @@
+.book-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  --quest-layout-transition-ms: 450ms;
+}
+
+.book-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chapter-sidebar {
+  flex: 0 0 min(240px, 28vw);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  overflow: hidden;
+  transition: flex-basis var(--quest-layout-transition-ms, 450ms) ease-in-out;
+}
+
+.chapter-sidebar.is-collapsed {
+  flex-basis: 52px;
+}
+
+.chapter-sidebar__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__header {
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.chapter-sidebar__title {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0 10px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity var(--quest-layout-transition-ms, 450ms) ease-in-out;
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__title {
+  opacity: 0;
+  width: 0;
+  padding: 0;
+}
+
+.chapter-sidebar__toggle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 6px 8px 6px 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  font: inherit;
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__toggle {
+  margin: 0;
+}
+
+.chapter-sidebar__toggle:hover,
+.chapter-sidebar__toggle:focus-visible {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  outline: none;
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__item {
+  justify-content: center;
+  padding: 6px 4px;
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__nav {
+  padding-inline: 4px;
+}
+
+.chapter-sidebar__nav {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 6px 12px;
+}
+
+.chapter-sidebar__section + .chapter-sidebar__section {
+  margin-top: 8px;
+}
+
+.chapter-sidebar__group {
+  margin: 0 0 4px;
+  padding: 0 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity var(--quest-layout-transition-ms, 450ms) ease-in-out;
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__group {
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.chapter-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chapter-sidebar__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.chapter-sidebar__item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.chapter-sidebar__item.is-active {
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.chapter-sidebar__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  transition: opacity var(--quest-layout-transition-ms, 450ms) ease-in-out;
+}
+
+.chapter-sidebar.is-collapsed .chapter-sidebar__label {
+  opacity: 0;
+  width: 0;
+}
+
+.chapter-layout {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+.chapter-map {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  background: var(--bg);
+  --quest-layout-transition-ms: 450ms;
+  --quest-grid-dot: color-mix(in srgb, var(--muted) 72%, var(--text));
+  --quest-edge-stroke: color-mix(in srgb, var(--muted) 55%, var(--text));
+  --quest-edge-width: 2.5px;
+}
+
+.chapter-map .react-flow__background-pattern.dots {
+  fill: var(--quest-grid-dot);
+}
+
+.react-flow__edge.quest-flow-edge .react-flow__edge-path {
+  stroke: var(--quest-edge-stroke);
+  stroke-width: var(--quest-edge-width);
+  fill: none;
+}
+
+.react-flow__edge.quest-flow-edge marker path,
+.react-flow__edge.quest-flow-edge marker polyline {
+  stroke: var(--quest-edge-stroke);
+  fill: var(--quest-edge-stroke);
+}
+
+.quest-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 12px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--header-control-bg, var(--panel));
+  box-shadow: var(--tfg-shadow, 0 4px 12px rgba(0, 0, 0, 0.12));
+}
+
+.quest-zoom-controls__btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  font: inherit;
+}
+
+.quest-zoom-controls__btn:hover,
+.quest-zoom-controls__btn:focus-visible {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+.quest-zoom-controls__select {
+  min-width: 4.5rem;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  text-align-last: center;
+}
+
+html[data-theme="light"] .quest-zoom-controls__select {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] .quest-zoom-controls__select {
+  color-scheme: dark;
+}
+
+.quest-zoom-controls__select option {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.quest-zoom-controls__select:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.quest-zoom-controls__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.chapter-detail {
+  flex: 0 0 min(360px, 34vw);
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  padding: 12px 14px;
+  overflow: auto;
+}
+
+.chapter-detail--drawer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  flex: none;
+  width: min(360px, 34vw);
+  box-shadow: var(--tfg-shadow, -8px 0 24px rgba(0, 0, 0, 0.18));
+  animation: chapter-detail-enter var(--quest-layout-transition-ms, 450ms) ease-in-out;
+}
+
+@keyframes chapter-detail-enter {
+  from {
+    transform: translateX(100%);
+    opacity: 0.6;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.chapter-detail__close {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  float: right;
+  width: 32px;
+  height: 32px;
+  margin: -4px -2px 8px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--header-control-bg, var(--panel));
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  font: inherit;
+}
+
+.chapter-detail__close:hover,
+.chapter-detail__close:focus-visible {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  outline: none;
+}
+
+.quest-icon__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.quest-icon__animated {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  animation-name: quest-texture-strip;
+  animation-timing-function: steps(var(--quest-texture-frames, 1));
+  animation-iteration-count: infinite;
+}
+
+@keyframes quest-texture-strip {
+  from { background-position-y: 0; }
+  to { background-position-y: 100%; }
+}
+
+.quest-icon--shape-square {
+  border-radius: 6px;
+}
+
+.quest-icon--shape-gear {
+  border-radius: 50%;
+  border-width: 3px;
+}
+
+.quest-icon--shape-heart {
+  border-radius: 0;
+  clip-path: polygon(50% 92%, 6% 42%, 6% 22%, 26% 8%, 50% 26%, 74% 8%, 94% 22%, 94% 42%);
+}
+
+.quest-chapter-image {
+  pointer-events: none;
+  object-fit: contain;
+  user-select: none;
+}
+
+.quest-flow-node {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quest-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--panel) 85%, var(--bg));
+  border: 2px solid var(--border);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.quest-icon.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.quest-icon__emi {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quest-icon__emi .icon-atlas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.quest-icon__fallback {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--muted);
+  user-select: none;
+}
+
+.quest-detail h2 {
+  margin-top: 0;
+}
+
+.quest-detail h3,
+.quest-detail h4 {
+  color: var(--muted);
+}
+
+.quest-detail__section {
+  margin-top: 1rem;
+}
+
+.quest-detail__section h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.quest-detail__list,
+.quest-detail__links {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.quest-detail__list li,
+.quest-detail__links li {
+  margin: 0.35rem 0;
+}
+
+.quest-item-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quest-item-row .quest-icon {
+  flex-shrink: 0;
+}
+
+.quest-detail__checkmark {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.quest-detail__none {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.quest-detail__link {
+  border: none;
+  padding: 0;
+  background: none;
+  color: var(--tfg-link);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.quest-detail__link:hover,
+.quest-detail__link:focus-visible {
+  color: var(--tfg-link-hover);
+  outline: none;
+}
+
+.quest-detail__placeholder {
+  color: var(--muted);
+}
+
+.quest-detail__description p {
+  margin: 0.35rem 0;
+}
+
+@media (max-width: 900px) {
+  .chapter-sidebar {
+    flex-basis: 200px;
+  }
+
+  .chapter-sidebar.is-collapsed {
+    flex-basis: 52px;
+  }
+
+  .chapter-detail--drawer {
+    width: min(360px, 92vw);
+  }
+}

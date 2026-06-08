@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Match package.json version to tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_NO_V="${TAG#v}"
+          if [ "$PKG_VERSION" != "$TAG_NO_V" ]; then
+            echo "::error::Tag ${TAG} must match package.json version (${PKG_VERSION})"
+            exit 1
+          fi
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - run: node scripts/package-release.mjs
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/quest-book-site-v${{ steps.version.outputs.version }}.tar.gz
+            release/quest-book-site-v${{ steps.version.outputs.version }}.zip
+          generate_release_notes: true

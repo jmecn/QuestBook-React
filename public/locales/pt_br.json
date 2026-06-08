@@ -1,0 +1,20 @@
+{
+  "appTitle": "Quest Book",
+  "brandTitle": "Quest Book home",
+  "labelLang": "lang:",
+  "labelTheme": "Theme",
+  "loading": "Loading…",
+  "loadingChapter": "Loading chapter…",
+  "chapters": "Chapters",
+  "chapterGroups": "Chapter groups",
+  "sidebarExpand": "Expand sidebar",
+  "sidebarCollapse": "Collapse sidebar",
+  "detailClose": "Close quest details",
+  "detailSelectQuest": "Select a quest node on the canvas.",
+  "detailTasks": "Tasks",
+  "detailRewards": "Rewards",
+  "detailPrerequisites": "Prerequisites",
+  "detailDependents": "Dependent quests",
+  "detailNone": "None",
+  "switchingLanguage": "Switching language…"
+}

@@ -1,0 +1,43 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { execSync } from 'node:child_process'
+
+const root = path.resolve(import.meta.dirname, '..')
+const distDir = path.join(root, 'dist')
+const outDir = path.join(root, 'release')
+
+const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
+const version = String(pkg.version || '').trim()
+if (!version) {
+  console.error('[package-release] package.json version is empty')
+  process.exit(1)
+}
+
+if (!fs.existsSync(path.join(distDir, 'index.html'))) {
+  console.error('[package-release] dist/index.html missing — run npm run build first')
+  process.exit(1)
+}
+
+const manifest = {
+  name: pkg.name,
+  version,
+  node: fs.readFileSync(path.join(root, '.nvmrc'), 'utf8').trim(),
+  builtAt: new Date().toISOString(),
+  layout: 'dist-root',
+}
+
+fs.mkdirSync(outDir, { recursive: true })
+fs.writeFileSync(path.join(distDir, 'release-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+
+const archiveBase = `quest-book-site-v${version}`
+const tarPath = path.join(outDir, `${archiveBase}.tar.gz`)
+const zipPath = path.join(outDir, `${archiveBase}.zip`)
+
+fs.rmSync(tarPath, { force: true })
+fs.rmSync(zipPath, { force: true })
+
+execSync(`tar -czf "${tarPath}" -C "${distDir}" .`, { stdio: 'inherit' })
+execSync(`cd "${distDir}" && zip -qr "${zipPath}" .`, { stdio: 'inherit' })
+
+console.log(`[package-release] ${tarPath}`)
+console.log(`[package-release] ${zipPath}`)

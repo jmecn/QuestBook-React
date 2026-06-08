@@ -1,0 +1,48 @@
+@import './styles/viewer-theme.css';
+@import './styles/site-shell.css';
+@import './styles/quest-canvas.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--tfg-font-sans);
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+a {
+  color: var(--tfg-link);
+}
+
+a:hover {
+  color: var(--tfg-link-hover);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.react-flow {
+  background: var(--bg);
+}
