@@ -17,7 +17,6 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/@xyflow')) return 'xyflow'
-          if (id.includes('node_modules/emi-recipe-renderer')) return 'emi'
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
             return 'react-vendor'
           }

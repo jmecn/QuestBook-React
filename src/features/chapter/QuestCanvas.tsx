@@ -2,8 +2,9 @@ import '@xyflow/react/dist/style.css'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Background,
-  MarkerType,
+  Handle,
   Panel,
+  Position,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
@@ -22,18 +23,19 @@ import { QuestDependencyEdge } from '@/features/chapter/QuestDependencyEdge'
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 import { sidebarMapWidthDelta } from '@/shared/lib/viewport-inset'
 import { questIconPx } from '@/shared/lib/quest-node-size'
+import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
+import { resolveQuestIcon, useQuestDisplayTitle } from '@/shared/lib/quest-display'
+import { isQuestLinkVisibleOnMap, isQuestVisibleOnMap } from '@/shared/lib/quest-visibility'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
 import type { ChapterData, ChapterImage, QuestNode as QuestData } from '@/shared/types/quest'
-import { gridStepPx, gridToPx, resolveQuestText } from '@/shared/lib/quest-text'
+import { gridStepPx, gridToPx } from '@/shared/lib/quest-text'
 import '@/styles/quest-canvas.css'
+
+/** Minimal handles so React Flow can mount edges; geometry uses node centers. */
+const QUEST_EDGE_HANDLE_ID = 'edge'
 
 const QUEST_EDGE_OPTIONS: DefaultEdgeOptions = {
   type: 'questDependency',
-  markerEnd: {
-    type: MarkerType.ArrowClosed,
-    width: 16,
-    height: 16,
-  },
   className: 'quest-flow-edge',
 }
 
@@ -42,7 +44,7 @@ const QUEST_ZOOM_BASE = 2
 
 const FOCUS_ANIMATION_MS = 450
 
-const ZOOM_PRESET_PERCENTS = [50, 75, 100, 125, 150, 175, 200] as const
+const ZOOM_PRESET_PERCENTS = [25, 50, 75, 100, 125, 150, 175, 200] as const
 
 type ZoomPresetPercent = (typeof ZOOM_PRESET_PERCENTS)[number]
 
@@ -68,8 +70,8 @@ function nearestPresetPercent(percent: number): ZoomPresetPercent {
 }
 
 export interface QuestNodeData extends Record<string, unknown> {
-  label: string
   quest: QuestData
+  dict: Record<string, string>
   locale: string
   gridScale: number
 }
@@ -82,6 +84,8 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
   const nodeId = useNodeId()
   const updateNodeInternals = useUpdateNodeInternals()
   const iconSize = questIconPx(data.quest.size, data.gridScale)
+  const label = useQuestDisplayTitle(data.quest, data.dict, data.locale)
+  const icon = resolveQuestIcon(data.quest)
 
   useEffect(() => {
     if (nodeId) {
@@ -90,13 +94,25 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
   }, [iconSize, nodeId, updateNodeInternals])
 
   return (
-    <div className="quest-flow-node" title={data.label}>
+    <div className="quest-flow-node" title={label}>
+      <Handle
+        type="source"
+        id={QUEST_EDGE_HANDLE_ID}
+        position={Position.Top}
+        className="quest-flow-handle"
+      />
+      <Handle
+        type="target"
+        id={QUEST_EDGE_HANDLE_ID}
+        position={Position.Top}
+        className="quest-flow-handle"
+      />
       <QuestIcon
-        icon={data.quest.icon}
+        icon={icon}
+        iconItems={data.quest.iconItems}
         size={iconSize}
         shape={data.quest.shape}
         selected={selected}
-        locale={data.locale}
       />
     </div>
   )
@@ -144,7 +160,12 @@ function FitViewOnChapterChange({ depKey }: { depKey: string }) {
   const { fitView, getZoom, getViewport, setViewport } = useReactFlow()
   useEffect(() => {
     const id = requestAnimationFrame(() => {
-      void fitView({ padding: 0.25, maxZoom: QUEST_ZOOM_BASE, minZoom: 0.5, duration: 0 }).then(() => {
+      void fitView({
+        padding: 0.25,
+        maxZoom: QUEST_ZOOM_BASE,
+        minZoom: displayPercentToZoom(ZOOM_PRESET_PERCENTS[0]),
+        duration: 0,
+      }).then(() => {
         if (getZoom() < QUEST_ZOOM_BASE) {
           setViewport({ ...getViewport(), zoom: QUEST_ZOOM_BASE })
         }
@@ -326,12 +347,16 @@ function ZoomControls() {
 
 function chapterToFlow(
   chapter: ChapterData,
+  catalog: Map<string, QuestCatalogEntry>,
   dict: Record<string, string>,
   selectedId: string | null,
   locale: string,
   gridScale: number,
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = []
+  const visibleQuestIds = new Set(
+    chapter.quests.filter(isQuestVisibleOnMap).map((quest) => quest.id),
+  )
 
   for (const image of chapter.images ?? []) {
     nodes.push({
@@ -347,34 +372,38 @@ function chapterToFlow(
   }
 
   for (const quest of chapter.quests) {
+    if (!visibleQuestIds.has(quest.id)) continue
     const iconSize = questIconPx(quest.size, gridScale)
     nodes.push({
       id: quest.id,
       type: 'quest',
       position: { x: gridToPx(quest.x, gridScale), y: gridToPx(quest.y, gridScale) },
       data: {
-        label: resolveQuestText(dict, quest.title) || quest.id,
         quest,
+        dict,
         locale,
         gridScale,
       },
+      width: iconSize,
+      height: iconSize,
       style: { width: iconSize, height: iconSize },
       selected: quest.id === selectedId,
       zIndex: 1,
     })
   }
 
-  const questIds = new Set(chapter.quests.map((quest) => quest.id))
-
   const edges: Edge[] = []
   for (const quest of chapter.quests) {
+    if (!visibleQuestIds.has(quest.id)) continue
     for (const dep of quest.dependencies ?? []) {
       if (quest.hideDependencyLines) continue
-      if (!questIds.has(dep)) continue
+      if (!visibleQuestIds.has(dep)) continue
       edges.push({
         id: `${dep}->${quest.id}`,
         source: dep,
         target: quest.id,
+        sourceHandle: QUEST_EDGE_HANDLE_ID,
+        targetHandle: QUEST_EDGE_HANDLE_ID,
         type: 'questDependency',
         zIndex: 0,
       })
@@ -382,22 +411,29 @@ function chapterToFlow(
   }
 
   for (const link of chapter.questLinks ?? []) {
-    const iconSize = questIconPx(1, gridScale)
+    const linkedEntry = catalog.get(link.linkedQuest)
+    if (!linkedEntry || !isQuestLinkVisibleOnMap(linkedEntry.quest)) continue
+
+    const linkedQuest = linkedEntry.quest
+    const iconSize = questIconPx(link.size ?? linkedQuest.size, gridScale)
     nodes.push({
-      id: link.id,
+      id: `link:${link.id}`,
       type: 'quest',
       position: { x: gridToPx(link.x, gridScale), y: gridToPx(link.y, gridScale) },
       data: {
-        label: '→',
         quest: {
-          id: link.linkedQuest,
+          ...linkedQuest,
           x: link.x,
           y: link.y,
-          title: link.linkedQuest,
+          size: link.size ?? linkedQuest.size,
+          shape: link.shape ?? linkedQuest.shape,
         },
+        dict,
         locale,
         gridScale,
       },
+      width: iconSize,
+      height: iconSize,
       style: { width: iconSize, height: iconSize },
       selected: link.linkedQuest === selectedId,
       zIndex: 1,
@@ -409,6 +445,7 @@ function chapterToFlow(
 
 export interface QuestCanvasProps {
   chapter: ChapterData
+  catalog: Map<string, QuestCatalogEntry>
   dict: Record<string, string>
   gridScale: number
   selectedId: string | null
@@ -422,6 +459,7 @@ export interface QuestCanvasProps {
 
 function QuestCanvasInner({
   chapter,
+  catalog,
   dict,
   gridScale,
   selectedId,
@@ -433,8 +471,8 @@ function QuestCanvasInner({
   onClearSelection,
 }: QuestCanvasProps) {
   const { nodes: layoutNodes, edges: layoutEdges } = useMemo(
-    () => chapterToFlow(chapter, dict, selectedId, locale, gridScale),
-    [chapter, dict, gridScale, locale, selectedId],
+    () => chapterToFlow(chapter, catalog, dict, selectedId, locale, gridScale),
+    [catalog, chapter, dict, gridScale, locale, selectedId],
   )
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes)

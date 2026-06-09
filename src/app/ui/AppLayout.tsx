@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BookLayoutProvider } from '@/app/context/BookLayoutContext'
-import { RecipeViewerIconProvider } from '@/app/context/RecipeViewerIconContext'
 import { SiteHeader } from '@/app/ui/SiteHeader'
 import { ChapterPage } from '@/features/chapter/ChapterPage'
 import { ChapterSidebar } from '@/features/chapter/ChapterSidebar'
@@ -30,18 +29,16 @@ export function AppLayout() {
   }, [chapter, locale, navigate])
 
   return (
-    <RecipeViewerIconProvider>
-      <BookLayoutProvider>
-        <div className="app-shell">
-          <SiteHeader />
-          <div className="book-body">
-            <ChapterSidebar />
-            <main className="book-main">
-              {chapter ? <ChapterPage /> : <p className="page-message">Loading…</p>}
-            </main>
-          </div>
+    <BookLayoutProvider>
+      <div className="app-shell">
+        <SiteHeader />
+        <div className="book-body">
+          <ChapterSidebar />
+          <main className="book-main">
+            {chapter ? <ChapterPage /> : <p className="page-message">Loading…</p>}
+          </main>
         </div>
-      </BookLayoutProvider>
-    </RecipeViewerIconProvider>
+      </div>
+    </BookLayoutProvider>
   )
 }

@@ -5,6 +5,36 @@ import type { QuestReward, QuestTask } from '@/shared/types/quest'
 import { resolveQuestText } from '@/shared/lib/quest-text'
 import { formatRewardLabel } from '@/shared/lib/reward-text'
 
+function TaskTitle({
+  task,
+  dict,
+  locale,
+}: {
+  task: QuestTask
+  dict: Record<string, string>
+  locale: string
+}) {
+  const [label, setLabel] = useState(() => resolveQuestText(dict, task.title))
+
+  useEffect(() => {
+    let cancelled = false
+    const base = resolveQuestText(dict, task.title)
+    const observe = task.toObserve?.trim()
+    if (!observe || !base.includes(observe)) {
+      setLabel(base)
+      return undefined
+    }
+    void resolveItemDisplayName(observe, locale).then((name) => {
+      if (!cancelled) setLabel(base.replace(observe, name))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [dict, locale, task.title, task.toObserve])
+
+  return <span>{label}</span>
+}
+
 function TaskRow({
   task,
   dict,
@@ -28,7 +58,7 @@ function TaskRow({
   }
 
   if (title) {
-    return <span>{title}</span>
+    return <TaskTitle task={task} dict={dict} locale={locale} />
   }
 
   if (task.type === 'checkmark') {

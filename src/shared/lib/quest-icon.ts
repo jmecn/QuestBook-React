@@ -1,8 +1,35 @@
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
+import { questItemIconUrl, questMissingItemIconUrl } from '@/shared/lib/quest-item-icon'
 
-/** Quest-export bundle PNG paths (item, block, or full texture path). */
-export function questExportIconCandidates(icon?: string): string[] {
-  return questExportTextureCandidates(icon)
+function urlsForRef(ref: string): string[] {
+  const urls: string[] = []
+  const itemUrl = questItemIconUrl(ref)
+  if (itemUrl) urls.push(itemUrl)
+  urls.push(...questExportTextureCandidates(ref))
+  return urls
+}
+
+/** Quest-export icon URLs: per-item PNG, then closure texture paths. */
+export function questExportIconCandidates(icon?: string, iconItems?: string[]): string[] {
+  const seen = new Set<string>()
+  const urls: string[] = []
+
+  const addRef = (ref?: string) => {
+    if (!ref || seen.has(ref)) return
+    seen.add(ref)
+    for (const url of urlsForRef(ref)) {
+      if (!urls.includes(url)) urls.push(url)
+    }
+  }
+
+  addRef(icon)
+  iconItems?.forEach(addRef)
+
+  if (urls.length === 0) {
+    urls.push(questMissingItemIconUrl())
+  }
+
+  return urls
 }
 
 function splitIcon(icon: string): { namespace: string; path: string } | null {

@@ -180,6 +180,7 @@ export function ChapterPage() {
         <Suspense fallback={<p className="page-message">{t('loadingChapter')}</p>}>
           <QuestCanvas
             chapter={chapter}
+            catalog={catalog}
             dict={dict}
             gridScale={gridScale}
             selectedId={effectiveSelectedId}

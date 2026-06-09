@@ -51,8 +51,8 @@ function groupChapters(
   return sections.length > 0 ? sections : [{ group: null, chapters }]
 }
 
-function chapterLabel(chapter: ChapterSummary): string {
-  return chapter.filename
+function chapterLabel(chapter: ChapterSummary, dict: Record<string, string>): string {
+  return resolveQuestText(dict, chapter.title) || chapter.filename
 }
 
 export function ChapterSidebar() {
@@ -134,7 +134,7 @@ export function ChapterSidebar() {
               <ul className="chapter-sidebar__list">
                 {chapters.map((chapter) => {
                   const active = chapter.filename === activeChapter
-                  const label = chapterLabel(chapter)
+                  const label = chapterLabel(chapter, dict)
                   return (
                     <li key={chapter.filename}>
                       <button
@@ -144,7 +144,7 @@ export function ChapterSidebar() {
                         aria-current={active ? 'page' : undefined}
                         title={collapsed ? label : undefined}
                       >
-                        <QuestIcon icon={chapter.icon} size={24} locale={locale} />
+                        <QuestIcon icon={chapter.icon} size={24} />
                         <span className="chapter-sidebar__label">{label}</span>
                       </button>
                     </li>

@@ -64,7 +64,7 @@ export function HomePage() {
           {(index.chapters ?? []).map((chapter) => (
             <li key={chapter.filename}>
               <Link to={`/?lang=${locale}&chapter=${chapter.filename}`}>
-                <QuestIcon icon={chapter.icon} size={32} locale={locale} />
+                <QuestIcon icon={chapter.icon} size={32} />
                 <span>{chapter.filename}</span>
               </Link>
             </li>

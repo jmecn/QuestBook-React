@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>Quest Book</title>
+    <script>
+      (function () {
+        var KEY = 'tfg-theme';
+        function norm(v) {
+          return v === 'light' || v === 'dark' || v === 'auto' ? v : null;
+        }
+        function resolve(pref) {
+          if (pref === 'light' || pref === 'dark') return pref;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        try {
+          document.documentElement.dataset.theme = resolve(norm(localStorage.getItem(KEY)) || 'auto');
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

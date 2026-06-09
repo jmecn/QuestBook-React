@@ -187,24 +187,55 @@
   background: var(--bg);
   --quest-layout-transition-ms: 450ms;
   --quest-grid-dot: color-mix(in srgb, var(--muted) 72%, var(--text));
-  --quest-edge-stroke: color-mix(in srgb, var(--muted) 55%, var(--text));
-  --quest-edge-width: 2.5px;
+  --quest-icon-inner-ratio: 0.6666667;
 }
 
 .chapter-map .react-flow__background-pattern.dots {
   fill: var(--quest-grid-dot);
 }
 
-.react-flow__edge.quest-flow-edge .react-flow__edge-path {
-  stroke: var(--quest-edge-stroke);
-  stroke-width: var(--quest-edge-width);
+/*
+ * PS-style marching ants. SVG stroke-dasharray cannot use CSS variables in most
+ * engines (falls back to solid). vector-effect keeps dash size stable when zooming.
+ */
+.chapter-map .quest-dependency-edge__stroke {
   fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 5;
+  stroke-dasharray: 6 6;
+  stroke-linecap: square;
+  pointer-events: none;
+  animation: quest-marching-ants 0.5s linear infinite;
 }
 
-.react-flow__edge.quest-flow-edge marker path,
-.react-flow__edge.quest-flow-edge marker polyline {
-  stroke: var(--quest-edge-stroke);
-  fill: var(--quest-edge-stroke);
+.chapter-map .quest-dependency-edge__stroke--main {
+  stroke: color-mix(in srgb, var(--text) 38%, var(--muted));
+}
+
+.chapter-map .quest-dependency-edge__stroke--alt {
+  stroke: var(--bg);
+  stroke-dashoffset: 6;
+}
+
+@keyframes quest-marching-ants {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter-map .quest-dependency-edge__stroke {
+    animation: none;
+    stroke-linecap: round;
+  }
+
+  .chapter-map .quest-dependency-edge__stroke--alt {
+    display: none;
+  }
+
+  .chapter-map .quest-dependency-edge__stroke--main {
+    opacity: 0.55;
+  }
 }
 
 .quest-zoom-controls {
@@ -334,11 +365,46 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   outline: none;
 }
 
+/* Nearest-neighbor when upscaling export PNGs and chapter art. */
+.quest-icon__img,
+.quest-icon__animated,
+.quest-chapter-image,
+.react-flow__viewport .quest-icon__img,
+.react-flow__viewport .quest-icon__animated {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* FTB: item icon is 2/3 of the shape; 32px PNG → 48px outer at size 1. */
+.quest-icon__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% * var(--quest-icon-inner-ratio));
+  height: calc(100% * var(--quest-icon-inner-ratio));
+  flex-shrink: 0;
+}
+
+.quest-icon__carousel {
+  position: relative;
+}
+
+.quest-icon__carousel .quest-icon__img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.quest-icon__carousel .quest-icon__img.is-active {
+  opacity: 1;
+}
+
 .quest-icon__img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
   pointer-events: none;
 }
 
@@ -346,7 +412,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: block;
   width: 100%;
   height: 100%;
-  image-rendering: pixelated;
   animation-name: quest-texture-strip;
   animation-timing-function: steps(var(--quest-texture-frames, 1));
   animation-iteration-count: infinite;
@@ -385,6 +450,17 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   justify-content: center;
 }
 
+.quest-flow-handle {
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  background: transparent;
+  pointer-events: none;
+}
+
 .quest-icon {
   display: inline-flex;
   align-items: center;
@@ -400,21 +476,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-icon.is-selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.quest-icon__emi {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quest-icon__emi .icon-atlas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  image-rendering: pixelated;
 }
 
 .quest-icon__fallback {

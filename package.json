@@ -13,7 +13,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "emi-recipe-renderer": "^0.6.4",
     "@xyflow/react": "^12.10.0",
     "i18next": "^26.3.1",
     "react": "^18.2.0",

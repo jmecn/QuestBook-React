@@ -28,3 +28,29 @@ export async function loadLangDict(locale: string): Promise<Record<string, strin
   if (!res.ok) return {}
   return res.json() as Promise<Record<string, string>>
 }
+
+export interface ItemsLangRow {
+  id: string
+  label?: string
+}
+
+export interface ItemsLangPayload {
+  items?: ItemsLangRow[]
+}
+
+/** Precomputed registry id → label table from quest-export {@code items-lang/}. */
+export async function loadItemsLangLabels(
+  locale: string,
+): Promise<Record<string, string> | null> {
+  const res = await fetch(questExportUrl(`items-lang/${locale}.json`))
+  if (!res.ok) return null
+  const data = (await res.json()) as ItemsLangPayload
+  if (!data.items?.length) return null
+
+  const labels: Record<string, string> = {}
+  for (const row of data.items) {
+    if (!row.id || row.label == null || row.label === '') continue
+    labels[row.id] = row.label
+  }
+  return labels
+}

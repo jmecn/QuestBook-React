@@ -13,17 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npm run build
+      - name: Typecheck and build
+        run: npm run build
 
       - name: Match package.json version to tag
         id: version
@@ -32,16 +36,23 @@ jobs:
           PKG_VERSION=$(node -p "require('./package.json').version")
           TAG_NO_V="${TAG#v}"
           if [ "$PKG_VERSION" != "$TAG_NO_V" ]; then
-            echo "::error::Tag ${TAG} must match package.json version (${PKG_VERSION})"
+            echo "::error::Tag ${TAG} must match package.json version (${PKG_VERSION}). Bump version then tag v${PKG_VERSION}."
             exit 1
           fi
           echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - run: node scripts/package-release.mjs
+      - name: Package site artifact
+        run: node scripts/package-release.mjs
 
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            release/quest-book-site-v${{ steps.version.outputs.version }}.tar.gz
-            release/quest-book-site-v${{ steps.version.outputs.version }}.zip
-          generate_release_notes: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${GITHUB_REF_NAME}"
+          TAR="release/quest-book-site-v${VERSION}.tar.gz"
+          ZIP="release/quest-book-site-v${VERSION}.zip"
+          gh release create "$TAG" "$TAR" "$ZIP" \
+            --repo "${{ github.repository }}" \
+            --title "$TAG" \
+            --generate-notes

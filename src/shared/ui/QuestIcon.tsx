@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { getRecipeViewerIconClient } from '@/adapters/recipe-viewer-icon-client'
-import { useRecipeViewerIcons } from '@/app/context/RecipeViewerIconContext'
+import { useEffect, useMemo, useState } from 'react'
 import { loadTextureAnimation, type TextureAnimationMeta } from '@/shared/lib/animated-texture'
+import { questItemIconUrl } from '@/shared/lib/quest-item-icon'
 import {
   questExportIconCandidates,
   questIconFallbackLabel,
@@ -9,69 +8,75 @@ import {
 
 export interface QuestIconProps {
   icon?: string
+  iconItems?: string[]
   size?: number
   shape?: string
   selected?: boolean
   className?: string
-  locale?: string
 }
 
-type IconMode = 'export' | 'animated' | 'recipe-viewer' | 'fallback'
+const ICON_CAROUSEL_MS = 1000
 
 export function QuestIcon({
   icon,
+  iconItems,
   size = 32,
   selected = false,
   shape,
   className = '',
-  locale = 'en_us',
 }: QuestIconProps) {
-  const exportCandidates = useMemo(() => questExportIconCandidates(icon), [icon])
-  const { baseUrl } = useRecipeViewerIcons()
-  const emiHostRef = useRef<HTMLSpanElement | null>(null)
-  const [mode, setMode] = useState<IconMode>(() => (
-    exportCandidates.length > 0 ? 'export' : 'recipe-viewer'
-  ))
+  const exportCandidates = useMemo(
+    () => questExportIconCandidates(icon, iconItems),
+    [icon, iconItems],
+  )
+  const carouselUrls = useMemo(() => {
+    if (!iconItems || iconItems.length <= 1) return []
+    const urls = iconItems
+      .map((itemId) => questItemIconUrl(itemId))
+      .filter((url): url is string => url != null)
+    return urls.length > 1 ? urls : []
+  }, [iconItems])
+
   const [exportIndex, setExportIndex] = useState(0)
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  const [failed, setFailed] = useState(false)
   const [animation, setAnimation] = useState<TextureAnimationMeta | null>(null)
-  const exportSrc = (mode === 'export' || mode === 'animated') && exportCandidates[exportIndex]
-    ? exportCandidates[exportIndex]
-    : undefined
+
+  const exportSrc = carouselUrls.length > 0
+    ? carouselUrls[carouselIndex]
+    : exportCandidates[exportIndex]
+
   const fallback = questIconFallbackLabel(icon)
+  const isCarousel = carouselUrls.length > 1
 
   useEffect(() => {
-    setMode(exportCandidates.length > 0 ? 'export' : 'recipe-viewer')
     setExportIndex(0)
+    setCarouselIndex(0)
+    setFailed(false)
     setAnimation(null)
-  }, [icon, exportCandidates.length])
+  }, [icon, iconItems, exportCandidates.length])
 
   useEffect(() => {
-    if (mode !== 'export' || !exportSrc) return
+    if (!isCarousel) return undefined
+    const timer = window.setInterval(() => {
+      setCarouselIndex((value) => (value + 1) % carouselUrls.length)
+    }, ICON_CAROUSEL_MS)
+    return () => window.clearInterval(timer)
+  }, [carouselUrls.length, isCarousel])
+
+  useEffect(() => {
+    if (!exportSrc || isCarousel) return undefined
 
     let cancelled = false
     void loadTextureAnimation(exportSrc).then((meta) => {
       if (cancelled || !meta || meta.frameCount <= 1) return
       setAnimation(meta)
-      setMode('animated')
     })
 
     return () => {
       cancelled = true
     }
-  }, [exportSrc, mode])
-
-  useEffect(() => {
-    if (mode !== 'recipe-viewer' || !icon || !baseUrl) return
-    const host = emiHostRef.current
-    if (!host) return
-    const client = getRecipeViewerIconClient()
-    const session = client.mountItemIcon(host, icon, {
-      baseUrl,
-      locale,
-      fallbackText: fallback,
-    })
-    return () => session.disconnect()
-  }, [baseUrl, fallback, icon, locale, mode])
+  }, [exportSrc, isCarousel])
 
   const shapeClass = shape ? `quest-icon--shape-${shape}` : ''
   const classes = [
@@ -81,7 +86,7 @@ export function QuestIcon({
     className,
   ].filter(Boolean).join(' ')
 
-  const animationStyle = animation && exportSrc
+  const animationStyle = animation && exportSrc && !isCarousel
     ? {
         backgroundImage: `url(${exportSrc})`,
         backgroundSize: `100% ${animation.frameCount * 100}%`,
@@ -90,37 +95,56 @@ export function QuestIcon({
       }
     : undefined
 
+  const handleImageError = () => {
+    if (isCarousel) return
+    if (exportIndex + 1 < exportCandidates.length) {
+      setExportIndex((value) => value + 1)
+      return
+    }
+    setFailed(true)
+  }
+
   return (
     <span className={classes} style={{ width: size, height: size }} title={icon}>
-      {mode === 'export' && exportSrc ? (
-        <img
-          key={exportSrc}
-          className="quest-icon__img"
-          src={exportSrc}
-          alt=""
-          decoding="async"
-          draggable={false}
-          onError={() => {
-            if (exportIndex + 1 < exportCandidates.length) {
-              setExportIndex((value) => value + 1)
-            } else {
-              setMode('recipe-viewer')
-            }
-          }}
-        />
+      {failed ? (
+        <span className="quest-icon__inner">
+          <span className="quest-icon__fallback" aria-hidden="true">{fallback}</span>
+        </span>
       ) : null}
-      {mode === 'animated' && exportSrc ? (
-        <span
-          className="quest-icon__animated"
-          style={animationStyle}
-          aria-hidden="true"
-        />
+      {!failed && isCarousel ? (
+        <span className="quest-icon__inner quest-icon__carousel" aria-hidden="true">
+          {carouselUrls.map((url, index) => (
+            <img
+              key={url}
+              className={`quest-icon__img${index === carouselIndex ? ' is-active' : ''}`}
+              src={url}
+              alt=""
+              decoding="async"
+              draggable={false}
+            />
+          ))}
+        </span>
       ) : null}
-      {mode === 'recipe-viewer' ? (
-        <span ref={emiHostRef} className="quest-icon__emi" />
+      {!failed && !isCarousel && exportSrc && !animation ? (
+        <span className="quest-icon__inner">
+          <img
+            className="quest-icon__img"
+            src={exportSrc}
+            alt=""
+            decoding="async"
+            draggable={false}
+            onError={handleImageError}
+          />
+        </span>
       ) : null}
-      {mode === 'fallback' ? (
-        <span className="quest-icon__fallback" aria-hidden="true">{fallback}</span>
+      {!failed && !isCarousel && exportSrc && animation ? (
+        <span className="quest-icon__inner">
+          <span
+            className="quest-icon__animated"
+            style={animationStyle}
+            aria-hidden="true"
+          />
+        </span>
       ) : null}
     </span>
   )

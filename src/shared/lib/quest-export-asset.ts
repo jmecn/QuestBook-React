@@ -11,8 +11,8 @@ function splitRef(ref: string): { namespace: string; path: string } | null {
 /**
  * Resolve closure PNG URLs under {@code quest-export/assets/}.
  *
- * Registry item/block ids (e.g. {@code gtceu:wrought_iron_ingot}) are intentionally omitted:
- * closure stores model-resolved texture paths, not id-named files — those icons use the EMI atlas.
+ * Registry item ids use per-item PNGs under {@code assets/icons/items/} (see {@code quest-item-icon.ts}).
+ * Closure texture paths resolve to model-exported PNGs below.
  */
 export function questExportTextureCandidates(ref?: string): string[] {
   if (!ref) return []

@@ -2,24 +2,42 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   applyTheme,
   getActiveTheme,
-  getStoredTheme,
+  getThemePreference,
   resolveInitialTheme,
-  setStoredTheme,
+  setThemePreference,
+  THEME_STORAGE_KEY,
   type Theme,
 } from '@/shared/lib/theme'
+
+function syncThemeState() {
+  return applyTheme(resolveInitialTheme())
+}
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => getActiveTheme())
 
-  useEffect(() => {
-    setTheme(applyTheme(resolveInitialTheme()))
+  const applySyncedState = useCallback(() => {
+    setTheme(syncThemeState())
   }, [])
 
   useEffect(() => {
+    applySyncedState()
+  }, [applySyncedState])
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== THEME_STORAGE_KEY && event.key !== null) return
+      applySyncedState()
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [applySyncedState])
+
+  useEffect(() => {
     const media = globalThis.matchMedia?.('(prefers-color-scheme: dark)')
-    if (!media || getStoredTheme()) return undefined
+    if (!media || getThemePreference() !== 'auto') return undefined
     const handler = () => {
-      if (getStoredTheme()) return
+      if (getThemePreference() !== 'auto') return
       setTheme(applyTheme(media.matches ? 'dark' : 'light'))
     }
     try {
@@ -33,7 +51,7 @@ export function useTheme() {
 
   const toggleTheme = useCallback(() => {
     const next: Theme = getActiveTheme() === 'dark' ? 'light' : 'dark'
-    setStoredTheme(next)
+    setThemePreference(next)
     setTheme(applyTheme(next))
   }, [])
 

@@ -3,6 +3,7 @@ import { useI18n } from '@/shared/i18n/useI18n'
 import { QuestRewardListItem, QuestTaskListItem } from '@/features/chapter/QuestDetailItems'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-catalog'
+import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
 import { resolveQuestLines, resolveQuestText } from '@/shared/lib/quest-text'
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
 
@@ -15,13 +16,41 @@ export interface QuestDetailPanelProps {
   onNavigateQuest: (chapterFilename: string, questId: string) => void
 }
 
+function QuestLinkButton({
+  entry,
+  dict,
+  locale,
+  onNavigateQuest,
+}: {
+  entry: QuestCatalogEntry
+  dict: Record<string, string>
+  locale: string
+  onNavigateQuest: (chapterFilename: string, questId: string) => void
+}) {
+  const label = useQuestDisplayTitle(entry.quest, dict, locale)
+
+  return (
+    <li>
+      <button
+        type="button"
+        className="quest-detail__link"
+        onClick={() => onNavigateQuest(entry.chapterFilename, entry.id)}
+      >
+        {label}
+      </button>
+    </li>
+  )
+}
+
 function QuestLinkList({
   entries,
   dict,
+  locale,
   onNavigateQuest,
 }: {
   entries: QuestCatalogEntry[]
   dict: Record<string, string>
+  locale: string
   onNavigateQuest: (chapterFilename: string, questId: string) => void
 }) {
   const { t } = useI18n()
@@ -33,15 +62,13 @@ function QuestLinkList({
   return (
     <ul className="quest-detail__links">
       {entries.map((entry) => (
-        <li key={entry.id}>
-          <button
-            type="button"
-            className="quest-detail__link"
-            onClick={() => onNavigateQuest(entry.chapterFilename, entry.id)}
-          >
-            {resolveQuestText(dict, entry.quest.title) || entry.id}
-          </button>
-        </li>
+        <QuestLinkButton
+          key={entry.id}
+          entry={entry}
+          dict={dict}
+          locale={locale}
+          onNavigateQuest={onNavigateQuest}
+        />
       ))}
     </ul>
   )
@@ -67,6 +94,12 @@ export function QuestDetailPanel({
     [chapters, quest],
   )
 
+  const title = useQuestDisplayTitle(
+    quest ?? { id: '', x: 0, y: 0 },
+    dict,
+    locale,
+  )
+
   if (!quest) {
     return (
       <p className="quest-detail__placeholder">
@@ -79,14 +112,14 @@ export function QuestDetailPanel({
 
   return (
     <div className="quest-detail">
-      <h2 id="quest-detail-title">{resolveQuestText(dict, quest.title) || quest.id}</h2>
+      <h2 id="quest-detail-title">{title}</h2>
       {quest.subtitle ? (
         <h3>{resolveQuestText(dict, quest.subtitle)}</h3>
       ) : null}
       {quest.description ? (
         <div className="quest-detail__description">
-          {resolveQuestLines(dict, quest.description).split('\n').map((line) => (
-            <p key={line}>{line}</p>
+          {resolveQuestLines(dict, quest.description).split('\n').map((line, index) => (
+            <p key={`${quest.id}-desc-${index}`}>{line}</p>
           ))}
         </div>
       ) : null}
@@ -122,6 +155,7 @@ export function QuestDetailPanel({
         <QuestLinkList
           entries={prerequisites}
           dict={dict}
+          locale={locale}
           onNavigateQuest={onNavigateQuest}
         />
       </section>
@@ -131,6 +165,7 @@ export function QuestDetailPanel({
         <QuestLinkList
           entries={dependents}
           dict={dict}
+          locale={locale}
           onNavigateQuest={onNavigateQuest}
         />
       </section>
