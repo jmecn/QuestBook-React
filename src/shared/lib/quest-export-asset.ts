@@ -37,7 +37,3 @@ export function questExportTextureCandidates(ref?: string): string[] {
 
   return []
 }
-
-export function questExportMcmetaUrl(pngUrl: string): string {
-  return pngUrl.endsWith('.png') ? `${pngUrl}.mcmeta` : `${pngUrl}.mcmeta`
-}

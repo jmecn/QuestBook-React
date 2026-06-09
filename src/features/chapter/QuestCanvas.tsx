@@ -94,7 +94,7 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
   }, [iconSize, nodeId, updateNodeInternals])
 
   return (
-    <div className="quest-flow-node" title={label}>
+    <div className="quest-flow-node" data-label={label || undefined}>
       <Handle
         type="source"
         id={QUEST_EDGE_HANDLE_ID}
@@ -113,6 +113,7 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
         size={iconSize}
         shape={data.quest.shape}
         selected={selected}
+        tooltip=""
       />
     </div>
   )
@@ -367,6 +368,7 @@ function chapterToFlow(
       selectable: false,
       draggable: false,
       focusable: false,
+      style: { pointerEvents: 'none' },
       zIndex: -100,
     })
   }

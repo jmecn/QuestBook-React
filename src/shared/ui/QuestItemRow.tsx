@@ -12,13 +12,13 @@ export function QuestItemRow({
   itemId,
   count,
   label,
-  iconSize = 24,
+  iconSize = 32,
 }: QuestItemRowProps) {
   const countPrefix = count != null && count > 1 ? `${count}× ` : ''
 
   return (
     <span className="quest-item-row">
-      <QuestIcon icon={itemId} size={iconSize} />
+      <QuestIcon icon={itemId} size={iconSize} variant="tile" />
       <span className="quest-item-row__label">{countPrefix}{label}</span>
     </span>
   )

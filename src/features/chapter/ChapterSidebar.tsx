@@ -144,7 +144,7 @@ export function ChapterSidebar() {
                         aria-current={active ? 'page' : undefined}
                         title={collapsed ? label : undefined}
                       >
-                        <QuestIcon icon={chapter.icon} size={24} />
+                        <QuestIcon icon={chapter.icon} size={32} variant="tile" />
                         <span className="chapter-sidebar__label">{label}</span>
                       </button>
                     </li>

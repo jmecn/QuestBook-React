@@ -190,6 +190,20 @@
   --quest-icon-inner-ratio: 0.6666667;
 }
 
+.chapter-map .react-flow__node {
+  overflow: visible !important;
+}
+
+.chapter-map .react-flow__node:has(.quest-chapter-image) {
+  pointer-events: none !important;
+  z-index: -100 !important;
+}
+
+.chapter-map .react-flow__node:has(.quest-flow-node):hover,
+.chapter-map .react-flow__node:has(.quest-flow-node).selected {
+  z-index: 10000 !important;
+}
+
 .chapter-map .react-flow__background-pattern.dots {
   fill: var(--quest-grid-dot);
 }
@@ -367,10 +381,8 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 
 /* Nearest-neighbor when upscaling export PNGs and chapter art. */
 .quest-icon__img,
-.quest-icon__animated,
 .quest-chapter-image,
-.react-flow__viewport .quest-icon__img,
-.react-flow__viewport .quest-icon__animated {
+.react-flow__viewport .quest-icon__img {
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
@@ -408,20 +420,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   pointer-events: none;
 }
 
-.quest-icon__animated {
-  display: block;
-  width: 100%;
-  height: 100%;
-  animation-name: quest-texture-strip;
-  animation-timing-function: steps(var(--quest-texture-frames, 1));
-  animation-iteration-count: infinite;
-}
-
-@keyframes quest-texture-strip {
-  from { background-position-y: 0; }
-  to { background-position-y: 100%; }
-}
-
 .quest-icon--shape-square {
   border-radius: 6px;
 }
@@ -443,11 +441,42 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 }
 
 .quest-flow-node {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.quest-flow-node[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text) 92%, transparent);
+  color: var(--bg);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+  z-index: 2;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+.quest-flow-node[data-label]:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .quest-flow-handle {
@@ -476,6 +505,25 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-icon.is-selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Sidebar chapter icons and task list rows: plain 32×32 PNGs, no quest-node chrome. */
+.quest-icon.quest-icon--tile {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.quest-icon.quest-icon--tile.is-selected {
+  border: none;
+  box-shadow: none;
+}
+
+.quest-icon.quest-icon--tile .quest-icon__inner {
+  width: 100%;
+  height: 100%;
 }
 
 .quest-icon__fallback {

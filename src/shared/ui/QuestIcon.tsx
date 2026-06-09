@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { loadTextureAnimation, type TextureAnimationMeta } from '@/shared/lib/animated-texture'
 import { questItemIconUrl } from '@/shared/lib/quest-item-icon'
 import {
   questExportIconCandidates,
@@ -11,6 +10,10 @@ export interface QuestIconProps {
   iconItems?: string[]
   size?: number
   shape?: string
+  /** {@code tile}: full-size square list icon; {@code node}: shaped quest canvas button (default). */
+  variant?: 'node' | 'tile'
+  /** Tooltip on hover; defaults to {@code icon} id. Pass {@code ''} to hide. */
+  tooltip?: string
   selected?: boolean
   className?: string
 }
@@ -23,6 +26,8 @@ export function QuestIcon({
   size = 32,
   selected = false,
   shape,
+  variant = 'node',
+  tooltip,
   className = '',
 }: QuestIconProps) {
   const exportCandidates = useMemo(
@@ -40,7 +45,6 @@ export function QuestIcon({
   const [exportIndex, setExportIndex] = useState(0)
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [failed, setFailed] = useState(false)
-  const [animation, setAnimation] = useState<TextureAnimationMeta | null>(null)
 
   const exportSrc = carouselUrls.length > 0
     ? carouselUrls[carouselIndex]
@@ -53,7 +57,6 @@ export function QuestIcon({
     setExportIndex(0)
     setCarouselIndex(0)
     setFailed(false)
-    setAnimation(null)
   }, [icon, iconItems, exportCandidates.length])
 
   useEffect(() => {
@@ -64,36 +67,14 @@ export function QuestIcon({
     return () => window.clearInterval(timer)
   }, [carouselUrls.length, isCarousel])
 
-  useEffect(() => {
-    if (!exportSrc || isCarousel) return undefined
-
-    let cancelled = false
-    void loadTextureAnimation(exportSrc).then((meta) => {
-      if (cancelled || !meta || meta.frameCount <= 1) return
-      setAnimation(meta)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [exportSrc, isCarousel])
-
   const shapeClass = shape ? `quest-icon--shape-${shape}` : ''
   const classes = [
     'quest-icon',
+    variant === 'tile' ? 'quest-icon--tile' : '',
     shapeClass,
     selected ? 'is-selected' : '',
     className,
   ].filter(Boolean).join(' ')
-
-  const animationStyle = animation && exportSrc && !isCarousel
-    ? {
-        backgroundImage: `url(${exportSrc})`,
-        backgroundSize: `100% ${animation.frameCount * 100}%`,
-        animationDuration: `${(animation.frametime * animation.frameCount) / 20}s`,
-        ['--quest-texture-frames' as string]: animation.frameCount,
-      }
-    : undefined
 
   const handleImageError = () => {
     if (isCarousel) return
@@ -104,8 +85,14 @@ export function QuestIcon({
     setFailed(true)
   }
 
+  const tooltipText = tooltip !== undefined ? (tooltip || undefined) : icon
+
   return (
-    <span className={classes} style={{ width: size, height: size }} title={icon}>
+    <span
+      className={classes}
+      style={{ width: size, height: size }}
+      title={tooltipText}
+    >
       {failed ? (
         <span className="quest-icon__inner">
           <span className="quest-icon__fallback" aria-hidden="true">{fallback}</span>
@@ -125,7 +112,7 @@ export function QuestIcon({
           ))}
         </span>
       ) : null}
-      {!failed && !isCarousel && exportSrc && !animation ? (
+      {!failed && !isCarousel && exportSrc ? (
         <span className="quest-icon__inner">
           <img
             className="quest-icon__img"
@@ -134,15 +121,6 @@ export function QuestIcon({
             decoding="async"
             draggable={false}
             onError={handleImageError}
-          />
-        </span>
-      ) : null}
-      {!failed && !isCarousel && exportSrc && animation ? (
-        <span className="quest-icon__inner">
-          <span
-            className="quest-icon__animated"
-            style={animationStyle}
-            aria-hidden="true"
           />
         </span>
       ) : null}
