@@ -713,6 +713,18 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   outline: none;
 }
 
+.quest-detail__tag-link {
+  color: var(--tfg-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.quest-detail__tag-link:hover,
+.quest-detail__tag-link:focus-visible {
+  color: var(--tfg-link-hover);
+  outline: none;
+}
+
 .quest-detail__placeholder {
   color: var(--muted);
 }

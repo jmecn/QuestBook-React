@@ -3,6 +3,8 @@ export interface QuestTask {
   type: string
   title?: string
   items?: string[]
+  /** {@code ftbfiltersystem:smart_filter} expression when task accepts a tag/filter, not one item. */
+  filterRaw?: string
   toObserve?: string
   dimension?: string
 }

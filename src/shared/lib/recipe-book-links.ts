@@ -26,3 +26,11 @@ export function recipeBookItemUrl(locale: string, itemId: string, base: string):
   url.searchParams.set('item', itemId.toLowerCase())
   return url.href
 }
+
+export function recipeBookTagUrl(locale: string, tagId: string, base: string): string {
+  const url = new URL(base)
+  url.searchParams.set('lang', locale)
+  const bare = tagId.startsWith('#') ? tagId.slice(1) : tagId
+  url.searchParams.set('tag', bare)
+  return url.href
+}

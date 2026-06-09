@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { resolveItemDisplayName } from '@/shared/lib/item-display-name'
+import { extractFilterTagIds, taskDisplayItemIds } from '@/shared/lib/quest-task-items'
 import { QuestItemRow } from '@/shared/ui/QuestItemRow'
+import { QuestTagLinkedText } from '@/shared/ui/QuestTagLinkedText'
 import type { QuestReward, QuestTask } from '@/shared/types/quest'
 import { resolveQuestText } from '@/shared/lib/quest-text'
 import { formatRewardLabel } from '@/shared/lib/reward-text'
@@ -32,7 +34,14 @@ function TaskTitle({
     }
   }, [dict, locale, task.title, task.toObserve])
 
-  return <span>{label}</span>
+  const filterTagIds = useMemo(
+    () => (task.filterRaw ? extractFilterTagIds(task.filterRaw) : []),
+    [task.filterRaw],
+  )
+
+  return (
+    <QuestTagLinkedText text={label} locale={locale} extraTagIds={filterTagIds} />
+  )
 }
 
 function TaskRow({
@@ -45,12 +54,12 @@ function TaskRow({
   locale: string
 }) {
   const title = resolveQuestText(dict, task.title)
-  const items = task.items ?? []
+  const displayItems = taskDisplayItemIds(task)
 
-  if (task.type === 'item' && items.length > 0) {
+  if (task.type === 'item' && displayItems.length > 0) {
     return (
       <span className="quest-task-items">
-        {items.map((itemId) => (
+        {displayItems.map((itemId) => (
           <TaskItemLabel key={`${task.id}:${itemId}`} itemId={itemId} locale={locale} />
         ))}
       </span>
