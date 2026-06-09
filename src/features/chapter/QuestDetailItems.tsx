@@ -49,11 +49,11 @@ function TaskRow({
 
   if (task.type === 'item' && items.length > 0) {
     return (
-      <>
+      <span className="quest-task-items">
         {items.map((itemId) => (
           <TaskItemLabel key={`${task.id}:${itemId}`} itemId={itemId} locale={locale} />
         ))}
-      </>
+      </span>
     )
   }
 
@@ -112,7 +112,7 @@ function RewardRow({
 
   if (reward.type === 'item' && reward.items?.length) {
     return (
-      <>
+      <span className="quest-task-items">
         {reward.items.map((itemId, index) => (
           <QuestItemRow
             key={`${reward.id}:${itemId}`}
@@ -122,7 +122,7 @@ function RewardRow({
             locale={locale}
           />
         ))}
-      </>
+      </span>
     )
   }
 

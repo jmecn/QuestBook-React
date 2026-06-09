@@ -1,10 +1,11 @@
-import { loadItemsLangLabels, loadLangDict } from '@/shared/lib/quest-export'
+import { loadItemNameKeys, loadItemsLangLabels, loadLangDict } from '@/shared/lib/quest-export'
 import { itemLookupKeys, normalizeRegistryId } from '@/shared/lib/registry-lang-keys'
 import { stripColorCodes } from '@/shared/lib/quest-text'
 
 const nameCache = new Map<string, string>()
 const langCache = new Map<string, Record<string, string>>()
 const itemsLangCache = new Map<string, Record<string, string> | null>()
+const nameKeysCache: { value: Record<string, string> | null } = { value: null }
 
 function stripRegistryIdFallback(itemId: string): string {
   const bare = normalizeRegistryId(itemId)
@@ -34,6 +35,13 @@ async function itemsLangFor(locale: string): Promise<Record<string, string> | nu
   return labels
 }
 
+async function nameKeysFor(): Promise<Record<string, string>> {
+  if (nameKeysCache.value) return nameKeysCache.value
+  const keys = await loadItemNameKeys()
+  nameKeysCache.value = keys
+  return keys
+}
+
 function resolveFromLangDict(dict: Record<string, string>, itemId: string): string | null {
   const bare = normalizeRegistryId(itemId)
   for (const key of itemLookupKeys(bare)) {
@@ -43,6 +51,27 @@ function resolveFromLangDict(dict: Record<string, string>, itemId: string): stri
     }
   }
   return null
+}
+
+function resolveFromNameKey(
+  dict: Record<string, string>,
+  nameKeys: Record<string, string>,
+  itemId: string,
+): string | null {
+  const bare = normalizeRegistryId(itemId)
+  const descriptionKey = nameKeys[bare]
+  if (descriptionKey) {
+    const fromKey = dict[descriptionKey]
+    if (fromKey && fromKey !== descriptionKey) {
+      return stripColorCodes(fromKey)
+    }
+  }
+  return resolveFromLangDict(dict, itemId)
+}
+
+function isUnresolvedLabel(label: string, itemId: string): boolean {
+  const bare = normalizeRegistryId(itemId)
+  return label === itemId || label === bare
 }
 
 /** Human-readable item label: items-lang, then closure lang (item → block → fluid), then id fallback. */
@@ -55,18 +84,20 @@ export async function resolveItemDisplayName(
   if (cached) return cached
 
   try {
-    const itemsLang = await itemsLangFor(locale)
     const bare = normalizeRegistryId(itemId)
+    const dict = await langDictFor(locale)
+    const nameKeys = await nameKeysFor()
+
+    const itemsLang = await itemsLangFor(locale)
     const fromItemsLang = itemsLang?.[bare] ?? itemsLang?.[itemId]
-    if (fromItemsLang) {
+    if (fromItemsLang && !isUnresolvedLabel(fromItemsLang, itemId)) {
       const resolved = stripColorCodes(fromItemsLang)
       nameCache.set(key, resolved)
       return resolved
     }
 
-    const dict = await langDictFor(locale)
-    const fromLang = resolveFromLangDict(dict, itemId)
-    const resolved = fromLang ?? stripRegistryIdFallback(itemId)
+    const fromNameKey = resolveFromNameKey(dict, nameKeys, itemId)
+    const resolved = fromNameKey ?? stripRegistryIdFallback(itemId)
     nameCache.set(key, resolved)
     return resolved
   } catch {

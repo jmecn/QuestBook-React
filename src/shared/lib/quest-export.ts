@@ -54,3 +54,15 @@ export async function loadItemsLangLabels(
   }
   return labels
 }
+
+export interface ItemNameKeysPayload {
+  items?: Record<string, string>
+}
+
+/** Registry id → in-game description lang key ({@code items/name-keys.json}). */
+export async function loadItemNameKeys(): Promise<Record<string, string>> {
+  const res = await fetch(questExportUrl('items/name-keys.json'))
+  if (!res.ok) return {}
+  const data = (await res.json()) as ItemNameKeysPayload
+  return data.items ?? {}
+}

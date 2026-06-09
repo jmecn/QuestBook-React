@@ -4,7 +4,10 @@
  */
 
 export interface McTextStyle {
-  color?: string
+  /** Minecraft color code {@code 0-9a-f}; rendered via theme-aware CSS classes. */
+  mcColor?: string
+  /** Custom {@code &#RRGGBB} hex from FTB parser. */
+  hexColor?: string
   bold?: boolean
   italic?: boolean
   underline?: boolean
@@ -73,8 +76,9 @@ function cloneStyle(style: McTextStyle): McTextStyle {
 
 function applyFormattingCode(style: McTextStyle, code: string): McTextStyle {
   if (code === 'r') return {}
-  const color = MC_COLORS[code]
-  if (color) return { ...style, color }
+  if (MC_COLORS[code]) {
+    return { ...style, mcColor: code, hexColor: undefined }
+  }
   switch (code) {
     case 'k': return { ...style, obfuscated: true }
     case 'l': return { ...style, bold: true }
@@ -211,7 +215,7 @@ function parseRichTextInner(text: string, dict: Record<string, string>): RichTex
         if (hex.length !== 7 || !/^#[0-9a-fA-F]{6}$/.test(hex)) {
           throw new QuestRichTextFormatError('Invalid formatting! Expected &#RRGGBB hex color!')
         }
-        style = { ...style, color: hex }
+        style = { ...style, hexColor: hex, mcColor: undefined }
         i += 6
         continue
       }
@@ -260,7 +264,8 @@ function collapseRichText(nodes: RichTextNode[]): RichTextNode[] {
 }
 
 function stylesEqual(a: McTextStyle, b: McTextStyle): boolean {
-  return a.color === b.color
+  return a.mcColor === b.mcColor
+    && a.hexColor === b.hexColor
     && !!a.bold === !!b.bold
     && !!a.italic === !!b.italic
     && !!a.underline === !!b.underline

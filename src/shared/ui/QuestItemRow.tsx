@@ -8,18 +8,18 @@ export interface QuestItemRowProps {
   iconSize?: number
 }
 
+/** Icon-only task/reward chip; item name is shown on hover via {@code title}. */
 export function QuestItemRow({
   itemId,
   count,
   label,
   iconSize = 32,
 }: QuestItemRowProps) {
-  const countPrefix = count != null && count > 1 ? `${count}× ` : ''
+  const tooltip = count != null && count > 1 ? `${count}× ${label}` : label
 
   return (
-    <span className="quest-item-row">
-      <QuestIcon icon={itemId} size={iconSize} variant="tile" />
-      <span className="quest-item-row__label">{countPrefix}{label}</span>
+    <span className="quest-item-row" title={tooltip} aria-label={tooltip}>
+      <QuestIcon icon={itemId} size={iconSize} variant="tile" tooltip="" />
     </span>
   )
 }

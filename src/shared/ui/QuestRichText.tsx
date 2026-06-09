@@ -2,15 +2,20 @@ import type { CSSProperties, ReactNode } from 'react'
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 import type { McTextStyle, RichTextNode } from '@/shared/lib/quest-rich-text-parser'
 
+function mcStyleClasses(style: McTextStyle): string {
+  const classes: string[] = []
+  if (style.mcColor) classes.push(`quest-rich-text__mc-${style.mcColor}`)
+  if (style.bold) classes.push('quest-rich-text__bold')
+  if (style.italic) classes.push('quest-rich-text__italic')
+  if (style.underline) classes.push('quest-rich-text__underline')
+  if (style.strikethrough) classes.push('quest-rich-text__strike')
+  if (style.obfuscated) classes.push('quest-rich-text__obf')
+  return classes.join(' ')
+}
+
 function styleToCss(style: McTextStyle): CSSProperties {
   const css: CSSProperties = {}
-  if (style.color) css.color = style.color
-  if (style.bold) css.fontWeight = 700
-  if (style.italic) css.fontStyle = 'italic'
-  if (style.underline) css.textDecoration = 'underline'
-  if (style.strikethrough) {
-    css.textDecoration = style.underline ? 'underline line-through' : 'line-through'
-  }
+  if (style.hexColor) css.color = style.hexColor
   if (style.obfuscated) css.filter = 'blur(2px)'
   return css
 }
@@ -20,7 +25,11 @@ function renderNode(node: RichTextNode, key: string | number): ReactNode {
     case 'text':
       if (!node.text) return null
       return (
-        <span key={key} className="quest-rich-text__span" style={styleToCss(node.style)}>
+        <span
+          key={key}
+          className={['quest-rich-text__span', mcStyleClasses(node.style)].filter(Boolean).join(' ')}
+          style={styleToCss(node.style)}
+        >
           {node.text}
         </span>
       )

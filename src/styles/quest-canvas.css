@@ -630,8 +630,15 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 
 .quest-item-row {
   display: inline-flex;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.quest-task-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   align-items: center;
-  gap: 8px;
 }
 
 .quest-item-row .quest-icon {
@@ -696,6 +703,79 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-rich-text__error {
   color: #ff5555;
   font-weight: 600;
+}
+
+/* Minecraft color codes — dark theme matches in-game; light theme remaps low-contrast colors. */
+.quest-rich-text__mc-0 { color: #000000; }
+.quest-rich-text__mc-1 { color: #0000aa; }
+.quest-rich-text__mc-2 { color: #00aa00; }
+.quest-rich-text__mc-3 { color: #00aaaa; }
+.quest-rich-text__mc-4 { color: #aa0000; }
+.quest-rich-text__mc-5 { color: #aa00aa; }
+.quest-rich-text__mc-6 { color: #ffaa00; }
+.quest-rich-text__mc-7 { color: #aaaaaa; }
+.quest-rich-text__mc-8 { color: #555555; }
+.quest-rich-text__mc-9 { color: #5555ff; }
+.quest-rich-text__mc-a { color: #55ff55; }
+.quest-rich-text__mc-b { color: #55ffff; }
+.quest-rich-text__mc-c { color: #ff5555; }
+.quest-rich-text__mc-d { color: #ff55ff; }
+.quest-rich-text__mc-e { color: #ffff55; }
+.quest-rich-text__mc-f { color: #ffffff; }
+
+html[data-theme="light"] .quest-rich-text__mc-0,
+html[data-theme="light"] .quest-rich-text__mc-f {
+  color: var(--text);
+}
+
+html[data-theme="light"] .quest-rich-text__mc-7,
+html[data-theme="light"] .quest-rich-text__mc-8 {
+  color: var(--muted);
+}
+
+html[data-theme="light"] .quest-rich-text__mc-3 {
+  color: #007a7a;
+}
+
+html[data-theme="light"] .quest-rich-text__mc-b {
+  color: #008f8f;
+}
+
+html[data-theme="light"] .quest-rich-text__mc-a {
+  color: #2d8a2d;
+}
+
+html[data-theme="light"] .quest-rich-text__mc-e {
+  color: #9a7b00;
+}
+
+html[data-theme="dark"] .quest-rich-text__mc-0,
+html:not([data-theme]) .quest-rich-text__mc-0 {
+  color: #888888;
+}
+
+.quest-rich-text__bold {
+  font-weight: 700;
+}
+
+.quest-rich-text__italic {
+  font-style: italic;
+}
+
+.quest-rich-text__underline {
+  text-decoration: underline;
+}
+
+.quest-rich-text__strike {
+  text-decoration: line-through;
+}
+
+.quest-rich-text__underline.quest-rich-text__strike {
+  text-decoration: underline line-through;
+}
+
+.quest-rich-text__obf {
+  filter: blur(2px);
 }
 
 .quest-rich-text__link {
