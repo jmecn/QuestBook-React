@@ -1,17 +1,18 @@
-const LANG_KEY = /\{([^{}]+)}/g
+import { parseRichText, plainQuestText } from '@/shared/lib/quest-rich-text-parser'
 
+export { parseQuestDescription, parseRichText, plainQuestText, richTextToPlain } from '@/shared/lib/quest-rich-text-parser'
+export type { QuestDescriptionBlock, RichTextNode } from '@/shared/lib/quest-rich-text-parser'
+
+/** @deprecated Prefer {@link plainQuestText}; kept for callers that only need a plain string. */
 export function stripColorCodes(text: string): string {
-  return text.replace(/§./g, '')
+  return text.replace(/[&§]./g, '')
 }
 
 export function resolveQuestText(
   dict: Record<string, string>,
   raw: string | undefined | null,
 ): string {
-  if (!raw) return ''
-  return stripColorCodes(
-    raw.replace(LANG_KEY, (_, key: string) => dict[key] ?? `{${key}}`),
-  )
+  return plainQuestText(dict, raw)
 }
 
 export function resolveQuestLines(
@@ -31,6 +32,22 @@ export function resolveQuestLines(
       .join('\n')
   }
   return resolveQuestText(dict, raw)
+}
+
+/** Rich-text nodes for titles/subtitles that may contain {@code &} color codes. */
+export function resolveQuestRichText(
+  dict: Record<string, string>,
+  raw: string | undefined | null,
+) {
+  if (!raw) return []
+  const trimmed = raw.trim()
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    const key = trimmed.slice(1, -1)
+    if (dict[key] != null && !key.startsWith('image:') && key !== '@pagebreak') {
+      return parseRichText(dict[key], dict)
+    }
+  }
+  return parseRichText(raw, dict)
 }
 
 /** FTB Quests chapter grid: one unit = 24px at gridScale 1; smaller gridScale = coarser grid in editor. */

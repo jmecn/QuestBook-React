@@ -4,7 +4,8 @@ import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
 import { loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
-import { resolveQuestText } from '@/shared/lib/quest-text'
+import { resolveQuestText, resolveQuestRichText } from '@/shared/lib/quest-text'
+import { QuestRichText } from '@/shared/ui/QuestRichText'
 import type { ChapterGroup, ChapterSummary, QuestIndex } from '@/shared/types/quest'
 
 function groupChapters(
@@ -55,6 +56,13 @@ function chapterLabel(chapter: ChapterSummary, dict: Record<string, string>): st
   return resolveQuestText(dict, chapter.title) || chapter.filename
 }
 
+function chapterLabelNodes(chapter: ChapterSummary, dict: Record<string, string>) {
+  if (chapter.title) {
+    return resolveQuestRichText(dict, chapter.title)
+  }
+  return [{ type: 'text' as const, text: chapter.filename, style: {} }]
+}
+
 export function ChapterSidebar() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
@@ -102,14 +110,20 @@ export function ChapterSidebar() {
     return <aside className="chapter-sidebar"><p className="page-message">{t('loading')}</p></aside>
   }
 
-  const bookTitle = resolveQuestText(dict, index.title) || t('appTitle')
+  const bookTitlePlain = resolveQuestText(dict, index.title)
   const sections = groupChapters(index)
   const sidebarClass = collapsed ? 'chapter-sidebar is-collapsed' : 'chapter-sidebar'
 
   return (
     <aside className={sidebarClass} aria-label={t('chapters')}>
       <div className="chapter-sidebar__header">
-        <div className="chapter-sidebar__title">{bookTitle}</div>
+        <div className="chapter-sidebar__title">
+          {bookTitlePlain ? (
+            <QuestRichText nodes={resolveQuestRichText(dict, index.title)} />
+          ) : (
+            t('appTitle')
+          )}
+        </div>
         <button
           type="button"
           className="chapter-sidebar__toggle"
@@ -123,13 +137,15 @@ export function ChapterSidebar() {
       </div>
       <nav className="chapter-sidebar__nav">
         {sections.map(({ group, chapters }) => {
-          const groupTitle = group
+          const groupTitlePlain = group
             ? resolveQuestText(dict, group.title) || group.id
             : null
           return (
             <section key={group?.id ?? '_ungrouped'} className="chapter-sidebar__section">
-              {groupTitle ? (
-                <h2 className="chapter-sidebar__group">{groupTitle}</h2>
+              {groupTitlePlain && group ? (
+                <h2 className="chapter-sidebar__group">
+                  <QuestRichText nodes={resolveQuestRichText(dict, group.title)} />
+                </h2>
               ) : null}
               <ul className="chapter-sidebar__list">
                 {chapters.map((chapter) => {
@@ -145,7 +161,9 @@ export function ChapterSidebar() {
                         title={collapsed ? label : undefined}
                       >
                         <QuestIcon icon={chapter.icon} size={32} variant="tile" />
-                        <span className="chapter-sidebar__label">{label}</span>
+                        <span className="chapter-sidebar__label">
+                          <QuestRichText nodes={chapterLabelNodes(chapter, dict)} />
+                        </span>
                       </button>
                     </li>
                   )

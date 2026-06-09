@@ -4,8 +4,10 @@ import { QuestRewardListItem, QuestTaskListItem } from '@/features/chapter/Quest
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-catalog'
 import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
-import { resolveQuestLines, resolveQuestText } from '@/shared/lib/quest-text'
+import { resolveQuestRichText } from '@/shared/lib/quest-text'
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
+import { QuestDescription } from '@/shared/ui/QuestDescription'
+import { QuestRichText } from '@/shared/ui/QuestRichText'
 
 export interface QuestDetailPanelProps {
   quest: QuestData | null
@@ -100,6 +102,11 @@ export function QuestDetailPanel({
     locale,
   )
 
+  const subtitleNodes = useMemo(
+    () => (quest?.subtitle ? resolveQuestRichText(dict, quest.subtitle) : []),
+    [dict, quest?.subtitle],
+  )
+
   if (!quest) {
     return (
       <p className="quest-detail__placeholder">
@@ -113,15 +120,11 @@ export function QuestDetailPanel({
   return (
     <div className="quest-detail">
       <h2 id="quest-detail-title">{title}</h2>
-      {quest.subtitle ? (
-        <h3>{resolveQuestText(dict, quest.subtitle)}</h3>
+      {subtitleNodes.length > 0 ? (
+        <QuestRichText as="h3" className="quest-detail__subtitle" nodes={subtitleNodes} />
       ) : null}
       {quest.description ? (
-        <div className="quest-detail__description">
-          {resolveQuestLines(dict, quest.description).split('\n').map((line, index) => (
-            <p key={`${quest.id}-desc-${index}`}>{line}</p>
-          ))}
-        </div>
+        <QuestDescription dict={dict} description={quest.description} />
       ) : null}
 
       <section className="quest-detail__section">
