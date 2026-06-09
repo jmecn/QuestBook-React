@@ -429,7 +429,8 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   border-width: 3px;
 }
 
-.quest-icon--shape-heart {
+/* Legacy CSS fallback when FTB shape PNGs are unavailable in the export bundle. */
+.quest-icon--shape-heart:not(.quest-icon--ftb-shape) {
   border-radius: 0;
   clip-path: polygon(50% 92%, 6% 42%, 6% 22%, 26% 8%, 50% 26%, 74% 8%, 94% 22%, 94% 42%);
 }
@@ -494,17 +495,78 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Default circular chrome when shape PNGs are missing (fallback only). */
+.quest-icon:not(.quest-icon--ftb-shape):not(.quest-icon--tile) {
   border-radius: 50%;
   background: color-mix(in srgb, var(--panel) 85%, var(--bg));
   border: 2px solid var(--border);
   overflow: hidden;
-  flex-shrink: 0;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
-.quest-icon.is-selected {
+.quest-icon:not(.quest-icon--ftb-shape).is-selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/*
+ * FTB QuestShape layers (background + outline PNGs); item icon sits on top at 2/3 size,
+ * same as {@code QuestButton.draw} — not clipped by the shape mask.
+ */
+.quest-icon--ftb-shape {
+  position: relative;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.quest-icon--ftb-shape.is-selected {
+  border: none;
+  box-shadow: none;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+.quest-icon--ftb-shape .quest-icon__shape-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.quest-icon--ftb-shape .quest-icon__shape-bg {
+  z-index: 0;
+  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+}
+
+.quest-icon--ftb-shape .quest-icon__shape-outline {
+  z-index: 1;
+  background: color-mix(in srgb, var(--text) 22%, var(--muted));
+}
+
+.quest-icon--ftb-shape.is-selected .quest-icon__shape-bg {
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+}
+
+.quest-icon--ftb-shape.is-selected .quest-icon__shape-outline {
+  background: var(--accent);
+}
+
+.quest-icon--ftb-shape .quest-icon__inner {
+  position: relative;
+  z-index: 2;
 }
 
 /* Sidebar chapter icons and task list rows: plain 32×32 PNGs, no quest-node chrome. */
