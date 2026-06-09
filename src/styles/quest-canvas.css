@@ -629,9 +629,48 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 }
 
 .quest-item-row {
+  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   cursor: default;
+  text-decoration: none;
+  color: inherit;
+}
+
+.quest-item-row--link {
+  cursor: pointer;
+}
+
+.quest-item-row--link:hover .quest-icon,
+.quest-item-row--link:focus-visible .quest-icon {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.quest-item-tooltip {
+  position: fixed;
+  z-index: 10000;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text) 92%, transparent);
+  color: var(--bg);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  max-width: min(240px, calc(100vw - 16px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+.quest-item-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .quest-task-items {
