@@ -21,5 +21,10 @@
   "searchTitle": "Search quests",
   "searchLoading": "Loading search index…",
   "searchNoResults": "No quests matched your search.",
-  "searchIndexMissing": "(search index missing — re-export quest data)"
+  "searchIndexMissing": "(search index missing — re-export quest data)",
+  "navLinksAria": "External links",
+  "navWiki": "Wiki",
+  "navWikiAria": "Open TerraFirmaGreg Wiki",
+  "navDiscord": "Discord",
+  "navDiscordAria": "Join TerraFirmaGreg on Discord"
 }

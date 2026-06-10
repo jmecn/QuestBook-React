@@ -21,5 +21,10 @@
   "searchTitle": "搜索任务",
   "searchLoading": "正在加载搜索索引…",
   "searchNoResults": "没有匹配的任务。",
-  "searchIndexMissing": "（缺少 search-index，请重新导出任务数据）"
+  "searchIndexMissing": "（缺少 search-index，请重新导出任务数据）",
+  "navLinksAria": "外部链接",
+  "navWiki": "Wiki",
+  "navWikiAria": "打开 TerraFirmaGreg Wiki",
+  "navDiscord": "Discord",
+  "navDiscordAria": "加入 TerraFirmaGreg Discord"
 }

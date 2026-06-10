@@ -42,6 +42,9 @@ function MoonIcon() {
   )
 }
 
+const WIKI_URL = 'https://wiki.terrafirmagreg.team/'
+const DISCORD_URL = 'https://discord.com/invite/AEaCzCTUwQ'
+
 export function SiteHeader() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -89,6 +92,27 @@ export function SiteHeader() {
         </div>
 
         <div className="site-header-actions">
+          <nav className="header-nav-links" aria-label={t('navLinksAria')}>
+            <a
+              className="header-nav-link"
+              href={WIKI_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t('navWikiAria')}
+            >
+              {t('navWiki')}
+            </a>
+            <a
+              className="header-nav-link"
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t('navDiscordAria')}
+            >
+              {t('navDiscord')}
+            </a>
+          </nav>
+
           <label className="header-control header-control--locale">
             <span className="header-control-label">{t('labelLang')}</span>
             <select
