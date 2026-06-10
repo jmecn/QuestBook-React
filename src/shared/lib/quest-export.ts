@@ -9,10 +9,15 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export async function loadSiteConfig(): Promise<{ recipeBookBaseUrl?: string }> {
+export interface SiteConfig {
+  recipeBookBaseUrl?: string
+  fieldGuideBaseUrl?: string
+}
+
+export async function loadSiteConfig(): Promise<SiteConfig> {
   const res = await fetch(siteUrl('site-config.json'))
   if (!res.ok) return {}
-  return res.json() as Promise<{ recipeBookBaseUrl?: string }>
+  return res.json() as Promise<SiteConfig>
 }
 
 export async function loadQuestIndex(): Promise<QuestIndex> {

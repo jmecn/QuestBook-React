@@ -48,10 +48,12 @@ function TaskRow({
   task,
   dict,
   locale,
+  iconSize = 32,
 }: {
   task: QuestTask
   dict: Record<string, string>
   locale: string
+  iconSize?: number
 }) {
   const title = resolveQuestText(dict, task.title)
   const displayItems = taskDisplayItemIds(task)
@@ -60,7 +62,12 @@ function TaskRow({
     return (
       <span className="quest-task-items">
         {displayItems.map((itemId) => (
-          <TaskItemLabel key={`${task.id}:${itemId}`} itemId={itemId} locale={locale} />
+          <TaskItemLabel
+            key={`${task.id}:${itemId}`}
+            itemId={itemId}
+            locale={locale}
+            iconSize={iconSize}
+          />
         ))}
       </span>
     )
@@ -77,7 +84,15 @@ function TaskRow({
   return <span>{task.type}</span>
 }
 
-function TaskItemLabel({ itemId, locale }: { itemId: string; locale: string }) {
+function TaskItemLabel({
+  itemId,
+  locale,
+  iconSize = 32,
+}: {
+  itemId: string
+  locale: string
+  iconSize?: number
+}) {
   const [label, setLabel] = useState(itemId)
 
   useEffect(() => {
@@ -90,15 +105,17 @@ function TaskItemLabel({ itemId, locale }: { itemId: string; locale: string }) {
     }
   }, [itemId, locale])
 
-  return <QuestItemRow itemId={itemId} label={label} locale={locale} />
+  return <QuestItemRow itemId={itemId} label={label} locale={locale} iconSize={iconSize} />
 }
 
 function RewardRow({
   reward,
   locale,
+  iconSize = 32,
 }: {
   reward: QuestReward
   locale: string
+  iconSize?: number
 }) {
   const [labels, setLabels] = useState<string[]>([])
 
@@ -129,6 +146,7 @@ function RewardRow({
             count={reward.count}
             label={labels[index] ?? itemId}
             locale={locale}
+            iconSize={iconSize}
           />
         ))}
       </span>
@@ -142,14 +160,16 @@ export function QuestTaskListItem({
   task,
   dict,
   locale,
+  iconSize = 32,
 }: {
   task: QuestTask
   dict: Record<string, string>
   locale: string
+  iconSize?: number
 }) {
   return (
-    <li>
-      <TaskRow task={task} dict={dict} locale={locale} />
+    <li className="quest-detail__task">
+      <TaskRow task={task} dict={dict} locale={locale} iconSize={iconSize} />
     </li>
   )
 }
@@ -157,13 +177,15 @@ export function QuestTaskListItem({
 export function QuestRewardListItem({
   reward,
   locale,
+  iconSize = 32,
 }: {
   reward: QuestReward
   locale: string
+  iconSize?: number
 }) {
   return (
-    <li>
-      <RewardRow reward={reward} locale={locale} />
+    <li className="quest-detail__task">
+      <RewardRow reward={reward} locale={locale} iconSize={iconSize} />
     </li>
   )
 }

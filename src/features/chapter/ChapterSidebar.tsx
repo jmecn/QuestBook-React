@@ -6,18 +6,26 @@ import { QuestIcon } from '@/shared/ui/QuestIcon'
 import { loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
 import { resolveQuestText, resolveQuestRichText } from '@/shared/lib/quest-text'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
+import { DEFAULT_CHAPTER_GROUP_ID } from '@/shared/lib/chapter-image-style'
 import type { ChapterGroup, ChapterSummary, QuestIndex } from '@/shared/types/quest'
+
+function sortChaptersInGroup(chapters: ChapterSummary[]): ChapterSummary[] {
+  return [...chapters].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+}
+
+function sidebarGroupLabel(group: ChapterGroup): ChapterGroup | null {
+  return group.id === DEFAULT_CHAPTER_GROUP_ID ? null : group
+}
 
 function groupChapters(
   index: QuestIndex,
 ): Array<{ group: ChapterGroup | null; chapters: ChapterSummary[] }> {
-  const chapters = [...(index.chapters ?? [])].sort(
+  const groups = [...(index.chapterGroups ?? [])].sort(
     (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0),
   )
-  const groups = index.chapterGroups ?? []
   const grouped = new Map<string | null, ChapterSummary[]>()
 
-  for (const chapter of chapters) {
+  for (const chapter of index.chapters ?? []) {
     const key = chapter.group ?? null
     const list = grouped.get(key) ?? []
     list.push(chapter)
@@ -25,7 +33,7 @@ function groupChapters(
   }
 
   if (groups.length === 0) {
-    return [{ group: null, chapters }]
+    return [{ group: null, chapters: sortChaptersInGroup(index.chapters ?? []) }]
   }
 
   const sections: Array<{ group: ChapterGroup | null; chapters: ChapterSummary[] }> = []
@@ -35,21 +43,29 @@ function groupChapters(
     const list = grouped.get(group.id)
     if (!list?.length) continue
     used.add(group.id)
-    sections.push({ group, chapters: list })
+    sections.push({
+      group: sidebarGroupLabel(group),
+      chapters: sortChaptersInGroup(list),
+    })
   }
 
   const ungrouped = grouped.get(null)
   if (ungrouped?.length) {
-    sections.unshift({ group: null, chapters: ungrouped })
+    sections.unshift({ group: null, chapters: sortChaptersInGroup(ungrouped) })
   }
 
   for (const [groupId, list] of grouped) {
     if (groupId && !used.has(groupId) && list.length) {
-      sections.push({ group: { id: groupId, title: groupId }, chapters: list })
+      sections.push({
+        group: { id: groupId, title: groupId },
+        chapters: sortChaptersInGroup(list),
+      })
     }
   }
 
-  return sections.length > 0 ? sections : [{ group: null, chapters }]
+  return sections.length > 0
+    ? sections
+    : [{ group: null, chapters: sortChaptersInGroup(index.chapters ?? []) }]
 }
 
 function chapterLabel(chapter: ChapterSummary, dict: Record<string, string>): string {

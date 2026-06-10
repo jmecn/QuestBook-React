@@ -40,7 +40,7 @@ export function ChapterPage() {
   const [dict, setDict] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
 
-  const { layoutEpoch, sidebarCollapsed } = useBookLayout()
+  const { layoutEpoch, sidebarCollapsed, setSidebarCollapsed } = useBookLayout()
   const drawerRef = useRef<HTMLElement>(null)
   const [drawerInset, setDrawerInset] = useState(0)
 
@@ -112,6 +112,9 @@ export function ChapterPage() {
     : null
 
   const onSelectQuest = (id: string) => {
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      setSidebarCollapsed(true)
+    }
     setSelectedId(id)
     window.location.hash = `quest=${encodeURIComponent(id)}`
   }
@@ -142,13 +145,17 @@ export function ChapterPage() {
       return undefined
     }
 
-    setDrawerInset(questDrawerInsetPx(window.innerWidth))
-
     const measure = () => {
+      if (window.innerWidth <= 900) {
+        setDrawerInset(0)
+        return
+      }
       const width = drawerRef.current?.getBoundingClientRect().width
       if (width && width > 0) {
         setDrawerInset(width)
+        return
       }
+      setDrawerInset(questDrawerInsetPx(window.innerWidth))
     }
 
     measure()

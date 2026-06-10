@@ -1,6 +1,6 @@
 import { questExportUrl } from '@/shared/lib/site-base'
 
-/** Placeholder item written by MWE when icon render fails. */
+/** Placeholder item written by ftb-quest-export when icon render fails. */
 export const QUEST_MISSING_ITEM_ICON = 'minecraft_web_export:missing_icon'
 
 function splitRef(ref: string): { namespace: string; path: string } | null {

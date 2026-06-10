@@ -322,7 +322,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 }
 
 .chapter-detail {
-  flex: 0 0 min(360px, 34vw);
+  flex: 0 0 min(480px, 32vw);
   min-height: 0;
   border-left: 1px solid var(--border);
   background: var(--panel);
@@ -337,9 +337,20 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   bottom: 0;
   z-index: 20;
   flex: none;
-  width: min(360px, 34vw);
+  display: flex;
+  flex-direction: column;
+  width: min(480px, 32vw);
+  overflow: hidden;
   box-shadow: var(--tfg-shadow, -8px 0 24px rgba(0, 0, 0, 0.18));
   animation: chapter-detail-enter var(--quest-layout-transition-ms, 450ms) ease-in-out;
+}
+
+.chapter-detail--drawer .quest-detail {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 @keyframes chapter-detail-enter {
@@ -435,10 +446,50 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   clip-path: polygon(50% 92%, 6% 42%, 6% 22%, 26% 8%, 50% 26%, 74% 8%, 94% 22%, 94% 42%);
 }
 
-.quest-chapter-image {
+.quest-chapter-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   pointer-events: none;
-  object-fit: contain;
   user-select: none;
+}
+
+.quest-chapter-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.quest-chapter-image--fill {
+  object-fit: fill;
+}
+
+.quest-chapter-image__tint {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.quest-chapter-image__sprite {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: var(--chapter-sprite-fw) calc(var(--chapter-sprite-fh) * (var(--chapter-sprite-frames) + 1));
+  animation: quest-chapter-sprite var(--chapter-sprite-duration) steps(var(--chapter-sprite-frames)) infinite;
+}
+
+@keyframes quest-chapter-sprite {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 var(--chapter-sprite-shift);
+  }
 }
 
 .quest-flow-node {
@@ -604,8 +655,38 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   color: var(--muted);
 }
 
+.quest-detail__objectives {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-top: 0.65rem;
+  flex-shrink: 0;
+}
+
+.quest-detail__panel h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.quest-detail__body {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.75rem;
+  overflow-y: auto;
+  flex-shrink: 1;
+}
+
 .quest-detail__section {
-  margin-top: 1rem;
+  margin-top: 0.85rem;
+  flex-shrink: 0;
+}
+
+.quest-detail__section--secondary {
+  margin-top: 0.65rem;
 }
 
 .quest-detail__section h4 {
@@ -626,6 +707,18 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-detail__list li,
 .quest-detail__links li {
   margin: 0.35rem 0;
+}
+
+.quest-detail__list--compact li,
+.quest-detail__list--compact .quest-detail__task {
+  margin: 2px 0;
+}
+
+.quest-detail__list--compact .quest-task-items {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 2px;
+  align-items: start;
 }
 
 .quest-item-row {
@@ -723,6 +816,21 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-detail__tag-link:focus-visible {
   color: var(--tfg-link-hover);
   outline: none;
+}
+
+.quest-detail__guide-link {
+  margin: 0.75rem 0 0;
+  text-align: center;
+}
+
+.quest-detail__guide-link a {
+  color: var(--tfg-link);
+  text-decoration: none;
+}
+
+.quest-detail__guide-link a:hover {
+  color: var(--tfg-link-hover);
+  text-decoration: underline;
 }
 
 .quest-detail__placeholder {
@@ -911,6 +1019,10 @@ html:not([data-theme]) .quest-rich-text__mc-0 {
 }
 
 @media (max-width: 900px) {
+  .book-body:has(.chapter-detail--drawer) .chapter-sidebar {
+    display: none;
+  }
+
   .chapter-sidebar {
     flex-basis: 200px;
   }
@@ -919,7 +1031,13 @@ html:not([data-theme]) .quest-rich-text__mc-0 {
     flex-basis: 52px;
   }
 
+  .quest-detail__objectives {
+    grid-template-columns: 1fr;
+  }
+
   .chapter-detail--drawer {
-    width: min(360px, 92vw);
+    width: 100%;
+    max-width: none;
+    border-left: none;
   }
 }

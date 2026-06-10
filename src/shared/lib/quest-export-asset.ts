@@ -12,7 +12,7 @@ function splitRef(ref: string): { namespace: string; path: string } | null {
  * Resolve closure PNG URLs under {@code quest-export/assets/}.
  *
  * Registry item ids use per-item PNGs under {@code assets/icons/items/} (see {@code quest-item-icon.ts}).
- * Closure texture paths resolve to model-exported PNGs below.
+ * Closure texture paths resolve to copied PNGs under {@code assets/<ns>/textures/}.
  */
 export function questExportTextureCandidates(ref?: string): string[] {
   if (!ref) return []

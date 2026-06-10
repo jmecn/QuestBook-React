@@ -20,6 +20,14 @@ import {
   type NodeProps,
 } from '@xyflow/react'
 import { QuestDependencyEdge } from '@/features/chapter/QuestDependencyEdge'
+import {
+  chapterImageLayout,
+  chapterImageOpacity,
+  chapterImageRgb,
+  chapterImageSpriteVars,
+  chapterImageTransformOrigin,
+  sortedChapterImages,
+} from '@/shared/lib/chapter-image-style'
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 import { sidebarMapWidthDelta } from '@/shared/lib/viewport-inset'
 import { questIconPx } from '@/shared/lib/quest-node-size'
@@ -39,8 +47,8 @@ const QUEST_EDGE_OPTIONS: DefaultEdgeOptions = {
   className: 'quest-flow-edge',
 }
 
-/** React Flow zoom treated as 100% in the quest map UI. */
-const QUEST_ZOOM_BASE = 2
+/** React Flow zoom at 100% — one FTB grid unit matches game-sized quest nodes on screen. */
+const QUEST_ZOOM_BASE = 1
 
 const FOCUS_ANIMATION_MS = 450
 
@@ -128,29 +136,64 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
   const { image, gridScale } = data
   const candidates = useMemo(() => questExportTextureCandidates(image.image), [image.image])
   const [index, setIndex] = useState(0)
-  const width = gridToPx(image.width, gridScale)
-  const height = gridToPx(image.height, gridScale)
+  const { widthPx, heightPx } = useMemo(
+    () => chapterImageLayout(image, gridScale),
+    [gridScale, image],
+  )
   const src = candidates[index]
+  const opacity = chapterImageOpacity(image.alpha)
+  const tint = chapterImageRgb(image.color)
+  const spriteVars = chapterImageSpriteVars(image)
+  const animated = spriteVars != null
+
+  useEffect(() => {
+    setIndex(0)
+  }, [image.image])
 
   if (!src) return null
 
+  const rotation = image.rotation ?? 0
+  const transformOrigin = chapterImageTransformOrigin(image.alignToCorner)
+
   return (
-    <img
-      className="quest-chapter-image"
-      src={src}
-      alt=""
-      draggable={false}
+    <div
+      className="quest-chapter-image-wrap"
       style={{
-        width,
-        height,
-        transform: `rotate(${image.rotation ?? 0}deg)`,
+        width: widthPx,
+        height: heightPx,
+        opacity,
+        transform: rotation ? `rotate(${rotation}deg)` : undefined,
+        transformOrigin,
       }}
-      onError={() => {
-        if (index + 1 < candidates.length) {
-          setIndex((value) => value + 1)
-        }
-      }}
-    />
+    >
+      {animated ? (
+        <div
+          className="quest-chapter-image__sprite"
+          style={{ ...spriteVars, backgroundImage: `url("${src}")` }}
+          role="img"
+          aria-hidden="true"
+        />
+      ) : (
+        <img
+          className="quest-chapter-image quest-chapter-image--fill"
+          src={src}
+          alt=""
+          draggable={false}
+          onError={() => {
+            if (index + 1 < candidates.length) {
+              setIndex((value) => value + 1)
+            }
+          }}
+        />
+      )}
+      {tint ? (
+        <div
+          className="quest-chapter-image__tint"
+          style={{ backgroundColor: `rgb(${tint.r}, ${tint.g}, ${tint.b})` }}
+          aria-hidden="true"
+        />
+      ) : null}
+    </div>
   )
 }
 
@@ -158,7 +201,7 @@ const nodeTypes = { quest: QuestNodeComponent, chapterImage: ChapterImageNode }
 const edgeTypes = { questDependency: QuestDependencyEdge }
 
 function FitViewOnChapterChange({ depKey }: { depKey: string }) {
-  const { fitView, getZoom, getViewport, setViewport } = useReactFlow()
+  const { fitView } = useReactFlow()
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       void fitView({
@@ -166,14 +209,10 @@ function FitViewOnChapterChange({ depKey }: { depKey: string }) {
         maxZoom: QUEST_ZOOM_BASE,
         minZoom: displayPercentToZoom(ZOOM_PRESET_PERCENTS[0]),
         duration: 0,
-      }).then(() => {
-        if (getZoom() < QUEST_ZOOM_BASE) {
-          setViewport({ ...getViewport(), zoom: QUEST_ZOOM_BASE })
-        }
       })
     })
     return () => cancelAnimationFrame(id)
-  }, [depKey, fitView, getZoom, getViewport, setViewport])
+  }, [depKey, fitView])
   return null
 }
 
@@ -359,17 +398,22 @@ function chapterToFlow(
     chapter.quests.filter(isQuestVisibleOnMap).map((quest) => quest.id),
   )
 
-  for (const image of chapter.images ?? []) {
+  for (const image of sortedChapterImages(chapter.images)) {
+    const layout = chapterImageLayout(image, gridScale)
     nodes.push({
-      id: `image:${image.image}:${image.x}:${image.y}`,
+      id: `image:${image.image}:${image.x}:${image.y}:${image.order ?? 0}`,
       type: 'chapterImage',
-      position: { x: gridToPx(image.x, gridScale), y: gridToPx(image.y, gridScale) },
+      position: { x: layout.x, y: layout.y },
       data: { image, gridScale },
       selectable: false,
       draggable: false,
       focusable: false,
-      style: { pointerEvents: 'none' },
-      zIndex: -100,
+      style: {
+        pointerEvents: 'none',
+        width: layout.widthPx,
+        height: layout.heightPx,
+      },
+      zIndex: -100 + (image.order ?? 0),
     })
   }
 

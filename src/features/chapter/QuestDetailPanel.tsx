@@ -1,11 +1,12 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { QuestRichTextNavigationProvider } from '@/app/context/QuestRichTextNavigationContext'
 import { QuestRewardListItem, QuestTaskListItem } from '@/features/chapter/QuestDetailItems'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-catalog'
 import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
-import { resolveQuestRichText } from '@/shared/lib/quest-text'
+import { fieldGuidePageUrl, fieldGuideSiteBase } from '@/shared/lib/field-guide-links'
+import { resolveQuestRichText, resolveQuestText } from '@/shared/lib/quest-text'
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
 import { QuestDescription } from '@/shared/ui/QuestDescription'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
@@ -18,6 +19,9 @@ export interface QuestDetailPanelProps {
   locale: string
   onNavigateQuest: (chapterFilename: string, questId: string) => void
 }
+
+const DETAIL_ICON_SIZE = 24
+const GUIDE_LINK_LANG_KEY = 'ftbquests.gui.open_in_guide'
 
 function QuestLinkButton({
   entry,
@@ -42,6 +46,44 @@ function QuestLinkButton({
         {label}
       </button>
     </li>
+  )
+}
+
+function QuestGuidePageLink({
+  guidePage,
+  locale,
+  dict,
+}: {
+  guidePage: string
+  locale: string
+  dict: Record<string, string>
+}) {
+  const [href, setHref] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const base = await fieldGuideSiteBase()
+      if (!base || cancelled) return
+      setHref(fieldGuidePageUrl(base, locale, guidePage))
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [guidePage, locale])
+
+  if (!href) {
+    return null
+  }
+
+  const label = resolveQuestText(dict, GUIDE_LINK_LANG_KEY) || 'Click here to read more...'
+
+  return (
+    <p className="quest-detail__guide-link">
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {label}
+      </a>
+    </p>
   )
 }
 
@@ -117,49 +159,72 @@ export function QuestDetailPanel({
   }
 
   const rewards = quest.rewards ?? []
+  const tasks = quest.tasks ?? []
+  const hasBody = subtitleNodes.length > 0 || Boolean(quest.description) || Boolean(quest.guidePage)
 
   return (
     <div className="quest-detail">
       <h2 id="quest-detail-title">{title}</h2>
-      {subtitleNodes.length > 0 ? (
-        <QuestRichText as="h3" className="quest-detail__subtitle" nodes={subtitleNodes} />
+
+      <div className="quest-detail__objectives">
+        <section className="quest-detail__panel quest-detail__panel--tasks">
+          <h4>{t('detailTasks')}</h4>
+          {tasks.length > 0 ? (
+            <ul className="quest-detail__list quest-detail__list--compact">
+              {tasks.map((task) => (
+                <QuestTaskListItem
+                  key={task.id}
+                  task={task}
+                  dict={dict}
+                  locale={locale}
+                  iconSize={DETAIL_ICON_SIZE}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="quest-detail__none">{t('detailNone')}</p>
+          )}
+        </section>
+
+        <section className="quest-detail__panel quest-detail__panel--rewards">
+          <h4>{t('detailRewards')}</h4>
+          {rewards.length > 0 ? (
+            <ul className="quest-detail__list quest-detail__list--compact">
+              {rewards.map((reward) => (
+                <QuestRewardListItem
+                  key={reward.id}
+                  reward={reward}
+                  locale={locale}
+                  iconSize={DETAIL_ICON_SIZE}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="quest-detail__none">{t('detailNone')}</p>
+          )}
+        </section>
+      </div>
+
+      {hasBody ? (
+        <div className="quest-detail__body">
+          {subtitleNodes.length > 0 ? (
+            <QuestRichText as="h3" className="quest-detail__subtitle" nodes={subtitleNodes} />
+          ) : null}
+          {quest.description ? (
+            <QuestRichTextNavigationProvider
+              catalog={catalog}
+              onNavigateQuest={onNavigateQuest}
+            >
+              <QuestDescription dict={dict} description={quest.description} />
+            </QuestRichTextNavigationProvider>
+          ) : null}
+          {quest.guidePage ? (
+            <QuestGuidePageLink guidePage={quest.guidePage} locale={locale} dict={dict} />
+          ) : null}
+        </div>
       ) : null}
-      {quest.description ? (
-        <QuestRichTextNavigationProvider
-          catalog={catalog}
-          onNavigateQuest={onNavigateQuest}
-        >
-          <QuestDescription dict={dict} description={quest.description} />
-        </QuestRichTextNavigationProvider>
-      ) : null}
 
-      <section className="quest-detail__section">
-        <h4>{t('detailTasks')}</h4>
-        {quest.tasks && quest.tasks.length > 0 ? (
-          <ul className="quest-detail__list">
-            {quest.tasks.map((task) => (
-              <QuestTaskListItem key={task.id} task={task} dict={dict} locale={locale} />
-            ))}
-          </ul>
-        ) : (
-          <p className="quest-detail__none">{t('detailNone')}</p>
-        )}
-      </section>
-
-      <section className="quest-detail__section">
-        <h4>{t('detailRewards')}</h4>
-        {rewards.length > 0 ? (
-          <ul className="quest-detail__list">
-            {rewards.map((reward) => (
-              <QuestRewardListItem key={reward.id} reward={reward} locale={locale} />
-            ))}
-          </ul>
-        ) : (
-          <p className="quest-detail__none">{t('detailNone')}</p>
-        )}
-      </section>
-
-      <section className="quest-detail__section">
+      <section className="quest-detail__section quest-detail__section--secondary">
         <h4>{t('detailPrerequisites')}</h4>
         <QuestLinkList
           entries={prerequisites}
@@ -169,7 +234,7 @@ export function QuestDetailPanel({
         />
       </section>
 
-      <section className="quest-detail__section">
+      <section className="quest-detail__section quest-detail__section--secondary">
         <h4>{t('detailDependents')}</h4>
         <QuestLinkList
           entries={dependents}

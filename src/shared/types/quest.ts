@@ -18,6 +18,18 @@ export interface ChapterImage {
   rotation?: number
   click?: string | null
   order?: number
+  /** 0–255; export always writes (default 255). */
+  alpha?: number
+  /** FTB {@code Color4I.rgb()} when not white. */
+  color?: number
+  alignToCorner?: boolean
+  animated?: boolean
+  frameCount?: number
+  frameWidth?: number
+  frameHeight?: number
+  dependency?: string
+  editorsOnly?: boolean
+  hover?: string[]
 }
 
 export interface QuestReward {
@@ -49,6 +61,8 @@ export interface QuestNode {
   iconItems?: string[]
   dependencies?: string[]
   hideDependencyLines?: boolean
+  /** FTB {@code guide_page} — Field Guide deep link target. */
+  guidePage?: string
   tasks?: QuestTask[]
   rewards?: QuestReward[]
 }
@@ -85,6 +99,8 @@ export interface ChapterSummary {
 export interface ChapterGroup {
   id: string
   title?: string
+  /** List index in FTB {@code chapterGroups} (group order in sidebar). */
+  orderIndex?: number
 }
 
 export interface QuestIndex {

@@ -1,6 +1,13 @@
+const MOBILE_MAX_WIDTH = 900
+const DRAWER_MAX_WIDTH = 480
+const DRAWER_VIEWPORT_RATIO = 0.32
+
 /** Right overlay width for the quest detail drawer (matches CSS). */
 export function questDrawerInsetPx(viewportWidth: number): number {
-  return Math.min(360, Math.round(viewportWidth * 0.34))
+  if (viewportWidth <= MOBILE_MAX_WIDTH) {
+    return 0
+  }
+  return Math.min(DRAWER_MAX_WIDTH, Math.round(viewportWidth * DRAWER_VIEWPORT_RATIO))
 }
 
 /** Left chapter sidebar width (matches CSS flex-basis). */
