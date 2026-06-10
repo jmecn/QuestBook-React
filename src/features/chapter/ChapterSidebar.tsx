@@ -4,8 +4,9 @@ import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
 import { loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
-import { resolveQuestText, resolveQuestRichText } from '@/shared/lib/quest-text'
+import { resolveQuestText, resolveQuestRichText, resolveQuestLines } from '@/shared/lib/quest-text'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
+import { QuestHoverLabel } from '@/shared/ui/QuestHoverLabel'
 import { DEFAULT_CHAPTER_GROUP_ID } from '@/shared/lib/chapter-image-style'
 import type { ChapterGroup, ChapterSummary, QuestIndex } from '@/shared/types/quest'
 
@@ -70,6 +71,10 @@ function groupChapters(
 
 function chapterLabel(chapter: ChapterSummary, dict: Record<string, string>): string {
   return resolveQuestText(dict, chapter.title) || chapter.filename
+}
+
+function chapterSubtitle(chapter: ChapterSummary, dict: Record<string, string>): string {
+  return resolveQuestLines(dict, chapter.subtitle)
 }
 
 function chapterLabelNodes(chapter: ChapterSummary, dict: Record<string, string>) {
@@ -167,20 +172,23 @@ export function ChapterSidebar() {
                 {chapters.map((chapter) => {
                   const active = chapter.filename === activeChapter
                   const label = chapterLabel(chapter, dict)
+                  const subtitle = chapterSubtitle(chapter, dict)
                   return (
                     <li key={chapter.filename}>
-                      <button
+                      <QuestHoverLabel
+                        as="button"
                         type="button"
                         className={`chapter-sidebar__item${active ? ' is-active' : ''}`}
+                        label={label}
+                        subtitle={subtitle || undefined}
                         onClick={() => selectChapter(chapter.filename)}
                         aria-current={active ? 'page' : undefined}
-                        title={collapsed ? label : undefined}
                       >
                         <QuestIcon icon={chapter.icon} size={32} variant="tile" />
                         <span className="chapter-sidebar__label">
                           <QuestRichText nodes={chapterLabelNodes(chapter, dict)} />
                         </span>
-                      </button>
+                      </QuestHoverLabel>
                     </li>
                   )
                 })}

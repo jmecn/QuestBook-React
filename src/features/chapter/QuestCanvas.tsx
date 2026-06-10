@@ -50,7 +50,9 @@ import {
 import { DEFAULT_QUEST_NODE_SIZE, questIconPx } from '@/shared/lib/quest-node-size'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveQuestIcon, useQuestDisplayTitle } from '@/shared/lib/quest-display'
+import { resolveQuestText } from '@/shared/lib/quest-text'
 import { isQuestLinkVisibleOnMap, isQuestVisibleOnMap } from '@/shared/lib/quest-visibility'
+import { QuestHoverLabel } from '@/shared/ui/QuestHoverLabel'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
 import type { ChapterData, ChapterImage, QuestNode as QuestData } from '@/shared/types/quest'
 import { gridStepPx, gridToPx } from '@/shared/lib/quest-text'
@@ -105,7 +107,9 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
   const updateNodeInternals = useUpdateNodeInternals()
   const iconSize = questIconPx(data.quest.size, data.gridScale)
   const label = useQuestDisplayTitle(data.quest, data.dict, data.locale)
+  const subtitle = resolveQuestText(data.dict, data.quest.subtitle)
   const icon = resolveQuestIcon(data.quest)
+  const tooltipLabel = label || subtitle
 
   useEffect(() => {
     if (nodeId) {
@@ -113,8 +117,8 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
     }
   }, [iconSize, nodeId, updateNodeInternals])
 
-  return (
-    <div className="quest-flow-node" data-label={label || undefined}>
+  const nodeBody = (
+    <>
       <Handle
         type="source"
         id={QUEST_EDGE_HANDLE_ID}
@@ -135,6 +139,22 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
         selected={selected}
         tooltip=""
       />
+    </>
+  )
+
+  return (
+    <div className="quest-flow-node">
+      {tooltipLabel ? (
+        <QuestHoverLabel
+          className="quest-flow-node__hover"
+          label={label || subtitle}
+          subtitle={label && subtitle ? subtitle : undefined}
+        >
+          {nodeBody}
+        </QuestHoverLabel>
+      ) : (
+        nodeBody
+      )}
     </div>
   )
 }

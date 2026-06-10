@@ -98,6 +98,7 @@ export interface ChapterSummary {
   orderIndex?: number
   icon?: string
   title?: string
+  subtitle?: string | string[]
 }
 
 export interface ChapterGroup {

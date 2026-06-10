@@ -12,11 +12,14 @@ import { createPortal } from 'react-dom'
 
 type QuestHoverLabelProps = {
   label: string
+  /** Plain-text secondary line (e.g. quest/chapter subtitle). */
+  subtitle?: string
   className?: string
   children: ReactNode
 } & (
   | ({ as?: 'span' } & React.ComponentPropsWithoutRef<'span'>)
   | ({ as: 'a' } & React.ComponentPropsWithoutRef<'a'>)
+  | ({ as: 'button' } & React.ComponentPropsWithoutRef<'button'>)
 )
 
 function clamp(value: number, min: number, max: number): number {
@@ -25,8 +28,10 @@ function clamp(value: number, min: number, max: number): number {
 
 /** Floating label on hover/focus; rendered in a portal so drawer overflow cannot clip it. */
 export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
-  const { label, className, children, as = 'span', ...rest } = props
-  const anchorRef = useRef<HTMLAnchorElement | HTMLSpanElement>(null)
+  const { label, subtitle, className, children, as = 'span', ...rest } = props
+  const tooltipLabel = subtitle?.trim() ? `${label}. ${subtitle}` : label
+  const stacked = Boolean(subtitle?.trim())
+  const anchorRef = useRef<HTMLAnchorElement | HTMLButtonElement | HTMLSpanElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   const [tooltipStyle, setTooltipStyle] = useState<{ left: number; top: number } | null>(null)
@@ -38,7 +43,10 @@ export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
 
     const gap = 6
     const margin = 8
-    const anchorRect = anchor.getBoundingClientRect()
+    let anchorRect = anchor.getBoundingClientRect()
+    if (anchorRect.width === 0 && anchorRect.height === 0 && anchor.firstElementChild instanceof HTMLElement) {
+      anchorRect = anchor.firstElementChild.getBoundingClientRect()
+    }
     const tipWidth = tooltip.offsetWidth
     const tipHeight = tooltip.offsetHeight
 
@@ -66,27 +74,27 @@ export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
     }
-  }, [updatePosition, visible, label])
+  }, [updatePosition, visible, label, subtitle])
 
   const show = () => setVisible(true)
   const hide = () => setVisible(false)
 
-  const onMouseEnter = (event: MouseEvent<HTMLAnchorElement | HTMLSpanElement>) => {
+  const onMouseEnter = (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement | HTMLSpanElement>) => {
     show()
     rest.onMouseEnter?.(event as never)
   }
 
-  const onMouseLeave = (event: MouseEvent<HTMLAnchorElement | HTMLSpanElement>) => {
+  const onMouseLeave = (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement | HTMLSpanElement>) => {
     hide()
     rest.onMouseLeave?.(event as never)
   }
 
-  const onFocus = (event: FocusEvent<HTMLAnchorElement | HTMLSpanElement>) => {
+  const onFocus = (event: FocusEvent<HTMLAnchorElement | HTMLButtonElement | HTMLSpanElement>) => {
     show()
     rest.onFocus?.(event as never)
   }
 
-  const onBlur = (event: FocusEvent<HTMLAnchorElement | HTMLSpanElement>) => {
+  const onBlur = (event: FocusEvent<HTMLAnchorElement | HTMLButtonElement | HTMLSpanElement>) => {
     hide()
     rest.onBlur?.(event as never)
   }
@@ -95,7 +103,7 @@ export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
     ...rest,
     ref: anchorRef,
     className,
-    'aria-label': label,
+    'aria-label': tooltipLabel,
     onMouseEnter,
     onMouseLeave,
     onFocus,
@@ -104,7 +112,9 @@ export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
 
   const anchor = as === 'a'
     ? <a {...(anchorProps as React.ComponentPropsWithoutRef<'a'>)}>{children}</a>
-    : <span {...(anchorProps as React.ComponentPropsWithoutRef<'span'>)}>{children}</span>
+    : as === 'button'
+      ? <button {...(anchorProps as React.ComponentPropsWithoutRef<'button'>)}>{children}</button>
+      : <span {...(anchorProps as React.ComponentPropsWithoutRef<'span'>)}>{children}</span>
 
   return (
     <>
@@ -113,11 +123,14 @@ export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
         ? createPortal(
             <div
               ref={tooltipRef}
-              className={`quest-item-tooltip${tooltipStyle ? ' is-visible' : ''}`}
+              className={`quest-item-tooltip${stacked ? ' quest-item-tooltip--stacked' : ''}${tooltipStyle ? ' is-visible' : ''}`}
               style={tooltipStyle ?? { left: 0, top: 0 }}
               role="tooltip"
             >
-              {label}
+              <span className="quest-item-tooltip__title">{label}</span>
+              {stacked ? (
+                <span className="quest-item-tooltip__subtitle">{subtitle}</span>
+              ) : null}
             </div>,
             document.body,
           )
