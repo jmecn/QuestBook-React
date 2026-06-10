@@ -17,8 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@gtceu-translate": ["../emi-recipe-renderer/src/gtceu-translate.js"]
+      "@/*": ["src/*"]
     },
     "allowJs": true
   },

@@ -30,7 +30,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.join(rootDir, 'src'),
-      '@gtceu-translate': path.join(rootDir, '../emi-recipe-renderer/src/gtceu-translate.js'),
     },
   },
 })

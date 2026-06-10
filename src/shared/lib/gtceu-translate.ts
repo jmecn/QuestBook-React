@@ -1,5 +1,5 @@
-/** Re-export GregTech composed label rules (shared with emi-recipe-renderer). */
+/** GregTech composed label rules for item/fluid display names. */
 export {
   translateComposedRegistry,
   isComposedRegistryNamespace,
-} from '@gtceu-translate'
+} from './gtceu-composed-registry'
