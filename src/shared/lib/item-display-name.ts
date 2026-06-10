@@ -1,10 +1,10 @@
-import { loadItemNameKeys, loadItemsLangLabels, loadLangDict } from '@/shared/lib/quest-export'
-import { itemLookupKeys, normalizeRegistryId } from '@/shared/lib/registry-lang-keys'
+import { loadItemNameKeys, loadLangDict } from '@/shared/lib/quest-export'
+import { dottedRegistryId, itemLookupKeys, normalizeRegistryId } from '@/shared/lib/registry-lang-keys'
 import { stripColorCodes } from '@/shared/lib/quest-text'
+import { translateComposedRegistry } from '@/shared/lib/gtceu-translate'
 
 const nameCache = new Map<string, string>()
 const langCache = new Map<string, Record<string, string>>()
-const itemsLangCache = new Map<string, Record<string, string> | null>()
 const nameKeysCache: { value: Record<string, string> | null } = { value: null }
 
 function stripRegistryIdFallback(itemId: string): string {
@@ -26,15 +26,6 @@ async function langDictFor(locale: string): Promise<Record<string, string>> {
   return dict
 }
 
-async function itemsLangFor(locale: string): Promise<Record<string, string> | null> {
-  if (itemsLangCache.has(locale)) {
-    return itemsLangCache.get(locale) ?? null
-  }
-  const labels = await loadItemsLangLabels(locale)
-  itemsLangCache.set(locale, labels)
-  return labels
-}
-
 async function nameKeysFor(): Promise<Record<string, string>> {
   if (nameKeysCache.value) return nameKeysCache.value
   const keys = await loadItemNameKeys()
@@ -42,9 +33,19 @@ async function nameKeysFor(): Promise<Record<string, string>> {
   return keys
 }
 
+function translateKey(dict: Record<string, string>, key: string): string {
+  return dict[key] ?? key
+}
+
+function registryLookupKeys(registryId: string): string[] {
+  const dotted = dottedRegistryId(registryId)
+  if (!dotted) return []
+  return [...itemLookupKeys(registryId), `entity.${dotted}`]
+}
+
 function resolveFromLangDict(dict: Record<string, string>, itemId: string): string | null {
   const bare = normalizeRegistryId(itemId)
-  for (const key of itemLookupKeys(bare)) {
+  for (const key of registryLookupKeys(bare)) {
     const value = dict[key]
     if (value && value !== bare && value !== itemId) {
       return stripColorCodes(value)
@@ -69,12 +70,43 @@ function resolveFromNameKey(
   return resolveFromLangDict(dict, itemId)
 }
 
-function isUnresolvedLabel(label: string, itemId: string): boolean {
+function resolveComposedLabel(dict: Record<string, string>, itemId: string): string | null {
   const bare = normalizeRegistryId(itemId)
-  return label === itemId || label === bare
+  const translate = (key: string) => translateKey(dict, key)
+  for (const kind of ['item', 'fluid'] as const) {
+    const composed = translateComposedRegistry(bare, kind, translate, dict)
+    if (composed && composed !== bare) {
+      return stripColorCodes(composed)
+    }
+  }
+  return null
 }
 
-/** Human-readable item label: items-lang, then closure lang (item → block → fluid), then id fallback. */
+/**
+ * Registry label from closure {@code lang/} only — no English id fallback.
+ * Used for observation task titles (match FTB: keep raw id when lang is missing).
+ */
+export async function resolveRegistryDisplayName(
+  registryId: string,
+  locale = 'en_us',
+): Promise<string | null> {
+  try {
+    const dict = await langDictFor(locale)
+    const nameKeys = await nameKeysFor()
+
+    const fromNameKey = resolveFromNameKey(dict, nameKeys, registryId)
+    if (fromNameKey) return fromNameKey
+
+    const fromComposed = resolveComposedLabel(dict, registryId)
+    if (fromComposed) return fromComposed
+
+    return resolveFromLangDict(dict, registryId)
+  } catch {
+    return null
+  }
+}
+
+/** Human-readable item label: name-keys + closure {@code lang/}, with GT compose rules, then id fallback. */
 export async function resolveItemDisplayName(
   itemId: string,
   locale = 'en_us',
@@ -84,20 +116,22 @@ export async function resolveItemDisplayName(
   if (cached) return cached
 
   try {
-    const bare = normalizeRegistryId(itemId)
     const dict = await langDictFor(locale)
     const nameKeys = await nameKeysFor()
 
-    const itemsLang = await itemsLangFor(locale)
-    const fromItemsLang = itemsLang?.[bare] ?? itemsLang?.[itemId]
-    if (fromItemsLang && !isUnresolvedLabel(fromItemsLang, itemId)) {
-      const resolved = stripColorCodes(fromItemsLang)
-      nameCache.set(key, resolved)
-      return resolved
+    const fromNameKey = resolveFromNameKey(dict, nameKeys, itemId)
+    if (fromNameKey) {
+      nameCache.set(key, fromNameKey)
+      return fromNameKey
     }
 
-    const fromNameKey = resolveFromNameKey(dict, nameKeys, itemId)
-    const resolved = fromNameKey ?? stripRegistryIdFallback(itemId)
+    const fromComposed = resolveComposedLabel(dict, itemId)
+    if (fromComposed) {
+      nameCache.set(key, fromComposed)
+      return fromComposed
+    }
+
+    const resolved = resolveFromLangDict(dict, itemId) ?? stripRegistryIdFallback(itemId)
     nameCache.set(key, resolved)
     return resolved
   } catch {

@@ -1,4 +1,5 @@
 import type { QuestTask } from '@/shared/types/quest'
+import { resolveQuestText } from '@/shared/lib/quest-text'
 
 /** FTB Filter System placeholder item used in SNBT — not a player-facing requirement. */
 export const FTB_SMART_FILTER_ID = 'ftbfiltersystem:smart_filter'
@@ -36,4 +37,17 @@ export function isFilterPlaceholderTask(task: QuestTask): boolean {
   if (task.filterRaw) return true
   const items = task.items ?? []
   return items.length > 0 && items.every((id) => id === FTB_SMART_FILTER_ID)
+}
+
+/**
+ * FTB {@code ViewQuestPanel} puts each task in {@code CompactGridLayout} (18×18 cells, wrap).
+ * Icon-only tasks become one grid cell; titled tasks (tag filters, etc.) span a full row.
+ */
+export function isCompactGridTask(task: QuestTask, dict: Record<string, string>): boolean {
+  if (isFilterPlaceholderTask(task)) return false
+  const title = resolveQuestText(dict, task.title).trim()
+  if (title) return false
+  if (task.type === 'checkmark') return true
+  if (task.type === 'item' && taskDisplayItemIds(task).length > 0) return true
+  return false
 }

@@ -456,14 +456,18 @@ function chapterToFlow(
     }
   }
 
+  const nodeIds = new Set(nodes.map((node) => node.id))
+
   for (const link of chapter.questLinks ?? []) {
     const linkedEntry = catalog.get(link.linkedQuest)
     if (!linkedEntry || !isQuestLinkVisibleOnMap(linkedEntry.quest)) continue
+    // Dependency edges use linked quest ids; node id must match (not link:${link.id}).
+    if (nodeIds.has(link.linkedQuest)) continue
 
     const linkedQuest = linkedEntry.quest
     const iconSize = questIconPx(link.size ?? linkedQuest.size, gridScale)
     nodes.push({
-      id: `link:${link.id}`,
+      id: link.linkedQuest,
       type: 'quest',
       position: { x: gridToPx(link.x, gridScale), y: gridToPx(link.y, gridScale) },
       data: {
@@ -484,6 +488,7 @@ function chapterToFlow(
       selected: link.linkedQuest === selectedId,
       zIndex: 1,
     })
+    nodeIds.add(link.linkedQuest)
   }
 
   return { nodes, edges }

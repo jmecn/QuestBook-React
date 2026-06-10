@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { QuestRichTextNavigationProvider } from '@/app/context/QuestRichTextNavigationContext'
-import { QuestRewardListItem, QuestTaskListItem } from '@/features/chapter/QuestDetailItems'
+import { QuestRewardList, QuestTaskList } from '@/features/chapter/QuestDetailItems'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-catalog'
 import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
 import { fieldGuidePageUrl, fieldGuideSiteBase } from '@/shared/lib/field-guide-links'
-import { resolveQuestRichText, resolveQuestText } from '@/shared/lib/quest-text'
+import { resolveQuestRichText } from '@/shared/lib/quest-text'
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
 import { QuestDescription } from '@/shared/ui/QuestDescription'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
@@ -20,7 +20,7 @@ export interface QuestDetailPanelProps {
   onNavigateQuest: (chapterFilename: string, questId: string) => void
 }
 
-const DETAIL_ICON_SIZE = 24
+const DETAIL_ICON_SIZE = 32
 const GUIDE_LINK_LANG_KEY = 'ftbquests.gui.open_in_guide'
 
 function QuestLinkButton({
@@ -76,7 +76,7 @@ function QuestGuidePageLink({
     return null
   }
 
-  const label = resolveQuestText(dict, GUIDE_LINK_LANG_KEY) || 'Click here to read more...'
+  const label = dict[GUIDE_LINK_LANG_KEY] || 'Click here to read more...'
 
   return (
     <p className="quest-detail__guide-link">
@@ -170,17 +170,12 @@ export function QuestDetailPanel({
         <section className="quest-detail__panel quest-detail__panel--tasks">
           <h4>{t('detailTasks')}</h4>
           {tasks.length > 0 ? (
-            <ul className="quest-detail__list quest-detail__list--compact">
-              {tasks.map((task) => (
-                <QuestTaskListItem
-                  key={task.id}
-                  task={task}
-                  dict={dict}
-                  locale={locale}
-                  iconSize={DETAIL_ICON_SIZE}
-                />
-              ))}
-            </ul>
+            <QuestTaskList
+              tasks={tasks}
+              dict={dict}
+              locale={locale}
+              iconSize={DETAIL_ICON_SIZE}
+            />
           ) : (
             <p className="quest-detail__none">{t('detailNone')}</p>
           )}
@@ -189,16 +184,11 @@ export function QuestDetailPanel({
         <section className="quest-detail__panel quest-detail__panel--rewards">
           <h4>{t('detailRewards')}</h4>
           {rewards.length > 0 ? (
-            <ul className="quest-detail__list quest-detail__list--compact">
-              {rewards.map((reward) => (
-                <QuestRewardListItem
-                  key={reward.id}
-                  reward={reward}
-                  locale={locale}
-                  iconSize={DETAIL_ICON_SIZE}
-                />
-              ))}
-            </ul>
+            <QuestRewardList
+              rewards={rewards}
+              locale={locale}
+              iconSize={DETAIL_ICON_SIZE}
+            />
           ) : (
             <p className="quest-detail__none">{t('detailNone')}</p>
           )}

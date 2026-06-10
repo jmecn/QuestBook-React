@@ -340,17 +340,15 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: flex;
   flex-direction: column;
   width: min(480px, 32vw);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-shadow: var(--tfg-shadow, -8px 0 24px rgba(0, 0, 0, 0.18));
   animation: chapter-detail-enter var(--quest-layout-transition-ms, 450ms) ease-in-out;
 }
 
 .chapter-detail--drawer .quest-detail {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  flex: none;
+  overflow: visible;
 }
 
 @keyframes chapter-detail-enter {
@@ -365,28 +363,36 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   }
 }
 
+.chapter-detail__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin: -2px 0 4px;
+}
+
 .chapter-detail__close {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  float: right;
-  width: 32px;
-  height: 32px;
-  margin: -4px -2px 8px 8px;
-  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
   border-radius: 6px;
-  background: var(--header-control-bg, var(--panel));
+  background: transparent;
   color: var(--muted);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
   font: inherit;
+  opacity: 0.5;
 }
 
 .chapter-detail__close:hover,
 .chapter-detail__close:focus-visible {
   color: var(--text);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  opacity: 1;
   outline: none;
 }
 
@@ -478,7 +484,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   width: 100%;
   height: 100%;
   background-repeat: no-repeat;
-  background-size: var(--chapter-sprite-fw) calc(var(--chapter-sprite-fh) * (var(--chapter-sprite-frames) + 1));
+  background-size: 100% calc(var(--chapter-sprite-frame-count) * 100%);
   animation: quest-chapter-sprite var(--chapter-sprite-duration) steps(var(--chapter-sprite-frames)) infinite;
 }
 
@@ -656,11 +662,16 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 }
 
 .quest-detail__objectives {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-top: 0.65rem;
-  flex-shrink: 0;
+  overflow: visible;
+}
+
+.quest-detail__panel {
+  overflow: visible;
+  width: 100%;
 }
 
 .quest-detail__panel h4 {
@@ -673,16 +684,12 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 }
 
 .quest-detail__body {
-  flex: 1;
-  min-height: 0;
   margin-top: 0.75rem;
-  overflow-y: auto;
-  flex-shrink: 1;
+  overflow: visible;
 }
 
 .quest-detail__section {
   margin-top: 0.85rem;
-  flex-shrink: 0;
 }
 
 .quest-detail__section--secondary {
@@ -714,11 +721,92 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   margin: 2px 0;
 }
 
+/* FTB ViewQuestPanel: CompactGridLayout — icon cells wrap, titled tasks full width. */
+.quest-task-grid {
+  --quest-detail-icon-size: 32px;
+  --quest-detail-icon-cell: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-content: flex-start;
+  padding: 2px;
+  overflow: visible;
+}
+
+.quest-task-grid__cell {
+  flex: 0 0 var(--quest-detail-icon-cell);
+  width: var(--quest-detail-icon-cell);
+  height: var(--quest-detail-icon-cell);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border-radius: 4px;
+}
+
+.quest-task-grid__text-row {
+  flex: 1 1 100%;
+  min-width: 100%;
+  margin: 1px 0 3px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.quest-task-grid .quest-item-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--quest-detail-icon-size);
+  height: var(--quest-detail-icon-size);
+  overflow: visible;
+  border-radius: 4px;
+}
+
+.quest-task-grid .quest-item-row--link:hover,
+.quest-task-grid .quest-item-row--link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.quest-task-grid .quest-item-row--link:hover .quest-icon,
+.quest-task-grid .quest-item-row--link:focus-visible .quest-icon {
+  outline: none;
+  box-shadow: none;
+}
+
 .quest-detail__list--compact .quest-task-items {
+  --quest-detail-icon-size: 32px;
+  --quest-detail-icon-cell: 36px;
   display: grid;
-  grid-template-columns: repeat(4, 24px);
-  gap: 2px;
+  grid-template-columns: repeat(4, var(--quest-detail-icon-cell));
+  gap: 4px;
   align-items: start;
+  padding: 2px;
+  overflow: visible;
+}
+
+.quest-detail__list--compact .quest-item-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--quest-detail-icon-size);
+  height: var(--quest-detail-icon-size);
+  overflow: visible;
+  border-radius: 4px;
+}
+
+.quest-detail__list--compact .quest-item-row--link:hover,
+.quest-detail__list--compact .quest-item-row--link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.quest-detail__list--compact .quest-item-row--link:hover .quest-icon,
+.quest-detail__list--compact .quest-item-row--link:focus-visible .quest-icon {
+  outline: none;
+  box-shadow: none;
 }
 
 .quest-item-row {
@@ -1029,10 +1117,6 @@ html:not([data-theme]) .quest-rich-text__mc-0 {
 
   .chapter-sidebar.is-collapsed {
     flex-basis: 52px;
-  }
-
-  .quest-detail__objectives {
-    grid-template-columns: 1fr;
   }
 
   .chapter-detail--drawer {

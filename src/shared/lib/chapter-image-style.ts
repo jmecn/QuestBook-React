@@ -58,17 +58,15 @@ export function chapterImageSpriteVars(image: ChapterImage): CSSProperties | und
     return undefined
   }
 
-  const frameWidth = image.frameWidth ?? 16
-  const frameHeight = image.frameHeight ?? frameWidth
   const frameCount = image.frameCount
   const durationSec = Math.max(0.8, frameCount / 20)
+  const shiftPercent = ((frameCount - 1) / frameCount) * 100
 
   return {
-    ['--chapter-sprite-fw' as string]: `${frameWidth}px`,
-    ['--chapter-sprite-fh' as string]: `${frameHeight}px`,
+    ['--chapter-sprite-frame-count' as string]: String(frameCount),
     ['--chapter-sprite-frames' as string]: String(frameCount - 1),
     ['--chapter-sprite-duration' as string]: `${durationSec}s`,
-    ['--chapter-sprite-shift' as string]: `${-(frameCount - 1) * frameHeight}px`,
+    ['--chapter-sprite-shift' as string]: `-${shiftPercent}%`,
   }
 }
 

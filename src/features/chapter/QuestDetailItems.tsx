@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { resolveItemDisplayName } from '@/shared/lib/item-display-name'
-import { extractFilterTagIds, taskDisplayItemIds } from '@/shared/lib/quest-task-items'
+import { resolveItemDisplayName, resolveRegistryDisplayName } from '@/shared/lib/item-display-name'
+import {
+  extractFilterTagIds,
+  isCompactGridTask,
+  taskDisplayItemIds,
+} from '@/shared/lib/quest-task-items'
 import { QuestItemRow } from '@/shared/ui/QuestItemRow'
 import { QuestTagLinkedText } from '@/shared/ui/QuestTagLinkedText'
 import type { QuestReward, QuestTask } from '@/shared/types/quest'
@@ -22,12 +26,15 @@ function TaskTitle({
     let cancelled = false
     const base = resolveQuestText(dict, task.title)
     const observe = task.toObserve?.trim()
-    if (!observe || !base.includes(observe)) {
+    // Tags (#namespace:path) stay in title; only resolve registry ids (blocks/entities/items).
+    if (!observe || observe.startsWith('#') || !base.includes(observe)) {
       setLabel(base)
       return undefined
     }
-    void resolveItemDisplayName(observe, locale).then((name) => {
-      if (!cancelled) setLabel(base.replace(observe, name))
+    void resolveRegistryDisplayName(observe, locale).then((name) => {
+      if (!cancelled) {
+        setLabel(name ? base.replace(observe, name) : base)
+      }
     })
     return () => {
       cancelled = true
@@ -108,6 +115,39 @@ function TaskItemLabel({
   return <QuestItemRow itemId={itemId} label={label} locale={locale} iconSize={iconSize} />
 }
 
+function TaskGridCell({
+  task,
+  locale,
+  iconSize = 32,
+}: {
+  task: QuestTask
+  locale: string
+  iconSize?: number
+}) {
+  const displayItems = taskDisplayItemIds(task)
+
+  if (task.type === 'checkmark') {
+    return <span className="quest-detail__checkmark">✓</span>
+  }
+
+  if (task.type === 'item' && displayItems.length > 0) {
+    return (
+      <>
+        {displayItems.map((itemId) => (
+          <TaskItemLabel
+            key={`${task.id}:${itemId}`}
+            itemId={itemId}
+            locale={locale}
+            iconSize={iconSize}
+          />
+        ))}
+      </>
+    )
+  }
+
+  return null
+}
+
 function RewardRow({
   reward,
   locale,
@@ -156,25 +196,7 @@ function RewardRow({
   return <span>{formatRewardLabel(reward)}</span>
 }
 
-export function QuestTaskListItem({
-  task,
-  dict,
-  locale,
-  iconSize = 32,
-}: {
-  task: QuestTask
-  dict: Record<string, string>
-  locale: string
-  iconSize?: number
-}) {
-  return (
-    <li className="quest-detail__task">
-      <TaskRow task={task} dict={dict} locale={locale} iconSize={iconSize} />
-    </li>
-  )
-}
-
-export function QuestRewardListItem({
+function RewardGridCell({
   reward,
   locale,
   iconSize = 32,
@@ -183,9 +205,96 @@ export function QuestRewardListItem({
   locale: string
   iconSize?: number
 }) {
+  const [labels, setLabels] = useState<string[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    if (reward.type !== 'item' || !reward.items?.length) {
+      setLabels([])
+      return undefined
+    }
+
+    void Promise.all(reward.items.map((itemId) => resolveItemDisplayName(itemId, locale)))
+      .then((names) => {
+        if (!cancelled) setLabels(names)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [locale, reward.items, reward.type])
+
+  if (reward.type !== 'item' || !reward.items?.length) {
+    return null
+  }
+
   return (
-    <li className="quest-detail__task">
-      <RewardRow reward={reward} locale={locale} iconSize={iconSize} />
-    </li>
+    <>
+      {reward.items.map((itemId, index) => (
+        <QuestItemRow
+          key={`${reward.id}:${itemId}`}
+          itemId={itemId}
+          count={reward.count}
+          label={labels[index] ?? itemId}
+          locale={locale}
+          iconSize={iconSize}
+        />
+      ))}
+    </>
+  )
+}
+
+/** FTB {@code CompactGridLayout}: one wrap grid for icon tasks, full-width rows for titles. */
+export function QuestTaskList({
+  tasks,
+  dict,
+  locale,
+  iconSize = 32,
+}: {
+  tasks: QuestTask[]
+  dict: Record<string, string>
+  locale: string
+  iconSize?: number
+}) {
+  return (
+    <div className="quest-task-grid">
+      {tasks.map((task) =>
+        isCompactGridTask(task, dict) ? (
+          <div key={task.id} className="quest-task-grid__cell">
+            <TaskGridCell task={task} locale={locale} iconSize={iconSize} />
+          </div>
+        ) : (
+          <div key={task.id} className="quest-task-grid__text-row">
+            <TaskRow task={task} dict={dict} locale={locale} iconSize={iconSize} />
+          </div>
+        ),
+      )}
+    </div>
+  )
+}
+
+export function QuestRewardList({
+  rewards,
+  locale,
+  iconSize = 32,
+}: {
+  rewards: QuestReward[]
+  locale: string
+  iconSize?: number
+}) {
+  return (
+    <div className="quest-task-grid">
+      {rewards.map((reward) =>
+        reward.type === 'item' && reward.items?.length ? (
+          <div key={reward.id} className="quest-task-grid__cell">
+            <RewardGridCell reward={reward} locale={locale} iconSize={iconSize} />
+          </div>
+        ) : (
+          <div key={reward.id} className="quest-task-grid__text-row">
+            <RewardRow reward={reward} locale={locale} iconSize={iconSize} />
+          </div>
+        ),
+      )}
+    </div>
   )
 }

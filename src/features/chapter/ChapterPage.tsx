@@ -206,14 +206,16 @@ export function ChapterPage() {
           className="chapter-detail chapter-detail--drawer"
           aria-labelledby="quest-detail-title"
         >
-          <button
-            type="button"
-            className="chapter-detail__close"
-            aria-label={t('detailClose')}
-            onClick={onCloseDetail}
-          >
-            ×
-          </button>
+          <div className="chapter-detail__toolbar">
+            <button
+              type="button"
+              className="chapter-detail__close"
+              aria-label={t('detailClose')}
+              onClick={onCloseDetail}
+            >
+              ×
+            </button>
+          </div>
           <QuestDetailPanel
             quest={selectedQuest}
             chapters={chapters}
