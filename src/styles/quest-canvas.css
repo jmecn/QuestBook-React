@@ -544,8 +544,8 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Occlude dependency SVG in the node bounding box (FTB draws lines under widgets). */
-  background: var(--bg);
+  /* Lines sit under nodes; occlusion follows FTB shape mask (see quest-icon__shape-occlude). */
+  background: transparent;
 }
 
 .quest-flow-node__hover {
