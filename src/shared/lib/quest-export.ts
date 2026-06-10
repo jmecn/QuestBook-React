@@ -1,4 +1,5 @@
 import type { ChapterData, QuestIndex } from '@/shared/types/quest'
+import { FALLBACK_LOCALE, normalizeLocale } from '@/shared/i18n/locale'
 import { questExportUrl, siteUrl } from '@/shared/lib/site-base'
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -28,10 +29,42 @@ export async function loadChapter(filename: string): Promise<ChapterData> {
   return fetchJson<ChapterData>(questExportUrl(`quests/chapters/${filename}.json`))
 }
 
-export async function loadLangDict(locale: string): Promise<Record<string, string>> {
+let enUsDictCache: Record<string, string> | null = null
+
+async function fetchLangFile(locale: string): Promise<Record<string, string>> {
   const res = await fetch(questExportUrl(`lang/${locale}.json`))
   if (!res.ok) return {}
   return res.json() as Promise<Record<string, string>>
+}
+
+async function loadEnUsDict(): Promise<Record<string, string>> {
+  if (!enUsDictCache) {
+    enUsDictCache = await fetchLangFile(FALLBACK_LOCALE)
+  }
+  return enUsDictCache
+}
+
+/** {@code primary} wins per key; missing keys come from {@code fallback}. */
+export function mergeLangDicts(
+  fallback: Record<string, string>,
+  primary: Record<string, string>,
+): Record<string, string> {
+  if (!Object.keys(primary).length) return fallback
+  if (!Object.keys(fallback).length) return primary
+  return { ...fallback, ...primary }
+}
+
+/** Quest / item lang table with {@code en_us} fallback for missing keys. */
+export async function loadLangDict(locale: string): Promise<Record<string, string>> {
+  const normalized = normalizeLocale(locale)
+  if (normalized === FALLBACK_LOCALE) {
+    return loadEnUsDict()
+  }
+  const [fallback, primary] = await Promise.all([
+    loadEnUsDict(),
+    fetchLangFile(normalized),
+  ])
+  return mergeLangDicts(fallback, primary)
 }
 
 export interface ItemNameKeysPayload {

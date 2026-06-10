@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuestRichTextNavigation } from '@/app/context/QuestRichTextNavigationContext'
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 import type { McTextStyle, RichTextNode } from '@/shared/lib/quest-rich-text-parser'
@@ -115,6 +116,9 @@ export interface QuestDescriptionImageProps {
   src?: string | null
 }
 
+/** FTB quest image blocks use small pixel sizes (e.g. 100); scale up for readable detail panels. */
+const QUEST_DESCRIPTION_IMAGE_SCALE = 2
+
 export function QuestDescriptionImage({
   imageRef,
   width,
@@ -123,33 +127,104 @@ export function QuestDescriptionImage({
   fit,
   src,
 }: QuestDescriptionImageProps) {
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const url = src ?? questExportTextureCandidates(imageRef)[0] ?? null
-  const alignClass = `quest-rich-text__figure--${align}`
+  const scaledWidth = width * QUEST_DESCRIPTION_IMAGE_SCALE
+  const scaledHeight = height * QUEST_DESCRIPTION_IMAGE_SCALE
+  const displayWidth = fit ? undefined : scaledWidth
+  const displayHeight = fit ? undefined : scaledHeight
+  const fitFigureStyle: CSSProperties | undefined = fit
+    ? { width: `min(100%, ${scaledWidth}px)` }
+    : undefined
+
+  useEffect(() => {
+    if (!lightboxOpen) return undefined
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightboxOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [lightboxOpen])
+
+  useEffect(() => {
+    if (!lightboxOpen) return undefined
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [lightboxOpen])
 
   if (!url) {
     return (
       <figure
-        className={`quest-rich-text__figure quest-rich-text__figure--missing ${alignClass}`}
-        style={fit ? { width: '100%' } : { width, height }}
+        className={`quest-rich-text__figure quest-rich-text__figure--missing quest-rich-text__figure--${align}`}
+        style={fit ? { width: '100%' } : { width: displayWidth, height: displayHeight }}
       >
         <figcaption className="quest-rich-text__missing">{imageRef}</figcaption>
       </figure>
     )
   }
 
+  const figureClass = [
+    'quest-rich-text__figure',
+    `quest-rich-text__figure--${align}`,
+    fit ? 'quest-rich-text__figure--fit' : '',
+  ].filter(Boolean).join(' ')
+
+  const imageSizeStyle: CSSProperties | undefined = fit
+    ? undefined
+    : { width: displayWidth, height: displayHeight }
+
   return (
-    <figure
-      className={`quest-rich-text__figure ${alignClass}${fit ? ' quest-rich-text__figure--fit' : ''}`}
-      style={fit ? undefined : { width, height }}
-    >
-      <img
-        className="quest-rich-text__image"
-        src={url}
-        alt=""
-        decoding="async"
-        draggable={false}
-        style={fit ? undefined : { width, height }}
-      />
-    </figure>
+    <>
+      <figure
+        className={figureClass}
+        style={fit ? fitFigureStyle : { width: displayWidth, height: displayHeight }}
+      >
+        <button
+          type="button"
+          className="quest-rich-text__image-button"
+          onClick={() => setLightboxOpen(true)}
+          aria-label="Enlarge image"
+        >
+          <img
+            className="quest-rich-text__image"
+            src={url}
+            alt=""
+            decoding="async"
+            draggable={false}
+            style={imageSizeStyle}
+          />
+        </button>
+      </figure>
+      {lightboxOpen && createPortal(
+        <div
+          className="quest-image-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Enlarged quest image"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            type="button"
+            className="quest-image-lightbox__close"
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close"
+          >
+            ×
+          </button>
+          <img
+            className="quest-image-lightbox__img"
+            src={url}
+            alt=""
+            decoding="async"
+            draggable={false}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }

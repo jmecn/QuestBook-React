@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { QuestDetailPanel } from '@/features/chapter/QuestDetailPanel'
@@ -29,8 +29,14 @@ function normalizeSelectedQuestId(
   return selectedId
 }
 
+function questIdFromHash(hash: string): string | null {
+  const match = hash.match(/quest=([^&]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 export function ChapterPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [params] = useSearchParams()
   const { locale, t } = useI18n()
   const chapterFile = params.get('chapter') ?? ''
@@ -44,24 +50,21 @@ export function ChapterPage() {
   const drawerRef = useRef<HTMLElement>(null)
   const [drawerInset, setDrawerInset] = useState(0)
 
-  const [selectedId, setSelectedId] = useState<string | null>(() => {
-    const match = window.location.hash.match(/quest=([^&]+)/)
-    return match ? decodeURIComponent(match[1]) : null
-  })
+  const [selectedId, setSelectedId] = useState<string | null>(() =>
+    questIdFromHash(window.location.hash),
+  )
 
   useEffect(() => {
     const onHash = () => {
-      const match = window.location.hash.match(/quest=([^&]+)/)
-      setSelectedId(match ? decodeURIComponent(match[1]) : null)
+      setSelectedId(questIdFromHash(window.location.hash))
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
   useEffect(() => {
-    const match = window.location.hash.match(/quest=([^&]+)/)
-    setSelectedId(match ? decodeURIComponent(match[1]) : null)
-  }, [chapterFile])
+    setSelectedId(questIdFromHash(location.hash || window.location.hash))
+  }, [chapterFile, location.hash])
 
   useEffect(() => {
     let cancelled = false

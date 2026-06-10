@@ -16,5 +16,10 @@
   "detailPrerequisites": "前置任务",
   "detailDependents": "后置任务",
   "detailNone": "无",
-  "switchingLanguage": "正在切换语言…"
+  "switchingLanguage": "正在切换语言…",
+  "searchPlaceholder": "搜索任务…",
+  "searchTitle": "搜索任务",
+  "searchLoading": "正在加载搜索索引…",
+  "searchNoResults": "没有匹配的任务。",
+  "searchIndexMissing": "（缺少 search-index，请重新导出任务数据）"
 }

@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { BookLayoutProvider } from '@/app/context/BookLayoutContext'
 import { SiteHeader } from '@/app/ui/SiteHeader'
-import { ChapterPage } from '@/features/chapter/ChapterPage'
+import { QuestSearchProvider } from '@/features/search/QuestSearchContext'
 import { ChapterSidebar } from '@/features/chapter/ChapterSidebar'
 import { loadQuestIndex } from '@/shared/lib/quest-export'
 import '@/styles/site-shell.css'
@@ -29,16 +29,18 @@ export function AppLayout() {
   }, [chapter, locale, navigate])
 
   return (
-    <BookLayoutProvider>
-      <div className="app-shell">
-        <SiteHeader />
-        <div className="book-body">
-          <ChapterSidebar />
-          <main className="book-main">
-            {chapter ? <ChapterPage /> : <p className="page-message">Loading…</p>}
-          </main>
+    <QuestSearchProvider>
+      <BookLayoutProvider>
+        <div className="app-shell">
+          <SiteHeader />
+          <div className="book-body">
+            <ChapterSidebar />
+            <main className="book-main">
+              {chapter ? <Outlet /> : <p className="page-message">Loading…</p>}
+            </main>
+          </div>
         </div>
-      </div>
-    </BookLayoutProvider>
+      </BookLayoutProvider>
+    </QuestSearchProvider>
   )
 }

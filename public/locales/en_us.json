@@ -16,5 +16,10 @@
   "detailPrerequisites": "Prerequisites",
   "detailDependents": "Dependent quests",
   "detailNone": "None",
-  "switchingLanguage": "Switching language…"
+  "switchingLanguage": "Switching language…",
+  "searchPlaceholder": "Search quests…",
+  "searchTitle": "Search quests",
+  "searchLoading": "Loading search index…",
+  "searchNoResults": "No quests matched your search.",
+  "searchIndexMissing": "(search index missing — re-export quest data)"
 }

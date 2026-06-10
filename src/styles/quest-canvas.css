@@ -1047,6 +1047,19 @@ html:not([data-theme]) .quest-rich-text__mc-0 {
   color: var(--tfg-link-hover, var(--accent));
 }
 
+.quest-detail__description .quest-rich-text__figure--left {
+  margin-right: auto;
+}
+
+.quest-detail__description .quest-rich-text__figure--center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.quest-detail__description .quest-rich-text__figure--right {
+  margin-left: auto;
+}
+
 .quest-rich-text__figure {
   margin: 0.5rem 0 0.85rem;
   display: flex;
@@ -1075,10 +1088,77 @@ html:not([data-theme]) .quest-rich-text__mc-0 {
   object-fit: contain;
 }
 
+.quest-rich-text__image-button {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  line-height: 0;
+  border-radius: 4px;
+}
+
+.quest-rich-text__image-button:hover .quest-rich-text__image,
+.quest-rich-text__image-button:focus-visible .quest-rich-text__image {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.quest-rich-text__image-button:focus-visible {
+  outline: none;
+}
+
 .quest-rich-text__image {
   display: block;
   max-width: 100%;
   image-rendering: pixelated;
+}
+
+.quest-image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background: color-mix(in srgb, var(--bg) 12%, rgba(0, 0, 0, 0.82));
+  cursor: zoom-out;
+}
+
+.quest-image-lightbox__img {
+  display: block;
+  max-width: min(96vw, 960px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  cursor: default;
+}
+
+.quest-image-lightbox__close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.quest-image-lightbox__close:hover,
+.quest-image-lightbox__close:focus-visible {
+  border-color: var(--accent);
+  outline: none;
 }
 
 .quest-rich-text__figure--missing {

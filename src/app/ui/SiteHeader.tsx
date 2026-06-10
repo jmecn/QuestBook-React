@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQuestSearch } from '@/features/search/QuestSearchContext'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useTheme } from '@/shared/hooks/useTheme'
 import {
@@ -7,6 +8,15 @@ import {
   visibleLocales,
 } from '@/shared/hooks/useLanguageConfig'
 import { siteUrl } from '@/shared/lib/site-base'
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="8.5" cy="8.5" r="5.25" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M12.5 12.5L17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 function SunIcon() {
   return (
@@ -35,6 +45,7 @@ function MoonIcon() {
 export function SiteHeader() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const { openSearch } = useQuestSearch()
   const { locale, setLocale, t } = useI18n()
   const { theme, toggleTheme } = useTheme()
   const langConfigQuery = useLanguageConfig()
@@ -47,7 +58,7 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <div className="site-header-inner site-header-inner--no-search">
+      <div className="site-header-inner">
         <button type="button" className="site-brand" onClick={goHome} title={t('brandTitle')}>
           <img
             className="site-brand-icon"
@@ -62,6 +73,20 @@ export function SiteHeader() {
           />
           <span className="site-name">{t('appTitle')}</span>
         </button>
+
+        <div className="site-search">
+          <button
+            type="button"
+            className="site-search-field site-search-trigger"
+            onClick={() => openSearch()}
+            aria-label={t('searchPlaceholder')}
+          >
+            <span className="site-search-icon">
+              <SearchIcon />
+            </span>
+            <span className="site-search-trigger-label">{t('searchPlaceholder')}</span>
+          </button>
+        </div>
 
         <div className="site-header-actions">
           <label className="header-control header-control--locale">

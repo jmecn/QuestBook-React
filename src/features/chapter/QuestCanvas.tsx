@@ -32,6 +32,11 @@ import {
   questExportTextureCandidates,
 } from '@/shared/lib/quest-export-asset'
 import { sidebarMapWidthDelta } from '@/shared/lib/viewport-inset'
+import {
+  getSavedQuestCanvasZoom,
+  QUEST_ZOOM_BASE,
+  rememberQuestCanvasZoom,
+} from '@/shared/lib/quest-canvas-viewport'
 import { DEFAULT_QUEST_NODE_SIZE, questIconPx } from '@/shared/lib/quest-node-size'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveQuestIcon, useQuestDisplayTitle } from '@/shared/lib/quest-display'
@@ -48,9 +53,6 @@ const QUEST_EDGE_OPTIONS: DefaultEdgeOptions = {
   type: 'questDependency',
   className: 'quest-flow-edge',
 }
-
-/** React Flow zoom at 100% — one FTB grid unit matches game-sized quest nodes on screen. */
-const QUEST_ZOOM_BASE = 1
 
 const FOCUS_ANIMATION_MS = 450
 
@@ -209,14 +211,15 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
 const nodeTypes = { quest: QuestNodeComponent, chapterImage: ChapterImageNode }
 const edgeTypes = { questDependency: QuestDependencyEdge }
 
-function FitViewOnChapterChange({ depKey }: { depKey: string }) {
+function CenterChapterAtSavedZoom({ depKey }: { depKey: string }) {
   const { fitView } = useReactFlow()
   useEffect(() => {
+    const zoom = getSavedQuestCanvasZoom()
     const id = requestAnimationFrame(() => {
       void fitView({
         padding: 0.25,
-        maxZoom: QUEST_ZOOM_BASE,
-        minZoom: displayPercentToZoom(ZOOM_PRESET_PERCENTS[0]),
+        minZoom: zoom,
+        maxZoom: zoom,
         duration: 0,
       })
     })
@@ -230,17 +233,31 @@ function FocusSelectedQuest({
   focusTarget,
   drawerInset,
   layoutEpoch,
+  chapterKey,
 }: {
   focusNodeId: string | null
   focusTarget: { x: number; y: number } | null
   drawerInset: number
   layoutEpoch: number
+  chapterKey: string
 }) {
   const nodesInitialized = useNodesInitialized()
   const { setCenter, getZoom } = useReactFlow()
+  const prevFocusRef = useRef<{ chapterKey: string; focusNodeId: string | null }>({
+    chapterKey: '',
+    focusNodeId: null,
+  })
 
   useEffect(() => {
     if (!focusNodeId || !focusTarget || !nodesInitialized) return
+
+    const prev = prevFocusRef.current
+    const chapterChanged = prev.chapterKey !== chapterKey
+    const focusChanged = prev.focusNodeId !== focusNodeId
+    prevFocusRef.current = { chapterKey, focusNodeId }
+
+    const duration =
+      !chapterChanged && focusChanged ? FOCUS_ANIMATION_MS : 0
 
     let cancelled = false
     const run = () => {
@@ -249,7 +266,7 @@ function FocusSelectedQuest({
       const centerX = focusTarget.x + drawerInset / (2 * zoom)
       void setCenter(centerX, focusTarget.y, {
         zoom,
-        duration: FOCUS_ANIMATION_MS,
+        duration,
       })
     }
 
@@ -261,7 +278,16 @@ function FocusSelectedQuest({
       cancelled = true
       cancelAnimationFrame(frame)
     }
-  }, [drawerInset, focusNodeId, focusTarget, getZoom, layoutEpoch, nodesInitialized, setCenter])
+  }, [
+    chapterKey,
+    drawerInset,
+    focusNodeId,
+    focusTarget,
+    getZoom,
+    layoutEpoch,
+    nodesInitialized,
+    setCenter,
+  ])
 
   return null
 }
@@ -332,6 +358,7 @@ function ZoomControls() {
 
   useOnViewportChange({
     onChange: ({ zoom: nextZoom }) => {
+      rememberQuestCanvasZoom(nextZoom)
       setDisplayPercent(nearestPresetPercent(zoomToDisplayPercent(nextZoom)))
     },
   })
@@ -339,8 +366,10 @@ function ZoomControls() {
   const applyPreset = useCallback(
     (percent: ZoomPresetPercent) => {
       setDisplayPercent(percent)
+      const zoom = displayPercentToZoom(percent)
+      rememberQuestCanvasZoom(zoom)
       const viewport = getViewport()
-      setViewport({ ...viewport, zoom: displayPercentToZoom(percent) })
+      setViewport({ ...viewport, zoom })
     },
     [getViewport, setViewport],
   )
@@ -596,7 +625,7 @@ function QuestCanvasInner({
       nodesConnectable={false}
       elementsSelectable
       elevateEdgesOnSelect={false}
-      defaultViewport={{ x: 0, y: 0, zoom: QUEST_ZOOM_BASE }}
+      defaultViewport={{ x: 0, y: 0, zoom: getSavedQuestCanvasZoom() }}
       minZoom={displayPercentToZoom(ZOOM_PRESET_PERCENTS[0])}
       maxZoom={displayPercentToZoom(ZOOM_PRESET_PERCENTS[ZOOM_PRESET_PERCENTS.length - 1])}
       proOptions={{ hideAttribution: true }}
@@ -607,12 +636,15 @@ function QuestCanvasInner({
         sidebarCollapsed={sidebarCollapsed}
         hasSelectedQuest={focusNodeId != null}
       />
-      <FitViewOnChapterChange depKey={layoutKey} />
+      {focusNodeId == null ? (
+        <CenterChapterAtSavedZoom depKey={layoutKey} />
+      ) : null}
       <FocusSelectedQuest
         focusNodeId={focusNodeId}
         focusTarget={focusTarget}
         drawerInset={drawerInset}
         layoutEpoch={layoutEpoch}
+        chapterKey={chapter.id}
       />
       <ZoomControls />
       <Background gap={backgroundDotGap} size={1.25} color="var(--quest-grid-dot)" />
