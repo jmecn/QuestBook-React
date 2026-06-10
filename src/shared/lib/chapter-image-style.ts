@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import type { ChapterImage } from '@/shared/types/quest'
 import { gridToPx } from '@/shared/lib/quest-text'
 
@@ -8,6 +7,9 @@ export const DEFAULT_CHAPTER_GROUP_ID = '0000000000000000'
 /** {@code Color4I.WHITE.rgb()} — default chapter image tint when export omits {@code color}. */
 export const FTB_COLOR4I_WHITE_RGB = 0xffffff
 
+/** Minecraft default when {@code animation.frametime} is omitted in {@code .mcmeta}. */
+export const MINECRAFT_DEFAULT_FRAME_TIME = 2
+
 export interface ChapterImagePaint {
   /** Opacity on texture/sprite only — FTB {@code WHITE.withAlpha(a)} (no rgb tint). */
   mediaOpacity?: number
@@ -15,6 +17,10 @@ export interface ChapterImagePaint {
   tintRgb?: string
   /** Opacity of multiply tint layer (alpha channel of vertex color). */
   tintOpacity?: number
+}
+
+export function isAnimatedChapterImage(image: ChapterImage): boolean {
+  return Boolean(image.animated && image.frameCount && image.frameCount > 1)
 }
 
 /**
@@ -74,23 +80,6 @@ export function chapterImageLayout(image: ChapterImage, gridScale: number) {
 
 export function chapterImageTransformOrigin(alignToCorner?: boolean): string {
   return alignToCorner ? 'top left' : 'center center'
-}
-
-export function chapterImageSpriteVars(image: ChapterImage): CSSProperties | undefined {
-  if (!image.animated || !image.frameCount || image.frameCount <= 1) {
-    return undefined
-  }
-
-  const frameCount = image.frameCount
-  const durationSec = Math.max(0.8, frameCount / 20)
-  const shiftPercent = ((frameCount - 1) / frameCount) * 100
-
-  return {
-    ['--chapter-sprite-frame-count' as string]: String(frameCount),
-    ['--chapter-sprite-frames' as string]: String(frameCount - 1),
-    ['--chapter-sprite-duration' as string]: `${durationSec}s`,
-    ['--chapter-sprite-shift' as string]: `-${shiftPercent}%`,
-  }
 }
 
 export function sortedChapterImages(images: ChapterImage[] | undefined): ChapterImage[] {

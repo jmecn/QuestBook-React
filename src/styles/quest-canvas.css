@@ -433,6 +433,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 /* Nearest-neighbor when upscaling export PNGs and chapter art. */
 .quest-icon__img,
 .quest-chapter-image,
+.quest-chapter-image__sprite,
 .react-flow__viewport .quest-icon__img {
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
@@ -533,17 +534,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   height: 100%;
   background-repeat: no-repeat;
   background-size: 100% calc(var(--chapter-sprite-frame-count) * 100%);
-  animation: quest-chapter-sprite var(--chapter-sprite-duration) steps(var(--chapter-sprite-frames)) infinite;
-}
-
-@keyframes quest-chapter-sprite {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 0 var(--chapter-sprite-shift);
-  }
+  image-rendering: pixelated;
 }
 
 .quest-flow-node {

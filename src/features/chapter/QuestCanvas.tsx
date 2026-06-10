@@ -25,10 +25,11 @@ import {
 import {
   chapterImageLayout,
   chapterImagePaint,
-  chapterImageSpriteVars,
   chapterImageTransformOrigin,
+  isAnimatedChapterImage,
   sortedChapterImages,
 } from '@/shared/lib/chapter-image-style'
+import { useChapterSpriteStyle } from '@/shared/hooks/useChapterSpriteStyle'
 import { chapterImageClickHref, isChapterImageClickable } from '@/shared/lib/chapter-image-click'
 import {
   questExportAssetUrl,
@@ -175,7 +176,8 @@ export interface ChapterImageNodeData extends Record<string, unknown> {
 
 function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
   const { image, gridScale } = data
-  const bakedSrc = image.baked ? questExportAssetUrl(image.baked) : undefined
+  const useAnimatedRaw = isAnimatedChapterImage(image)
+  const bakedSrc = image.baked && !useAnimatedRaw ? questExportAssetUrl(image.baked) : undefined
   const candidates = useMemo(
     () => (bakedSrc ? [bakedSrc] : questExportTextureCandidates(image.image)),
     [bakedSrc, image.image],
@@ -186,9 +188,10 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
     [gridScale, image],
   )
   const src = candidates[index]
-  const paint = bakedSrc ? undefined : chapterImagePaint(image)
-  const spriteVars = chapterImageSpriteVars(image)
-  const animated = spriteVars != null
+  // Animated: raw strip + CSS vertex alpha/tint (FTB draw-time multiply). Static baked PNG already modulated.
+  const paint = useAnimatedRaw || !bakedSrc ? chapterImagePaint(image) : undefined
+  const spriteStyle = useChapterSpriteStyle(image)
+  const animated = spriteStyle != null
   const mediaStyle = paint?.mediaOpacity != null ? { opacity: paint.mediaOpacity } : undefined
 
   useEffect(() => {
@@ -205,7 +208,7 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
   const media = animated ? (
     <div
       className="quest-chapter-image__sprite"
-      style={{ ...spriteVars, backgroundImage: `url("${src}")`, ...mediaStyle }}
+      style={{ ...spriteStyle, backgroundImage: `url("${src}")`, ...mediaStyle }}
       role="img"
       aria-hidden="true"
     />

@@ -27,6 +27,10 @@ export interface ChapterImage {
   alignToCorner?: boolean
   animated?: boolean
   frameCount?: number
+  /** Minecraft texture {@code .mcmeta} {@code animation.frametime} (ticks per frame, default 2). */
+  frameTime?: number
+  /** {@code .mcmeta animation.frames} indices; defaults to {@code [0..frameCount-1]}. */
+  frameSequence?: number[]
   frameWidth?: number
   frameHeight?: number
   dependency?: string
