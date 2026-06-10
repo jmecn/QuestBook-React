@@ -1,6 +1,6 @@
 import type { ChapterGridPoint } from '@/shared/lib/quest-chapter-bounds'
 
-/** React Flow zoom at 100% — one FTB grid unit matches game-sized quest nodes on screen. */
+/** React Flow zoom at 100% — one FTB grid unit between node centers; nodes are ~6/7 of cell width. */
 export const QUEST_ZOOM_BASE = 1
 
 /** Match {@code --quest-layout-transition-ms} in quest-canvas.css. */
