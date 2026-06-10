@@ -30,7 +30,7 @@ import {
 } from '@/shared/lib/chapter-image-style'
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 import { sidebarMapWidthDelta } from '@/shared/lib/viewport-inset'
-import { questIconPx } from '@/shared/lib/quest-node-size'
+import { DEFAULT_QUEST_NODE_SIZE, questIconPx } from '@/shared/lib/quest-node-size'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveQuestIcon, useQuestDisplayTitle } from '@/shared/lib/quest-display'
 import { isQuestLinkVisibleOnMap, isQuestVisibleOnMap } from '@/shared/lib/quest-visibility'
@@ -465,7 +465,9 @@ function chapterToFlow(
     if (nodeIds.has(link.linkedQuest)) continue
 
     const linkedQuest = linkedEntry.quest
-    const iconSize = questIconPx(link.size ?? linkedQuest.size, gridScale)
+    // Link placement uses link width (default 1); do not inherit the source chapter quest size.
+    const linkSize = link.size ?? DEFAULT_QUEST_NODE_SIZE
+    const iconSize = questIconPx(linkSize, gridScale)
     nodes.push({
       id: link.linkedQuest,
       type: 'quest',
@@ -475,7 +477,7 @@ function chapterToFlow(
           ...linkedQuest,
           x: link.x,
           y: link.y,
-          size: link.size ?? linkedQuest.size,
+          size: linkSize,
           shape: link.shape ?? linkedQuest.shape,
         },
         dict,

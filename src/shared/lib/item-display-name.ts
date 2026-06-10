@@ -47,11 +47,15 @@ function resolveFromLangDict(dict: Record<string, string>, itemId: string): stri
   const bare = normalizeRegistryId(itemId)
   for (const key of registryLookupKeys(bare)) {
     const value = dict[key]
-    if (value && value !== bare && value !== itemId) {
+    if (value && value !== bare && value !== itemId && !isLangTemplate(value)) {
       return stripColorCodes(value)
     }
   }
   return null
+}
+
+function isLangTemplate(value: string): boolean {
+  return value.includes('%s')
 }
 
 function resolveFromNameKey(
@@ -63,7 +67,8 @@ function resolveFromNameKey(
   const descriptionKey = nameKeys[bare]
   if (descriptionKey) {
     const fromKey = dict[descriptionKey]
-    if (fromKey && fromKey !== descriptionKey) {
+    // name-keys often point at tagprefix.* (%s锭) — leave composition to GT rules.
+    if (fromKey && fromKey !== descriptionKey && !isLangTemplate(fromKey)) {
       return stripColorCodes(fromKey)
     }
   }
@@ -94,11 +99,11 @@ export async function resolveRegistryDisplayName(
     const dict = await langDictFor(locale)
     const nameKeys = await nameKeysFor()
 
-    const fromNameKey = resolveFromNameKey(dict, nameKeys, registryId)
-    if (fromNameKey) return fromNameKey
-
     const fromComposed = resolveComposedLabel(dict, registryId)
     if (fromComposed) return fromComposed
+
+    const fromNameKey = resolveFromNameKey(dict, nameKeys, registryId)
+    if (fromNameKey) return fromNameKey
 
     return resolveFromLangDict(dict, registryId)
   } catch {
@@ -119,16 +124,16 @@ export async function resolveItemDisplayName(
     const dict = await langDictFor(locale)
     const nameKeys = await nameKeysFor()
 
-    const fromNameKey = resolveFromNameKey(dict, nameKeys, itemId)
-    if (fromNameKey) {
-      nameCache.set(key, fromNameKey)
-      return fromNameKey
-    }
-
     const fromComposed = resolveComposedLabel(dict, itemId)
     if (fromComposed) {
       nameCache.set(key, fromComposed)
       return fromComposed
+    }
+
+    const fromNameKey = resolveFromNameKey(dict, nameKeys, itemId)
+    if (fromNameKey) {
+      nameCache.set(key, fromNameKey)
+      return fromNameKey
     }
 
     const resolved = resolveFromLangDict(dict, itemId) ?? stripRegistryIdFallback(itemId)

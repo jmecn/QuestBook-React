@@ -6,6 +6,9 @@ import { gridStepPx } from '@/shared/lib/quest-text'
  */
 export const FTB_QUEST_ICON_INNER_RATIO = 2 / 3
 
+/** FTB {@code QuestLink} default width when the link omits {@code size} in export JSON. */
+export const DEFAULT_QUEST_NODE_SIZE = 1
+
 /** Quest shape outer diameter in canvas pixels ({@code size} 1 ≈ one grid step at 2× FTB button). */
 export function questIconPx(size = 1, gridScale = 0.5): number {
   const questSize = Number(size) > 0 ? Number(size) : 1
