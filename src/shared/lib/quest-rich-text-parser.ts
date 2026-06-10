@@ -1,7 +1,10 @@
 /**
  * FTB Quests rich text — ports {@code TextComponentParser} + {@code ClientTextComponentUtils}.
- * Supports {@code &}/{@code §} color codes, {@code {lang.key}}, {@code {image:...}}, {@code {@pagebreak}}.
+ * Supports {@code &}/{@code §} color codes, {@code {lang.key}}, {@code {image:...}}, {@code {@pagebreak}},
+ * and Minecraft JSON text components ({@code clickEvent}, {@code extra}, etc.).
  */
+
+import { tryParseMinecraftTextComponentLine } from '@/shared/lib/minecraft-text-component'
 
 export interface McTextStyle {
   /** Minecraft color code {@code 0-9a-f}; rendered via theme-aware CSS classes. */
@@ -19,6 +22,7 @@ export type RichTextNode =
   | { type: 'text'; text: string; style: McTextStyle }
   | { type: 'error'; message: string }
   | { type: 'link'; href: string; children: RichTextNode[] }
+  | { type: 'questLink'; questId: string; children: RichTextNode[] }
   | { type: 'fragment'; children: RichTextNode[] }
 
 export type QuestDescriptionBlock =
@@ -298,6 +302,12 @@ function parseDescriptionLine(
     }
   }
 
+  const jsonComponentNodes = tryParseMinecraftTextComponentLine(trimmed, dict)
+  if (jsonComponentNodes) {
+    if (jsonComponentNodes.length === 0) return []
+    return [{ type: 'paragraph', nodes: jsonComponentNodes }]
+  }
+
   const langKey = isWholeLangReference(line)
   if (langKey && dict[langKey] != null) {
     return parseDescriptionText(dict[langKey], dict)
@@ -349,6 +359,7 @@ export function richTextToPlain(nodes: RichTextNode[]): string {
       case 'text': return node.text
       case 'error': return node.message
       case 'link': return richTextToPlain(node.children)
+      case 'questLink': return richTextToPlain(node.children)
       case 'fragment': return richTextToPlain(node.children)
       default: return ''
     }

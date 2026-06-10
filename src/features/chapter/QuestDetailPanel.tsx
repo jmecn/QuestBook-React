@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useI18n } from '@/shared/i18n/useI18n'
+import { QuestRichTextNavigationProvider } from '@/app/context/QuestRichTextNavigationContext'
 import { QuestRewardListItem, QuestTaskListItem } from '@/features/chapter/QuestDetailItems'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-catalog'
@@ -124,7 +125,12 @@ export function QuestDetailPanel({
         <QuestRichText as="h3" className="quest-detail__subtitle" nodes={subtitleNodes} />
       ) : null}
       {quest.description ? (
-        <QuestDescription dict={dict} description={quest.description} />
+        <QuestRichTextNavigationProvider
+          catalog={catalog}
+          onNavigateQuest={onNavigateQuest}
+        >
+          <QuestDescription dict={dict} description={quest.description} />
+        </QuestRichTextNavigationProvider>
       ) : null}
 
       <section className="quest-detail__section">

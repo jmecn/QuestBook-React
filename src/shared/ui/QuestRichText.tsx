@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useQuestRichTextNavigation } from '@/app/context/QuestRichTextNavigationContext'
 import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 import type { McTextStyle, RichTextNode } from '@/shared/lib/quest-rich-text-parser'
 
@@ -18,6 +19,27 @@ function styleToCss(style: McTextStyle): CSSProperties {
   if (style.hexColor) css.color = style.hexColor
   if (style.obfuscated) css.filter = 'blur(2px)'
   return css
+}
+
+function QuestLinkNode({
+  questId,
+  children,
+}: {
+  questId: string
+  children: ReactNode
+}) {
+  const { navigateToQuest } = useQuestRichTextNavigation()
+
+  return (
+    <button
+      type="button"
+      className="quest-rich-text__link quest-rich-text__quest-link"
+      onClick={() => navigateToQuest(questId)}
+      title={questId}
+    >
+      {children}
+    </button>
+  )
 }
 
 function renderNode(node: RichTextNode, key: string | number): ReactNode {
@@ -50,6 +72,12 @@ function renderNode(node: RichTextNode, key: string | number): ReactNode {
         >
           {node.children.map((child, index) => renderNode(child, `${key}-${index}`))}
         </a>
+      )
+    case 'questLink':
+      return (
+        <QuestLinkNode key={key} questId={node.questId}>
+          {node.children.map((child, index) => renderNode(child, `${key}-${index}`))}
+        </QuestLinkNode>
       )
     case 'fragment':
       return node.children.map((child, index) => renderNode(child, `${key}-${index}`))
