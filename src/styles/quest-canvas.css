@@ -188,6 +188,10 @@
   --quest-layout-transition-ms: 300ms;
   --quest-grid-dot: color-mix(in srgb, var(--muted) 72%, var(--text));
   --quest-icon-inner-ratio: 0.6666667;
+  /* FTB QuestButton.draw: DARK_GRAY shape, WHITE@150 fill/outline (ftb_quests_theme.txt). */
+  --ftb-quest-shape-occlude: #212121;
+  --ftb-quest-shape-fill: rgba(255, 255, 255, 0.5882352941);
+  --ftb-quest-shape-outline: rgba(255, 255, 255, 0.5882352941);
 }
 
 .chapter-map .react-flow__node {
@@ -604,7 +608,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-icon--ftb-shape.is-selected {
   border: none;
   box-shadow: none;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 45%, transparent));
 }
 
 .quest-icon--ftb-shape .quest-icon__shape-layer {
@@ -624,25 +627,23 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 
 .quest-icon--ftb-shape .quest-icon__shape-occlude {
   z-index: 0;
-  background: var(--bg);
+  background: var(--ftb-quest-shape-occlude);
 }
 
 .quest-icon--ftb-shape .quest-icon__shape-bg {
   z-index: 1;
-  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+  background: var(--ftb-quest-shape-fill);
 }
 
 .quest-icon--ftb-shape .quest-icon__shape-outline {
   z-index: 2;
-  background: color-mix(in srgb, var(--text) 22%, var(--muted));
+  background: var(--ftb-quest-shape-outline);
 }
 
-.quest-icon--ftb-shape.is-selected .quest-icon__shape-bg {
-  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
-}
-
+.quest-icon--ftb-shape.is-selected .quest-icon__shape-bg,
 .quest-icon--ftb-shape.is-selected .quest-icon__shape-outline {
-  background: var(--accent);
+  /* FTB viewed/selected: pulsing WHITE@~190–240 on fill + outline. */
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .quest-icon--ftb-shape .quest-icon__inner {

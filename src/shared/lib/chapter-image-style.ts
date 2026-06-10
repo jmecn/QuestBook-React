@@ -24,9 +24,8 @@ export function isAnimatedChapterImage(image: ChapterImage): boolean {
 }
 
 /**
- * FTB {@code image.withColor(color.withAlpha(alpha))} — approximated for CSS.
- * Alpha-only: lower texture opacity (never a white multiply backdrop).
- * Tint: multiply overlay on top of texture; alpha scales the overlay.
+ * FTB {@code image.withColor(color.withAlpha(alpha))} — approximated for CSS when no baked PNG.
+ * Export bakes vertex color into {@code baked} assets; this runs only for raw-texture fallback.
  */
 export function chapterImagePaint(image: ChapterImage): ChapterImagePaint | undefined {
   const alpha = image.alpha ?? 255

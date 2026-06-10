@@ -26,7 +26,6 @@ import {
   chapterImageLayout,
   chapterImagePaint,
   chapterImageTransformOrigin,
-  isAnimatedChapterImage,
   sortedChapterImages,
 } from '@/shared/lib/chapter-image-style'
 import { useChapterSpriteStyle } from '@/shared/hooks/useChapterSpriteStyle'
@@ -176,8 +175,7 @@ export interface ChapterImageNodeData extends Record<string, unknown> {
 
 function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
   const { image, gridScale } = data
-  const useAnimatedRaw = isAnimatedChapterImage(image)
-  const bakedSrc = image.baked && !useAnimatedRaw ? questExportAssetUrl(image.baked) : undefined
+  const bakedSrc = image.baked ? questExportAssetUrl(image.baked) : undefined
   const candidates = useMemo(
     () => (bakedSrc ? [bakedSrc] : questExportTextureCandidates(image.image)),
     [bakedSrc, image.image],
@@ -188,8 +186,8 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
     [gridScale, image],
   )
   const src = candidates[index]
-  // Animated: raw strip + CSS vertex alpha/tint (FTB draw-time multiply). Static baked PNG already modulated.
-  const paint = useAnimatedRaw || !bakedSrc ? chapterImagePaint(image) : undefined
+  // Baked PNG (static or animated strip) already has FTB vertex color; raw texture fallback applies paint at draw time.
+  const paint = bakedSrc ? undefined : chapterImagePaint(image)
   const spriteStyle = useChapterSpriteStyle(image)
   const animated = spriteStyle != null
   const mediaStyle = paint?.mediaOpacity != null ? { opacity: paint.mediaOpacity } : undefined
