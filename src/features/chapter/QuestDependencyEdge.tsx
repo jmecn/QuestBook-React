@@ -17,9 +17,11 @@ export function QuestDependencyEdge({
   id,
   source,
   target,
+  data,
 }: EdgeProps) {
   const sourceNode = useInternalNode(source)
   const targetNode = useInternalNode(target)
+  const highlight = data?.highlight as 'incoming' | 'outgoing' | undefined
 
   if (!sourceNode?.internals.positionAbsolute || !targetNode?.internals.positionAbsolute) {
     return null
@@ -46,7 +48,13 @@ export function QuestDependencyEdge({
   })
 
   return (
-    <g className="quest-dependency-edge">
+    <g
+      className={[
+        'quest-dependency-edge',
+        highlight === 'incoming' ? 'quest-dependency-edge--incoming' : '',
+        highlight === 'outgoing' ? 'quest-dependency-edge--outgoing' : '',
+      ].filter(Boolean).join(' ')}
+    >
       <path
         id={id}
         className="quest-dependency-edge__stroke quest-dependency-edge__stroke--alt"

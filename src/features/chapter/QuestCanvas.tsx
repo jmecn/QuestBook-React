@@ -19,6 +19,10 @@ import {
 } from '@xyflow/react'
 import { QuestDependencyEdge } from '@/features/chapter/QuestDependencyEdge'
 import {
+  QuestCanvasHoverProvider,
+  useQuestCanvasHover,
+} from '@/features/chapter/QuestCanvasHoverContext'
+import {
   chapterImageLayout,
   chapterImagePaint,
   chapterImageSpriteVars,
@@ -105,6 +109,7 @@ function isQuestNodeData(data: Record<string, unknown>): data is QuestNodeData {
 function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) {
   const nodeId = useNodeId()
   const updateNodeInternals = useUpdateNodeInternals()
+  const { setHoveredQuestId } = useQuestCanvasHover()
   const iconSize = questIconPx(data.quest.size, data.gridScale)
   const label = useQuestDisplayTitle(data.quest, data.dict, data.locale)
   const subtitle = resolveQuestText(data.dict, data.quest.subtitle)
@@ -143,7 +148,11 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
   )
 
   return (
-    <div className="quest-flow-node">
+    <div
+      className="quest-flow-node"
+      onMouseEnter={() => setHoveredQuestId(data.quest.id)}
+      onMouseLeave={() => setHoveredQuestId(null)}
+    >
       {tooltipLabel ? (
         <QuestHoverLabel
           className="quest-flow-node__hover"
@@ -655,22 +664,60 @@ export interface QuestCanvasProps {
   onClearSelection?: () => void
 }
 
-function QuestCanvasInner({
+function QuestCanvasInner(props: QuestCanvasProps) {
+  const { nodes: layoutNodes, edges: layoutEdges } = useMemo(
+    () => chapterToFlow(
+      props.chapter,
+      props.catalog,
+      props.dict,
+      props.selectedId,
+      props.locale,
+      props.gridScale,
+    ),
+    [props.catalog, props.chapter, props.dict, props.gridScale, props.locale, props.selectedId],
+  )
+
+  return (
+    <QuestCanvasHoverProvider selectedId={props.selectedId}>
+      <QuestCanvasFlow
+        {...props}
+        layoutNodes={layoutNodes}
+        layoutEdges={layoutEdges}
+      />
+    </QuestCanvasHoverProvider>
+  )
+}
+
+function QuestCanvasFlow({
   chapter,
   catalog,
-  dict,
   gridScale,
   selectedId,
-  locale,
   drawerInset = 0,
   layoutEpoch = 0,
   sidebarCollapsed = false,
   onSelectQuest,
   onClearSelection,
-}: QuestCanvasProps) {
-  const { nodes: layoutNodes, edges: layoutEdges } = useMemo(
-    () => chapterToFlow(chapter, catalog, dict, selectedId, locale, gridScale),
-    [catalog, chapter, dict, gridScale, locale, selectedId],
+  layoutNodes,
+  layoutEdges,
+}: QuestCanvasProps & { layoutNodes: Node[]; layoutEdges: Edge[] }) {
+  const { highlightQuestId } = useQuestCanvasHover()
+
+  const flowEdges = useMemo(
+    () => layoutEdges.map((edge) => {
+      const outgoing = highlightQuestId != null && edge.source === highlightQuestId
+      const incoming = highlightQuestId != null && edge.target === highlightQuestId
+      const highlighted = outgoing || incoming
+      return {
+        ...edge,
+        zIndex: highlighted ? 10 : 0,
+        data: {
+          ...(edge.data ?? {}),
+          highlight: outgoing ? 'outgoing' as const : incoming ? 'incoming' as const : undefined,
+        },
+      }
+    }),
+    [highlightQuestId, layoutEdges],
   )
 
   const onNodeClick = useCallback(
@@ -712,7 +759,7 @@ function QuestCanvasInner({
   return (
     <ReactFlow
       nodes={layoutNodes}
-      edges={layoutEdges}
+      edges={flowEdges}
       onNodesChange={() => {}}
       onEdgesChange={() => {}}
       nodeTypes={nodeTypes}

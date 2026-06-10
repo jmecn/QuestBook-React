@@ -242,6 +242,12 @@
   }
 }
 
+@keyframes quest-marching-ants-wide {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chapter-map .quest-dependency-edge__stroke {
     animation: none;
@@ -255,6 +261,29 @@
   .chapter-map .quest-dependency-edge__stroke--main {
     opacity: 0.55;
   }
+}
+
+/* FTB QuestPanel pass 2: requires = incoming (cyan), required-for = outgoing (yellow). */
+.chapter-map .quest-dependency-edge--incoming .quest-dependency-edge__stroke--main {
+  stroke: #00c8c8;
+}
+
+.chapter-map .quest-dependency-edge--outgoing .quest-dependency-edge__stroke--main {
+  stroke: #c8c800;
+}
+
+/* Keep dash period > stroke-width so square caps do not close gaps (solid-looking line). */
+.chapter-map .quest-dependency-edge--incoming .quest-dependency-edge__stroke,
+.chapter-map .quest-dependency-edge--outgoing .quest-dependency-edge__stroke {
+  stroke-dasharray: 8 8;
+  animation-name: quest-marching-ants-wide;
+  animation-duration: 0.35s;
+}
+
+.chapter-map .quest-dependency-edge--incoming .quest-dependency-edge__stroke--alt,
+.chapter-map .quest-dependency-edge--outgoing .quest-dependency-edge__stroke--alt {
+  stroke-dashoffset: 8;
+  animation-duration: 0.35s;
 }
 
 .quest-zoom-controls {
