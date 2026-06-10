@@ -7,10 +7,8 @@ import {
   Position,
   ReactFlow,
   ReactFlowProvider,
-  useEdgesState,
   useNodeId,
   useNodesInitialized,
-  useNodesState,
   useOnViewportChange,
   useReactFlow,
   useUpdateNodeInternals,
@@ -45,6 +43,8 @@ import {
   QUEST_LAYOUT_TRANSITION_MS,
   rememberChapterCenter,
   rememberQuestCanvasZoom,
+  runProgrammaticViewportMove,
+  shouldRememberViewportOnSettle,
   QUEST_ZOOM_BASE,
 } from '@/shared/lib/quest-canvas-viewport'
 import { DEFAULT_QUEST_NODE_SIZE, questIconPx } from '@/shared/lib/quest-node-size'
@@ -239,65 +239,108 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
 const nodeTypes = { quest: QuestNodeComponent, chapterImage: ChapterImageNode }
 const edgeTypes = { questDependency: QuestDependencyEdge }
 
-function centerViewportOnGridPoint(
+/** Place a flow point at the visible map center (left of the detail drawer overlay). */
+function centerFlowPointInVisibleViewport(
   setCenter: ReturnType<typeof useReactFlow>['setCenter'],
-  point: { x: number; y: number },
-  gridScale: number,
+  flowPoint: { x: number; y: number },
   drawerInset: number,
   zoom: number,
   duration: number,
-): void {
-  const flow = gridToFlowPoint(point, gridScale)
-  const centerX = flow.x + drawerInset / (2 * zoom)
-  void setCenter(centerX, flow.y, { zoom, duration })
+): Promise<boolean> {
+  const centerX = flowPoint.x + drawerInset / (2 * zoom)
+  return new Promise((resolve) => {
+    runProgrammaticViewportMove(() => {
+      void setCenter(centerX, flowPoint.y, { zoom, duration }).then(resolve)
+    })
+  })
 }
 
-function ApplyChapterViewport({
-  depKey,
+/** Map-pane center in flow coordinates (respects drawer overlay when open). */
+function captureVisibleMapCenter(
+  screenToFlowPosition: ReturnType<typeof useReactFlow>['screenToFlowPosition'],
+  drawerInset: number,
+): { x: number; y: number } | null {
+  const pane = document.querySelector('.chapter-map .react-flow')
+  if (!(pane instanceof HTMLElement)) return null
+  const rect = pane.getBoundingClientRect()
+  const centerX = rect.left + (rect.width - drawerInset) / 2
+  const centerY = rect.top + rect.height / 2
+  return screenToFlowPosition({ x: centerX, y: centerY })
+}
+
+/** Focus selected quest or restore chapter center once pan/zoom is ready. */
+function QuestViewportController({
   chapter,
   catalog,
   gridScale,
+  chapterLayoutReady,
+  focusNodeId,
+  focusTarget,
   drawerInset,
-  skip,
+  layoutEpoch,
 }: {
-  depKey: string
   chapter: ChapterData
   catalog: Map<string, QuestCatalogEntry>
   gridScale: number
+  chapterLayoutReady: boolean
+  focusNodeId: string | null
+  focusTarget: { x: number; y: number } | null
   drawerInset: number
-  skip: boolean
+  layoutEpoch: number
 }) {
   const nodesInitialized = useNodesInitialized()
-  const { setCenter, getZoom } = useReactFlow()
+  const { setCenter, getZoom, viewportInitialized } = useReactFlow()
+  const chapterEnteredRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (skip || !nodesInitialized) return
+    chapterEnteredRef.current = null
+  }, [chapter.id])
 
-    let target = getDefaultChapterViewCenter(chapter, catalog)
-
-    if (chapter.autofocusId) {
-      const autofocus = resolveAutofocusGridPoint(chapter, catalog, chapter.autofocusId)
-      if (autofocus) {
-        target = autofocus
-      }
-    } else {
-      const remembered = getRememberedChapterCenter(chapter.id)
-      if (remembered) {
-        target = remembered
-      }
-    }
-
-    rememberChapterCenter(chapter.id, target)
+  useEffect(() => {
+    if (!chapterLayoutReady || !nodesInitialized || !viewportInitialized) return
 
     let cancelled = false
-    const run = () => {
+    const apply = () => {
       if (cancelled) return
       const zoom = getZoom() || getSavedQuestCanvasZoom()
-      centerViewportOnGridPoint(setCenter, target, gridScale, drawerInset, zoom, QUEST_LAYOUT_TRANSITION_MS)
+
+      if (focusNodeId && focusTarget) {
+        void centerFlowPointInVisibleViewport(
+          setCenter,
+          focusTarget,
+          drawerInset,
+          zoom,
+          QUEST_LAYOUT_TRANSITION_MS,
+        )
+        chapterEnteredRef.current = chapter.id
+        return
+      }
+
+      if (chapterEnteredRef.current === chapter.id) return
+
+      let target = getDefaultChapterViewCenter(chapter, catalog)
+      if (chapter.autofocusId) {
+        const autofocus = resolveAutofocusGridPoint(chapter, catalog, chapter.autofocusId)
+        if (autofocus) {
+          target = autofocus
+        }
+      } else {
+        const remembered = getRememberedChapterCenter(chapter.id)
+        if (remembered) {
+          target = remembered
+        }
+      }
+
+      const flow = gridToFlowPoint(target, gridScale)
+      void centerFlowPointInVisibleViewport(setCenter, flow, 0, zoom, 0).then((ok) => {
+        if (!cancelled && ok) {
+          chapterEnteredRef.current = chapter.id
+        }
+      })
     }
 
     const frame = requestAnimationFrame(() => {
-      requestAnimationFrame(run)
+      requestAnimationFrame(apply)
     })
 
     return () => {
@@ -307,106 +350,45 @@ function ApplyChapterViewport({
   }, [
     catalog,
     chapter,
-    depKey,
-    drawerInset,
-    getZoom,
-    gridScale,
-    nodesInitialized,
-    setCenter,
-    skip,
-  ])
-
-  return null
-}
-
-function RememberChapterViewportOnPan({
-  chapterId,
-  gridScale,
-}: {
-  chapterId: string
-  gridScale: number
-}) {
-  const { screenToFlowPosition } = useReactFlow()
-
-  useOnViewportChange({
-    onEnd: () => {
-      const pane = document.querySelector('.chapter-map .react-flow')
-      if (!(pane instanceof HTMLElement)) return
-      const rect = pane.getBoundingClientRect()
-      const flow = screenToFlowPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-      })
-      rememberChapterCenter(chapterId, flowToGridPoint(flow.x, flow.y, gridScale))
-    },
-  })
-
-  return null
-}
-
-function FocusSelectedQuest({
-  focusNodeId,
-  focusTarget,
-  drawerInset,
-}: {
-  focusNodeId: string | null
-  focusTarget: { x: number; y: number } | null
-  drawerInset: number
-}) {
-  const nodesInitialized = useNodesInitialized()
-  const { setCenter, getZoom } = useReactFlow()
-
-  useEffect(() => {
-    if (!focusNodeId || !focusTarget || !nodesInitialized) return
-
-    let cancelled = false
-    const run = () => {
-      if (cancelled) return
-      const zoom = getZoom() || QUEST_ZOOM_BASE
-      const centerX = focusTarget.x + drawerInset / (2 * zoom)
-      void setCenter(centerX, focusTarget.y, {
-        zoom,
-        duration: QUEST_LAYOUT_TRANSITION_MS,
-      })
-    }
-
-    const frame = requestAnimationFrame(() => {
-      requestAnimationFrame(run)
-    })
-
-    return () => {
-      cancelled = true
-      cancelAnimationFrame(frame)
-    }
-  }, [
+    chapterLayoutReady,
     drawerInset,
     focusNodeId,
     focusTarget?.x,
     focusTarget?.y,
     getZoom,
+    gridScale,
+    layoutEpoch,
     nodesInitialized,
     setCenter,
+    viewportInitialized,
   ])
 
   return null
 }
 
-function AdjustViewportOnDrawerClose({ drawerInset }: { drawerInset: number }) {
-  const { getViewport, setViewport } = useReactFlow()
-  const prevInsetRef = useRef(drawerInset)
+/** Persist chapter center when the viewport settles after user pan/zoom. */
+function RememberChapterViewportOnSettle({
+  chapterId,
+  gridScale,
+  drawerInset,
+  skip,
+}: {
+  chapterId: string
+  gridScale: number
+  drawerInset: number
+  skip: boolean
+}) {
+  const { screenToFlowPosition } = useReactFlow()
 
-  useEffect(() => {
-    const prevInset = prevInsetRef.current
-    prevInsetRef.current = drawerInset
-
-    if (prevInset > 0 && drawerInset === 0) {
-      const viewport = getViewport()
-      void setViewport(
-        { ...viewport, x: viewport.x + prevInset / 2 },
-        { duration: QUEST_LAYOUT_TRANSITION_MS },
-      )
-    }
-  }, [drawerInset, getViewport, setViewport])
+  useOnViewportChange({
+    onEnd: () => {
+      if (skip || !shouldRememberViewportOnSettle()) return
+      const flow = captureVisibleMapCenter(screenToFlowPosition, drawerInset)
+      if (flow) {
+        rememberChapterCenter(chapterId, flowToGridPoint(flow.x, flow.y, gridScale))
+      }
+    },
+  })
 
   return null
 }
@@ -440,10 +422,12 @@ function AdjustViewportOnSidebarChange({
     if (mapDelta === 0) return
 
     const viewport = getViewport()
-    void setViewport(
-      { ...viewport, x: viewport.x + mapDelta / 2 },
-      { duration: QUEST_LAYOUT_TRANSITION_MS },
-    )
+    runProgrammaticViewportMove(() => {
+      void setViewport(
+        { ...viewport, x: viewport.x + mapDelta / 2 },
+        { duration: QUEST_LAYOUT_TRANSITION_MS },
+      )
+    })
   }, [hasSelectedQuest, layoutEpoch, sidebarCollapsed, getViewport, setViewport])
 
   return null
@@ -546,6 +530,7 @@ function chapterToFlow(
       selectable: false,
       draggable: false,
       focusable: false,
+      measured: { width: layout.widthPx, height: layout.heightPx },
       style: {
         pointerEvents: clickable ? 'auto' : 'none',
         width: layout.widthPx,
@@ -570,6 +555,7 @@ function chapterToFlow(
       },
       width: iconSize,
       height: iconSize,
+      measured: { width: iconSize, height: iconSize },
       style: { width: iconSize, height: iconSize },
       selected: quest.id === selectedId,
       zIndex: 1,
@@ -624,6 +610,7 @@ function chapterToFlow(
       },
       width: iconSize,
       height: iconSize,
+      measured: { width: iconSize, height: iconSize },
       style: { width: iconSize, height: iconSize },
       selected: link.linkedQuest === selectedId,
       zIndex: 1,
@@ -666,14 +653,6 @@ function QuestCanvasInner({
     [catalog, chapter, dict, gridScale, locale, selectedId],
   )
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges)
-
-  useEffect(() => {
-    setNodes(layoutNodes)
-    setEdges(layoutEdges)
-  }, [layoutEdges, layoutNodes, setEdges, setNodes])
-
   const onNodeClick = useCallback(
     (_: unknown, node: Node) => {
       if (node.type !== 'quest' || !isQuestNodeData(node.data)) return
@@ -688,33 +667,34 @@ function QuestCanvasInner({
 
   const gridStep = gridStepPx(gridScale)
   const backgroundDotGap = Math.max(12, Math.round(gridStep / 3))
-  const layoutKey = `${chapter.id}:${gridScale}:${nodes.length}`
+
+  const chapterLayoutReady = layoutNodes.length > 0
 
   const focusNodeId = useMemo(() => {
     if (!selectedId) return null
     if (chapter.quests.some((quest) => quest.id === selectedId)) {
       return selectedId
     }
-    return nodes.find((node) => (
+    return layoutNodes.find((node) => (
       node.type === 'quest'
       && isQuestNodeData(node.data)
       && node.data.quest.id === selectedId
     ))?.id ?? null
-  }, [chapter.quests, nodes, selectedId])
+  }, [chapter.quests, layoutNodes, selectedId])
 
   const focusTarget = useMemo(() => {
     if (!focusNodeId) return null
-    const node = nodes.find((entry) => entry.id === focusNodeId)
+    const node = layoutNodes.find((entry) => entry.id === focusNodeId)
     if (!node) return null
     return { x: node.position.x, y: node.position.y }
-  }, [focusNodeId, nodes])
+  }, [focusNodeId, layoutNodes])
 
   return (
     <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
+      nodes={layoutNodes}
+      edges={layoutEdges}
+      onNodesChange={() => {}}
+      onEdgesChange={() => {}}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       defaultEdgeOptions={QUEST_EDGE_OPTIONS}
@@ -730,27 +710,26 @@ function QuestCanvasInner({
       maxZoom={displayPercentToZoom(ZOOM_PRESET_PERCENTS[ZOOM_PRESET_PERCENTS.length - 1])}
       proOptions={{ hideAttribution: true }}
     >
-      <AdjustViewportOnDrawerClose drawerInset={drawerInset} />
       <AdjustViewportOnSidebarChange
         layoutEpoch={layoutEpoch}
         sidebarCollapsed={sidebarCollapsed}
         hasSelectedQuest={focusNodeId != null}
       />
-      {focusNodeId == null ? (
-        <ApplyChapterViewport
-          depKey={layoutKey}
-          chapter={chapter}
-          catalog={catalog}
-          gridScale={gridScale}
-          drawerInset={drawerInset}
-          skip={false}
-        />
-      ) : null}
-      <RememberChapterViewportOnPan chapterId={chapter.id} gridScale={gridScale} />
-      <FocusSelectedQuest
+      <QuestViewportController
+        chapter={chapter}
+        catalog={catalog}
+        gridScale={gridScale}
+        chapterLayoutReady={chapterLayoutReady}
         focusNodeId={focusNodeId}
         focusTarget={focusTarget}
         drawerInset={drawerInset}
+        layoutEpoch={layoutEpoch}
+      />
+      <RememberChapterViewportOnSettle
+        chapterId={chapter.id}
+        gridScale={gridScale}
+        drawerInset={drawerInset}
+        skip={focusNodeId != null}
       />
       <ZoomControls />
       <Background gap={backgroundDotGap} size={1.25} color="var(--quest-grid-dot)" />
@@ -770,7 +749,7 @@ export const QuestCanvas = memo(function QuestCanvas(props: QuestCanvasProps) {
   }, [selectedId])
 
   return (
-    <ReactFlowProvider>
+    <ReactFlowProvider key={props.chapter.id}>
       <QuestCanvasInner {...props} />
     </ReactFlowProvider>
   )
