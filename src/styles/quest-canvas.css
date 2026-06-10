@@ -473,6 +473,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   object-fit: fill;
 }
 
+/* FTB vertex tint: texture first, then multiply overlay (not a colored backdrop). */
 .quest-chapter-image__tint {
   position: absolute;
   inset: 0;

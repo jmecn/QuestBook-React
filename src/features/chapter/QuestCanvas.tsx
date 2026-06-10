@@ -22,13 +22,15 @@ import {
 import { QuestDependencyEdge } from '@/features/chapter/QuestDependencyEdge'
 import {
   chapterImageLayout,
-  chapterImageOpacity,
-  chapterImageRgb,
+  chapterImagePaint,
   chapterImageSpriteVars,
   chapterImageTransformOrigin,
   sortedChapterImages,
 } from '@/shared/lib/chapter-image-style'
-import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
+import {
+  questExportAssetUrl,
+  questExportTextureCandidates,
+} from '@/shared/lib/quest-export-asset'
 import { sidebarMapWidthDelta } from '@/shared/lib/viewport-inset'
 import { DEFAULT_QUEST_NODE_SIZE, questIconPx } from '@/shared/lib/quest-node-size'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
@@ -134,21 +136,25 @@ export interface ChapterImageNodeData extends Record<string, unknown> {
 
 function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
   const { image, gridScale } = data
-  const candidates = useMemo(() => questExportTextureCandidates(image.image), [image.image])
+  const bakedSrc = image.baked ? questExportAssetUrl(image.baked) : undefined
+  const candidates = useMemo(
+    () => (bakedSrc ? [bakedSrc] : questExportTextureCandidates(image.image)),
+    [bakedSrc, image.image],
+  )
   const [index, setIndex] = useState(0)
   const { widthPx, heightPx } = useMemo(
     () => chapterImageLayout(image, gridScale),
     [gridScale, image],
   )
   const src = candidates[index]
-  const opacity = chapterImageOpacity(image.alpha)
-  const tint = chapterImageRgb(image.color)
+  const paint = bakedSrc ? undefined : chapterImagePaint(image)
   const spriteVars = chapterImageSpriteVars(image)
   const animated = spriteVars != null
+  const mediaStyle = paint?.mediaOpacity != null ? { opacity: paint.mediaOpacity } : undefined
 
   useEffect(() => {
     setIndex(0)
-  }, [image.image])
+  }, [image.image, image.baked])
 
   if (!src) return null
 
@@ -161,7 +167,6 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
       style={{
         width: widthPx,
         height: heightPx,
-        opacity,
         transform: rotation ? `rotate(${rotation}deg)` : undefined,
         transformOrigin,
       }}
@@ -169,7 +174,7 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
       {animated ? (
         <div
           className="quest-chapter-image__sprite"
-          style={{ ...spriteVars, backgroundImage: `url("${src}")` }}
+          style={{ ...spriteVars, backgroundImage: `url("${src}")`, ...mediaStyle }}
           role="img"
           aria-hidden="true"
         />
@@ -179,6 +184,7 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
           src={src}
           alt=""
           draggable={false}
+          style={mediaStyle}
           onError={() => {
             if (index + 1 < candidates.length) {
               setIndex((value) => value + 1)
@@ -186,10 +192,13 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
           }}
         />
       )}
-      {tint ? (
+      {paint?.tintRgb ? (
         <div
           className="quest-chapter-image__tint"
-          style={{ backgroundColor: `rgb(${tint.r}, ${tint.g}, ${tint.b})` }}
+          style={{
+            backgroundColor: paint.tintRgb,
+            opacity: paint.tintOpacity ?? 1,
+          }}
           aria-hidden="true"
         />
       ) : null}

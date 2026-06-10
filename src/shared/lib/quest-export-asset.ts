@@ -9,11 +9,16 @@ function splitRef(ref: string): { namespace: string; path: string } | null {
 }
 
 /**
- * Resolve closure PNG URLs under {@code quest-export/assets/}.
+ * Resolve exported PNG URLs under {@code quest-export/assets/}.
  *
  * Registry item ids use per-item PNGs under {@code assets/icons/items/} (see {@code quest-item-icon.ts}).
- * Closure texture paths resolve to copied PNGs under {@code assets/<ns>/textures/}.
+ * Texture paths resolve to copied PNGs under {@code assets/<ns>/textures/}.
  */
+/** Asset path from export manifest, e.g. {@code assets/chapter-images/<hash>.png}. */
+export function questExportAssetUrl(relativePath: string): string {
+  return questExportUrl(relativePath)
+}
+
 export function questExportTextureCandidates(ref?: string): string[] {
   if (!ref) return []
   const parts = splitRef(ref)

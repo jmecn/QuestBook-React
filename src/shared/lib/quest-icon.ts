@@ -9,7 +9,7 @@ function urlsForRef(ref: string): string[] {
   return urls
 }
 
-/** Quest-export icon URLs: per-item PNG, then closure texture paths. */
+/** Quest-export icon URLs: per-item PNG, then exported texture paths. */
 export function questExportIconCandidates(icon?: string, iconItems?: string[]): string[] {
   const seen = new Set<string>()
   const urls: string[] = []

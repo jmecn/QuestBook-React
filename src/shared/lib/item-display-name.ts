@@ -88,7 +88,7 @@ function resolveComposedLabel(dict: Record<string, string>, itemId: string): str
 }
 
 /**
- * Registry label from closure {@code lang/} only — no English id fallback.
+ * Registry label from exported {@code lang/} only — no English id fallback.
  * Used for observation task titles (match FTB: keep raw id when lang is missing).
  */
 export async function resolveRegistryDisplayName(
@@ -111,7 +111,7 @@ export async function resolveRegistryDisplayName(
   }
 }
 
-/** Human-readable item label: name-keys + closure {@code lang/}, with GT compose rules, then id fallback. */
+/** Human-readable item label: name-keys + exported {@code lang/}, with GT compose rules, then id fallback. */
 export async function resolveItemDisplayName(
   itemId: string,
   locale = 'en_us',

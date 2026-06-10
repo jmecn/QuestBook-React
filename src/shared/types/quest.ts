@@ -11,6 +11,8 @@ export interface QuestTask {
 
 export interface ChapterImage {
   image: string
+  /** Pre-baked PNG (or vertical sprite strip) under quest-export {@code assets/chapter-images/}. */
+  baked?: string
   x: number
   y: number
   width: number
