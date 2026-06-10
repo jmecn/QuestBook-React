@@ -84,6 +84,8 @@ export interface ChapterData {
   group?: string | null
   title?: string
   subtitle?: string | string[]
+  /** FTB {@code autofocus_id} — quest or quest-link id to center on when opening the chapter. */
+  autofocusId?: string
   quests: QuestNode[]
   questLinks?: QuestLink[]
   images?: ChapterImage[]
