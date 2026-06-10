@@ -3,7 +3,7 @@
   min-height: 0;
   display: flex;
   overflow: hidden;
-  --quest-layout-transition-ms: 450ms;
+  --quest-layout-transition-ms: 300ms;
 }
 
 .book-main {
@@ -23,7 +23,7 @@
   border-right: 1px solid var(--border);
   background: var(--panel);
   overflow: hidden;
-  transition: flex-basis var(--quest-layout-transition-ms, 450ms) ease-in-out;
+  transition: flex-basis var(--quest-layout-transition-ms, 300ms) ease-in-out;
 }
 
 .chapter-sidebar.is-collapsed {
@@ -52,7 +52,7 @@
   color: var(--text);
   overflow: hidden;
   white-space: nowrap;
-  transition: opacity var(--quest-layout-transition-ms, 450ms) ease-in-out;
+  transition: opacity var(--quest-layout-transition-ms, 300ms) ease-in-out;
 }
 
 .chapter-sidebar.is-collapsed .chapter-sidebar__title {
@@ -116,7 +116,7 @@
   letter-spacing: 0.04em;
   overflow: hidden;
   white-space: nowrap;
-  transition: opacity var(--quest-layout-transition-ms, 450ms) ease-in-out;
+  transition: opacity var(--quest-layout-transition-ms, 300ms) ease-in-out;
 }
 
 .chapter-sidebar.is-collapsed .chapter-sidebar__group {
@@ -163,7 +163,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.85rem;
-  transition: opacity var(--quest-layout-transition-ms, 450ms) ease-in-out;
+  transition: opacity var(--quest-layout-transition-ms, 300ms) ease-in-out;
 }
 
 .chapter-sidebar.is-collapsed .chapter-sidebar__label {
@@ -185,7 +185,7 @@
   min-height: 0;
   position: relative;
   background: var(--bg);
-  --quest-layout-transition-ms: 450ms;
+  --quest-layout-transition-ms: 300ms;
   --quest-grid-dot: color-mix(in srgb, var(--muted) 72%, var(--text));
   --quest-icon-inner-ratio: 0.6666667;
 }
@@ -194,9 +194,14 @@
   overflow: visible !important;
 }
 
-.chapter-map .react-flow__node:has(.quest-chapter-image) {
+.chapter-map .react-flow__node:has(.quest-chapter-image-wrap:not(.quest-chapter-image-wrap--clickable)) {
   pointer-events: none !important;
   z-index: -100 !important;
+}
+
+.chapter-map .react-flow__node:has(.quest-chapter-image-wrap--clickable) {
+  pointer-events: auto !important;
+  z-index: 2 !important;
 }
 
 .chapter-map .react-flow__node:has(.quest-flow-node):hover,
@@ -343,7 +348,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   overflow-x: hidden;
   overflow-y: auto;
   box-shadow: var(--tfg-shadow, -8px 0 24px rgba(0, 0, 0, 0.18));
-  animation: chapter-detail-enter var(--quest-layout-transition-ms, 450ms) ease-in-out;
+  animation: chapter-detail-enter var(--quest-layout-transition-ms, 300ms) ease-in-out;
 }
 
 .chapter-detail--drawer .quest-detail {
@@ -459,6 +464,19 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   overflow: hidden;
   pointer-events: none;
   user-select: none;
+}
+
+.quest-chapter-image-wrap--clickable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.quest-chapter-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
 }
 
 .quest-chapter-image {

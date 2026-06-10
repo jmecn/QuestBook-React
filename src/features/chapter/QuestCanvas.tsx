@@ -27,6 +27,7 @@ import {
   chapterImageTransformOrigin,
   sortedChapterImages,
 } from '@/shared/lib/chapter-image-style'
+import { chapterImageClickHref, isChapterImageClickable } from '@/shared/lib/chapter-image-click'
 import {
   questExportAssetUrl,
   questExportTextureCandidates,
@@ -41,6 +42,7 @@ import {
 import {
   getRememberedChapterCenter,
   getSavedQuestCanvasZoom,
+  QUEST_LAYOUT_TRANSITION_MS,
   rememberChapterCenter,
   rememberQuestCanvasZoom,
   QUEST_ZOOM_BASE,
@@ -61,8 +63,6 @@ const QUEST_EDGE_OPTIONS: DefaultEdgeOptions = {
   type: 'questDependency',
   className: 'quest-flow-edge',
 }
-
-const FOCUS_ANIMATION_MS = 450
 
 const ZOOM_PRESET_PERCENTS = [25, 50, 75, 100, 125, 150, 175, 200] as const
 
@@ -170,37 +170,57 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
 
   const rotation = image.rotation ?? 0
   const transformOrigin = chapterImageTransformOrigin(image.alignToCorner)
+  const clickHref = chapterImageClickHref(image.click)
+  const clickable = clickHref != null
+
+  const media = animated ? (
+    <div
+      className="quest-chapter-image__sprite"
+      style={{ ...spriteVars, backgroundImage: `url("${src}")`, ...mediaStyle }}
+      role="img"
+      aria-hidden="true"
+    />
+  ) : (
+    <img
+      className="quest-chapter-image quest-chapter-image--fill"
+      src={src}
+      alt=""
+      draggable={false}
+      style={mediaStyle}
+      onError={() => {
+        if (index + 1 < candidates.length) {
+          setIndex((value) => value + 1)
+        }
+      }}
+    />
+  )
+
+  const wrapClass = clickable
+    ? 'quest-chapter-image-wrap quest-chapter-image-wrap--clickable'
+    : 'quest-chapter-image-wrap'
+
+  const wrapStyle = {
+    width: widthPx,
+    height: heightPx,
+    transform: rotation ? `rotate(${rotation}deg)` : undefined,
+    transformOrigin,
+  } as const
 
   return (
-    <div
-      className="quest-chapter-image-wrap"
-      style={{
-        width: widthPx,
-        height: heightPx,
-        transform: rotation ? `rotate(${rotation}deg)` : undefined,
-        transformOrigin,
-      }}
-    >
-      {animated ? (
-        <div
-          className="quest-chapter-image__sprite"
-          style={{ ...spriteVars, backgroundImage: `url("${src}")`, ...mediaStyle }}
-          role="img"
-          aria-hidden="true"
-        />
+    <div className={wrapClass} style={wrapStyle}>
+      {clickable ? (
+        <a
+          className="quest-chapter-image-link"
+          href={clickHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={clickHref}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {media}
+        </a>
       ) : (
-        <img
-          className="quest-chapter-image quest-chapter-image--fill"
-          src={src}
-          alt=""
-          draggable={false}
-          style={mediaStyle}
-          onError={() => {
-            if (index + 1 < candidates.length) {
-              setIndex((value) => value + 1)
-            }
-          }}
-        />
+        media
       )}
       {paint?.tintRgb ? (
         <div
@@ -273,7 +293,7 @@ function ApplyChapterViewport({
     const run = () => {
       if (cancelled) return
       const zoom = getZoom() || getSavedQuestCanvasZoom()
-      centerViewportOnGridPoint(setCenter, target, gridScale, drawerInset, zoom, 0)
+      centerViewportOnGridPoint(setCenter, target, gridScale, drawerInset, zoom, QUEST_LAYOUT_TRANSITION_MS)
     }
 
     const frame = requestAnimationFrame(() => {
@@ -328,32 +348,16 @@ function FocusSelectedQuest({
   focusNodeId,
   focusTarget,
   drawerInset,
-  layoutEpoch,
-  chapterKey,
 }: {
   focusNodeId: string | null
   focusTarget: { x: number; y: number } | null
   drawerInset: number
-  layoutEpoch: number
-  chapterKey: string
 }) {
   const nodesInitialized = useNodesInitialized()
   const { setCenter, getZoom } = useReactFlow()
-  const prevFocusRef = useRef<{ chapterKey: string; focusNodeId: string | null }>({
-    chapterKey: '',
-    focusNodeId: null,
-  })
 
   useEffect(() => {
     if (!focusNodeId || !focusTarget || !nodesInitialized) return
-
-    const prev = prevFocusRef.current
-    const chapterChanged = prev.chapterKey !== chapterKey
-    const focusChanged = prev.focusNodeId !== focusNodeId
-    prevFocusRef.current = { chapterKey, focusNodeId }
-
-    const duration =
-      !chapterChanged && focusChanged ? FOCUS_ANIMATION_MS : 0
 
     let cancelled = false
     const run = () => {
@@ -362,7 +366,7 @@ function FocusSelectedQuest({
       const centerX = focusTarget.x + drawerInset / (2 * zoom)
       void setCenter(centerX, focusTarget.y, {
         zoom,
-        duration,
+        duration: QUEST_LAYOUT_TRANSITION_MS,
       })
     }
 
@@ -375,12 +379,11 @@ function FocusSelectedQuest({
       cancelAnimationFrame(frame)
     }
   }, [
-    chapterKey,
     drawerInset,
     focusNodeId,
-    focusTarget,
+    focusTarget?.x,
+    focusTarget?.y,
     getZoom,
-    layoutEpoch,
     nodesInitialized,
     setCenter,
   ])
@@ -400,7 +403,7 @@ function AdjustViewportOnDrawerClose({ drawerInset }: { drawerInset: number }) {
       const viewport = getViewport()
       void setViewport(
         { ...viewport, x: viewport.x + prevInset / 2 },
-        { duration: FOCUS_ANIMATION_MS },
+        { duration: QUEST_LAYOUT_TRANSITION_MS },
       )
     }
   }, [drawerInset, getViewport, setViewport])
@@ -439,7 +442,7 @@ function AdjustViewportOnSidebarChange({
     const viewport = getViewport()
     void setViewport(
       { ...viewport, x: viewport.x + mapDelta / 2 },
-      { duration: FOCUS_ANIMATION_MS },
+      { duration: QUEST_LAYOUT_TRANSITION_MS },
     )
   }, [hasSelectedQuest, layoutEpoch, sidebarCollapsed, getViewport, setViewport])
 
@@ -534,6 +537,7 @@ function chapterToFlow(
 
   for (const image of sortedChapterImages(chapter.images)) {
     const layout = chapterImageLayout(image, gridScale)
+    const clickable = isChapterImageClickable(image.click)
     nodes.push({
       id: `image:${image.image}:${image.x}:${image.y}:${image.order ?? 0}`,
       type: 'chapterImage',
@@ -543,11 +547,11 @@ function chapterToFlow(
       draggable: false,
       focusable: false,
       style: {
-        pointerEvents: 'none',
+        pointerEvents: clickable ? 'auto' : 'none',
         width: layout.widthPx,
         height: layout.heightPx,
       },
-      zIndex: -100 + (image.order ?? 0),
+      zIndex: clickable ? 2 + (image.order ?? 0) : -100 + (image.order ?? 0),
     })
   }
 
@@ -747,8 +751,6 @@ function QuestCanvasInner({
         focusNodeId={focusNodeId}
         focusTarget={focusTarget}
         drawerInset={drawerInset}
-        layoutEpoch={layoutEpoch}
-        chapterKey={chapter.id}
       />
       <ZoomControls />
       <Background gap={backgroundDotGap} size={1.25} color="var(--quest-grid-dot)" />
