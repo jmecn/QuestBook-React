@@ -710,10 +710,10 @@ function QuestCanvasFlow({
     () => layoutEdges.map((edge) => {
       const outgoing = highlightQuestId != null && edge.source === highlightQuestId
       const incoming = highlightQuestId != null && edge.target === highlightQuestId
-      const highlighted = outgoing || incoming
       return {
         ...edge,
-        zIndex: highlighted ? 10 : 0,
+        // Keep all edges under quest nodes (FTB draws connections below buttons).
+        zIndex: 0,
         data: {
           ...(edge.data ?? {}),
           highlight: outgoing ? 'outgoing' as const : incoming ? 'incoming' as const : undefined,

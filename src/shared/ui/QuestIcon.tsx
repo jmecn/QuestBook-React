@@ -55,6 +55,10 @@ export function QuestIcon({
     () => (variant === 'node' ? questShapeTextureUrl(shapeId, 'outline') : null),
     [shapeId, variant],
   )
+  const shapeMaskUrl = useMemo(
+    () => (variant === 'node' ? questShapeTextureUrl(shapeId, 'shape') : null),
+    [shapeId, variant],
+  )
 
   const [exportIndex, setExportIndex] = useState(0)
   const [carouselIndex, setCarouselIndex] = useState(0)
@@ -148,6 +152,16 @@ export function QuestIcon({
     >
       {useFtbShapeLayers ? (
         <>
+          {shapeMaskUrl ? (
+            <span
+              className="quest-icon__shape-layer quest-icon__shape-occlude"
+              style={{
+                WebkitMaskImage: `url("${shapeMaskUrl}")`,
+                maskImage: `url("${shapeMaskUrl}")`,
+              }}
+              aria-hidden="true"
+            />
+          ) : null}
           <span
             className="quest-icon__shape-layer quest-icon__shape-bg"
             style={{

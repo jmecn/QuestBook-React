@@ -1,4 +1,11 @@
+import {
+  questShapeBorderToward,
+  questShapeFromNodeData,
+} from '@/shared/lib/quest-shape-border'
+
 type Point = { x: number; y: number }
+
+type BorderNode = SizedNode & { data?: unknown }
 
 type SizedNode = {
   measured: { width?: number; height?: number }
@@ -28,18 +35,16 @@ export function questNodeCenter(node: SizedNode): Point {
   return { x: x + width / 2, y: y + height / 2 }
 }
 
-/** Quest nodes are circular; radius is half the measured box. */
+/** @deprecated Prefer {@link questNodeBorderToward} for shape-aware clipping. */
 export function questNodeRadius(node: SizedNode): number {
   const { width, height } = questNodeSize(node)
   return Math.min(width, height) / 2
 }
 
-/** Point on the circle border along the ray from center toward another point. */
-export function circleBorderToward(center: Point, toward: Point, radius: number): Point {
-  const dx = toward.x - center.x
-  const dy = toward.y - center.y
-  const len = Math.hypot(dx, dy)
-  if (len < 1e-6) return { ...center }
-  const scale = radius / len
-  return { x: center.x + dx * scale, y: center.y + dy * scale }
+/** Point on the node shape border along the ray from center toward another node. */
+export function questNodeBorderToward(node: BorderNode, toward: Point): Point {
+  const center = questNodeCenter(node)
+  const { width, height } = questNodeSize(node)
+  const shape = questShapeFromNodeData(node.data)
+  return questShapeBorderToward(center, toward, width / 2, height / 2, shape)
 }

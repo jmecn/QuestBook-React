@@ -4,13 +4,12 @@ import {
   type EdgeProps,
 } from '@xyflow/react'
 import {
-  circleBorderToward,
+  questNodeBorderToward,
   questNodeCenter,
-  questNodeRadius,
 } from '@/shared/lib/quest-dependency-handles'
 
 /**
- * Straight dependency line from center to center, clipped at circular node bounds.
+ * Straight dependency line clipped at each quest shape's border (not always a circle).
  * Rendered as a dual-stroke marching-ants animation (PS-style selection marquee).
  */
 export function QuestDependencyEdge({
@@ -29,16 +28,8 @@ export function QuestDependencyEdge({
 
   const sourceCenter = questNodeCenter(sourceNode)
   const targetCenter = questNodeCenter(targetNode)
-  const sourcePoint = circleBorderToward(
-    sourceCenter,
-    targetCenter,
-    questNodeRadius(sourceNode),
-  )
-  const targetPoint = circleBorderToward(
-    targetCenter,
-    sourceCenter,
-    questNodeRadius(targetNode),
-  )
+  const sourcePoint = questNodeBorderToward(sourceNode, targetCenter)
+  const targetPoint = questNodeBorderToward(targetNode, sourceCenter)
 
   const [edgePath] = getStraightPath({
     sourceX: sourcePoint.x,

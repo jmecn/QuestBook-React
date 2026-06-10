@@ -544,6 +544,8 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Occlude dependency SVG in the node bounding box (FTB draws lines under widgets). */
+  background: var(--bg);
 }
 
 .quest-flow-node__hover {
@@ -620,13 +622,18 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   mask-position: center;
 }
 
-.quest-icon--ftb-shape .quest-icon__shape-bg {
+.quest-icon--ftb-shape .quest-icon__shape-occlude {
   z-index: 0;
+  background: var(--bg);
+}
+
+.quest-icon--ftb-shape .quest-icon__shape-bg {
+  z-index: 1;
   background: color-mix(in srgb, var(--panel) 88%, var(--bg));
 }
 
 .quest-icon--ftb-shape .quest-icon__shape-outline {
-  z-index: 1;
+  z-index: 2;
   background: color-mix(in srgb, var(--text) 22%, var(--muted));
 }
 
@@ -640,7 +647,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 
 .quest-icon--ftb-shape .quest-icon__inner {
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 /* Sidebar chapter icons and task list rows: plain 32×32 PNGs, no quest-node chrome. */
