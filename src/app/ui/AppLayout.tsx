@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { BookLayoutProvider } from '@/app/context/BookLayoutContext'
+import { QuestAtlasProvider } from '@/app/context/QuestAtlasContext'
 import { SiteHeader } from '@/app/ui/SiteHeader'
 import { QuestSearchProvider } from '@/features/search/QuestSearchContext'
 import { ChapterSidebar } from '@/features/chapter/ChapterSidebar'
@@ -30,17 +31,19 @@ export function AppLayout() {
 
   return (
     <QuestSearchProvider>
-      <BookLayoutProvider>
-        <div className="app-shell">
-          <SiteHeader />
-          <div className="book-body">
-            <ChapterSidebar />
-            <main className="book-main">
-              {chapter ? <Outlet /> : <p className="page-message">Loading…</p>}
-            </main>
+      <QuestAtlasProvider>
+        <BookLayoutProvider>
+          <div className="app-shell">
+            <SiteHeader />
+            <div className="book-body">
+              <ChapterSidebar />
+              <main className="book-main">
+                {chapter ? <Outlet /> : <p className="page-message">Loading…</p>}
+              </main>
+            </div>
           </div>
-        </div>
-      </BookLayoutProvider>
+        </BookLayoutProvider>
+      </QuestAtlasProvider>
     </QuestSearchProvider>
   )
 }

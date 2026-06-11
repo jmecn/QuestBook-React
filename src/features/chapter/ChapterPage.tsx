@@ -3,6 +3,9 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { QuestDetailPanel } from '@/features/chapter/QuestDetailPanel'
+import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
+import { loadChapterAtlasContext } from '@/shared/lib/quest-atlas/chapter-atlas'
+import type { ChapterAtlasContext } from '@/shared/lib/quest-atlas/types'
 import { buildQuestCatalog } from '@/shared/lib/quest-catalog'
 import { loadChapter, loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
 import { questDrawerInsetPx } from '@/shared/lib/viewport-inset'
@@ -40,6 +43,9 @@ export function ChapterPage() {
   const [params] = useSearchParams()
   const { locale, t } = useI18n()
   const chapterFile = params.get('chapter') ?? ''
+
+  const { globalAtlas } = useQuestGlobalAtlas()
+  const [chapterAtlas, setChapterAtlas] = useState<ChapterAtlasContext | null>(null)
 
   const [index, setIndex] = useState<QuestIndex | null>(null)
   const [chapters, setChapters] = useState<ChapterData[]>([])
@@ -96,6 +102,20 @@ export function ChapterPage() {
     () => chapters.find((ch) => ch.filename === chapterFile) ?? null,
     [chapterFile, chapters],
   )
+
+  useEffect(() => {
+    if (!chapter) {
+      setChapterAtlas(null)
+      return undefined
+    }
+    let cancelled = false
+    void loadChapterAtlasContext(chapter).then((ctx) => {
+      if (!cancelled) setChapterAtlas(ctx)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [chapter])
 
   const catalog = useMemo(() => buildQuestCatalog(chapters), [chapters])
 
@@ -198,6 +218,8 @@ export function ChapterPage() {
             drawerInset={drawerInset}
             layoutEpoch={layoutEpoch}
             sidebarCollapsed={sidebarCollapsed}
+            globalAtlas={globalAtlas}
+            chapterAtlas={chapterAtlas}
             onSelectQuest={onSelectQuest}
             onClearSelection={onCloseDetail}
           />
@@ -225,6 +247,8 @@ export function ChapterPage() {
             catalog={catalog}
             dict={dict}
             locale={locale}
+            globalAtlas={globalAtlas}
+            chapterAtlas={chapterAtlas}
             onNavigateQuest={onNavigateQuest}
           />
         </aside>

@@ -1,97 +1,133 @@
 import { useEffect, useMemo, useState } from 'react'
-import { questItemIconUrl } from '@/shared/lib/quest-item-icon'
-import {
-  questExportIconCandidates,
-  questIconFallbackLabel,
-} from '@/shared/lib/quest-icon'
-import {
-  questShapeTextureUrl,
-  resolveQuestShapeId,
-} from '@/shared/lib/quest-shape-texture'
+import { questIconFallbackLabel } from '@/shared/lib/quest-icon-fallback'
+import { resolveSprite } from '@/shared/lib/quest-atlas/resolve-sprite'
+import { atlasSpriteBackgroundStyle, globalAtlasMaskStyle } from '@/shared/lib/quest-atlas/sprite-mask-style'
+import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest-atlas/types'
+import { resolveQuestShapeId } from '@/shared/lib/quest-shape-texture'
+import type { IconDisplay } from '@/shared/types/quest'
 
 export interface QuestIconProps {
+  display?: IconDisplay
   icon?: string
-  iconItems?: string[]
-  size?: number
   shape?: string
-
   variant?: 'node' | 'tile'
-
-  tooltip?: string
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
+  size?: number
   selected?: boolean
+  tooltip?: string
   className?: string
 }
 
 const ICON_CAROUSEL_MS = 1000
 
+function iconOuterPx(display: IconDisplay | undefined, size: number): number {
+  return display?.nodeOuterPx ?? size
+}
+
+function iconInnerPx(
+  display: IconDisplay | undefined,
+  outer: number,
+  variant: 'node' | 'tile',
+): number {
+  if (variant === 'tile') {
+    return outer
+  }
+  return display?.innerPx ?? Math.round(outer * (2 / 3))
+}
+
+function carouselSpriteIds(display: IconDisplay | undefined): string[] {
+  if (!display) return []
+  if (display.frames && display.frames.length > 1) {
+    return display.frames.map((frame) => frame.spriteId)
+  }
+  return [display.spriteId]
+}
+
+function QuestIconSprite({
+  spriteId,
+  displayPx,
+  globalAtlas,
+  chapterAtlas,
+}: {
+  spriteId: string
+  displayPx: number
+  globalAtlas: GlobalAtlasContext | null | undefined
+  chapterAtlas: ChapterAtlasContext | null | undefined
+}) {
+  const resolved = useMemo(
+    () => resolveSprite(spriteId, globalAtlas ?? null, chapterAtlas ?? null),
+    [chapterAtlas, globalAtlas, spriteId],
+  )
+
+  if (!resolved) return null
+
+  return (
+    <span
+      className="quest-icon__img quest-icon__sprite"
+      style={atlasSpriteBackgroundStyle(resolved, displayPx)}
+      aria-hidden="true"
+    />
+  )
+}
+
 export function QuestIcon({
+  display,
   icon,
-  iconItems,
   size = 32,
   selected = false,
   shape,
   variant = 'node',
+  globalAtlas = null,
+  chapterAtlas = null,
   tooltip,
   className = '',
 }: QuestIconProps) {
-  const exportCandidates = useMemo(
-    () => questExportIconCandidates(icon, iconItems),
-    [icon, iconItems],
-  )
-  const carouselUrls = useMemo(() => {
-    if (!iconItems || iconItems.length <= 1) return []
-    const urls = iconItems
-      .map((itemId) => questItemIconUrl(itemId))
-      .filter((url): url is string => url != null)
-    return urls.length > 1 ? urls : []
-  }, [iconItems])
-
+  const outerPx = iconOuterPx(display, size)
+  const innerPx = iconInnerPx(display, outerPx, variant)
   const shapeId = resolveQuestShapeId(shape)
-  const shapeBackgroundUrl = useMemo(
-    () => (variant === 'node' ? questShapeTextureUrl(shapeId, 'background') : null),
-    [shapeId, variant],
-  )
-  const shapeOutlineUrl = useMemo(
-    () => (variant === 'node' ? questShapeTextureUrl(shapeId, 'outline') : null),
-    [shapeId, variant],
-  )
-  const shapeMaskUrl = useMemo(
-    () => (variant === 'node' ? questShapeTextureUrl(shapeId, 'shape') : null),
-    [shapeId, variant],
-  )
+  const spriteIds = carouselSpriteIds(display)
+  const isCarousel = spriteIds.length > 1
 
-  const [exportIndex, setExportIndex] = useState(0)
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [failed, setFailed] = useState(false)
-  const [shapeLayersFailed, setShapeLayersFailed] = useState(false)
-  const [occludeMaskUrl, setOccludeMaskUrl] = useState<string | null>(null)
-
-  const exportSrc = carouselUrls.length > 0
-    ? carouselUrls[carouselIndex]
-    : exportCandidates[exportIndex]
-
-  const fallback = questIconFallbackLabel(icon)
-  const isCarousel = carouselUrls.length > 1
-  const useFtbShapeLayers = variant === 'node'
-    && !shapeLayersFailed
-    && shapeBackgroundUrl != null
-    && shapeOutlineUrl != null
 
   useEffect(() => {
-    setExportIndex(0)
     setCarouselIndex(0)
     setFailed(false)
-    setShapeLayersFailed(false)
-    setOccludeMaskUrl(null)
-  }, [icon, iconItems, exportCandidates.length, shapeBackgroundUrl, shapeOutlineUrl, shapeMaskUrl])
+  }, [display?.spriteId, display?.frames?.length, outerPx])
 
   useEffect(() => {
     if (!isCarousel) return undefined
     const timer = window.setInterval(() => {
-      setCarouselIndex((value) => (value + 1) % carouselUrls.length)
+      setCarouselIndex((value) => (value + 1) % spriteIds.length)
     }, ICON_CAROUSEL_MS)
     return () => window.clearInterval(timer)
-  }, [carouselUrls.length, isCarousel])
+  }, [isCarousel, spriteIds.length])
+
+  const activeSpriteId = spriteIds[carouselIndex] ?? display?.spriteId
+  const hasResolvedIcon = activeSpriteId != null
+    && resolveSprite(activeSpriteId, globalAtlas, chapterAtlas) != null
+
+  useEffect(() => {
+    if (display && !hasResolvedIcon) {
+      setFailed(true)
+    } else {
+      setFailed(false)
+    }
+  }, [display, hasResolvedIcon])
+
+  const shapeBackgroundRect = globalAtlas?.meta.sprites[`${shapeId}:background`]
+  const shapeOutlineRect = globalAtlas?.meta.sprites[`${shapeId}:outline`]
+  const shapeMaskRect = globalAtlas?.meta.sprites[`${shapeId}:shape`]
+
+  const useFtbShapeLayers = variant === 'node'
+    && globalAtlas != null
+    && shapeBackgroundRect != null
+    && shapeOutlineRect != null
+
+  const occludeRect = shapeMaskRect ?? shapeBackgroundRect
+  const fallback = questIconFallbackLabel(icon)
 
   const shapeClass = !useFtbShapeLayers && shape ? `quest-icon--shape-${shapeId}` : ''
   const classes = [
@@ -104,68 +140,17 @@ export function QuestIcon({
     className,
   ].filter(Boolean).join(' ')
 
-  const handleImageError = () => {
-    if (isCarousel) return
-    if (exportIndex + 1 < exportCandidates.length) {
-      setExportIndex((value) => value + 1)
-      return
-    }
-    setFailed(true)
-  }
-
-  useEffect(() => {
-    if (variant !== 'node' || !shapeBackgroundUrl || !shapeOutlineUrl) {
-      return undefined
-    }
-    let cancelled = false
-    const probe = new Image()
-    probe.onload = () => {
-      if (!cancelled) setShapeLayersFailed(false)
-    }
-    probe.onerror = () => {
-      if (!cancelled) setShapeLayersFailed(true)
-    }
-    probe.src = shapeOutlineUrl
-    return () => {
-      cancelled = true
-    }
-  }, [shapeBackgroundUrl, shapeOutlineUrl, variant])
-
-  useEffect(() => {
-    if (variant !== 'node' || !shapeBackgroundUrl) {
-      return undefined
-    }
-    let cancelled = false
-    if (!shapeMaskUrl) {
-      setOccludeMaskUrl(shapeBackgroundUrl)
-      return () => {
-        cancelled = true
-      }
-    }
-    const probe = new Image()
-    probe.onload = () => {
-      if (!cancelled) setOccludeMaskUrl(shapeMaskUrl)
-    }
-    probe.onerror = () => {
-      if (!cancelled) setOccludeMaskUrl(shapeBackgroundUrl)
-    }
-    probe.src = shapeMaskUrl
-    return () => {
-      cancelled = true
-    }
-  }, [shapeBackgroundUrl, shapeMaskUrl, variant])
-
   const tooltipText = tooltip !== undefined ? (tooltip || undefined) : icon
 
-  const itemIcon = !failed && !isCarousel && exportSrc ? (
-    <span className="quest-icon__inner">
-      <img
-        className="quest-icon__img"
-        src={exportSrc}
-        alt=""
-        decoding="async"
-        draggable={false}
-        onError={handleImageError}
+  const innerStyle = { width: innerPx, height: innerPx }
+
+  const itemLayer = !failed && activeSpriteId ? (
+    <span className="quest-icon__inner" style={innerStyle}>
+      <QuestIconSprite
+        spriteId={activeSpriteId}
+        displayPx={innerPx}
+        globalAtlas={globalAtlas}
+        chapterAtlas={chapterAtlas}
       />
     </span>
   ) : null
@@ -173,59 +158,36 @@ export function QuestIcon({
   return (
     <span
       className={classes}
-      style={{ width: size, height: size }}
+      style={{ width: outerPx, height: outerPx }}
       title={tooltipText}
     >
-      {useFtbShapeLayers ? (
+      {useFtbShapeLayers && shapeBackgroundRect && shapeOutlineRect ? (
         <>
-          {occludeMaskUrl ? (
+          {occludeRect ? (
             <span
               className="quest-icon__shape-layer quest-icon__shape-occlude"
-              style={{
-                WebkitMaskImage: `url("${occludeMaskUrl}")`,
-                maskImage: `url("${occludeMaskUrl}")`,
-              }}
+              style={globalAtlasMaskStyle(globalAtlas.meta, occludeRect, outerPx)}
               aria-hidden="true"
             />
           ) : null}
           <span
             className="quest-icon__shape-layer quest-icon__shape-bg"
-            style={{
-              WebkitMaskImage: `url("${shapeBackgroundUrl}")`,
-              maskImage: `url("${shapeBackgroundUrl}")`,
-            }}
+            style={globalAtlasMaskStyle(globalAtlas.meta, shapeBackgroundRect, outerPx)}
             aria-hidden="true"
           />
           <span
             className="quest-icon__shape-layer quest-icon__shape-outline"
-            style={{
-              WebkitMaskImage: `url("${shapeOutlineUrl}")`,
-              maskImage: `url("${shapeOutlineUrl}")`,
-            }}
+            style={globalAtlasMaskStyle(globalAtlas.meta, shapeOutlineRect, outerPx)}
             aria-hidden="true"
           />
         </>
       ) : null}
       {failed ? (
-        <span className="quest-icon__inner">
+        <span className="quest-icon__inner" style={innerStyle}>
           <span className="quest-icon__fallback" aria-hidden="true">{fallback}</span>
         </span>
       ) : null}
-      {!failed && isCarousel ? (
-        <span className="quest-icon__inner quest-icon__carousel" aria-hidden="true">
-          {carouselUrls.map((url, index) => (
-            <img
-              key={url}
-              className={`quest-icon__img${index === carouselIndex ? ' is-active' : ''}`}
-              src={url}
-              alt=""
-              decoding="async"
-              draggable={false}
-            />
-          ))}
-        </span>
-      ) : null}
-      {itemIcon}
+      {itemLayer}
     </span>
   )
 }

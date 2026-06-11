@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
+import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
 import { loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
 import { resolveQuestText } from '@/shared/lib/quest-text'
 import type { QuestIndex } from '@/shared/types/quest'
 
 export function HomePage() {
+  const { globalAtlas } = useQuestGlobalAtlas()
   const { locale, t } = useI18n()
 
   const [index, setIndex] = useState<QuestIndex | null>(null)
@@ -64,7 +66,13 @@ export function HomePage() {
           {(index.chapters ?? []).map((chapter) => (
             <li key={chapter.filename}>
               <Link to={`/?lang=${locale}&chapter=${chapter.filename}`}>
-                <QuestIcon icon={chapter.icon} size={32} />
+                <QuestIcon
+                  display={chapter.iconDisplay}
+                  icon={chapter.icon}
+                  globalAtlas={globalAtlas}
+                  size={32}
+                  variant="tile"
+                />
                 <span>{chapter.filename}</span>
               </Link>
             </li>

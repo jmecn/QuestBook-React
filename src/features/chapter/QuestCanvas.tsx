@@ -55,9 +55,10 @@ import {
   shouldRememberViewportOnSettle,
   QUEST_ZOOM_BASE,
 } from '@/shared/lib/quest-canvas-viewport'
-import { DEFAULT_QUEST_NODE_SIZE, questIconPx } from '@/shared/lib/quest-node-size'
+import { DEFAULT_QUEST_NODE_SIZE, questIconPx, resolveQuestLinkIconDisplay } from '@/shared/lib/quest-node-size'
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
-import { resolveQuestIcon, useQuestDisplayTitle } from '@/shared/lib/quest-display'
+import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest-atlas/types'
+import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
 import { resolveQuestText } from '@/shared/lib/quest-text'
 import { isQuestLinkVisibleOnMap, isQuestVisibleOnMap } from '@/shared/lib/quest-visibility'
 import { QuestHoverLabel } from '@/shared/ui/QuestHoverLabel'
@@ -103,6 +104,12 @@ export interface QuestNodeData extends Record<string, unknown> {
   dict: Record<string, string>
   locale: string
   gridScale: number
+  globalAtlas: GlobalAtlasContext | null
+  chapterAtlas: ChapterAtlasContext | null
+}
+
+function questNodeOuterPx(quest: QuestData, gridScale: number): number {
+  return quest.iconDisplay?.nodeOuterPx ?? questIconPx(quest.size, gridScale)
 }
 
 function isQuestNodeData(data: Record<string, unknown>): data is QuestNodeData {
@@ -113,10 +120,9 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
   const nodeId = useNodeId()
   const updateNodeInternals = useUpdateNodeInternals()
   const { setHoveredQuestId } = useQuestCanvasHover()
-  const iconSize = questIconPx(data.quest.size, data.gridScale)
+  const iconSize = questNodeOuterPx(data.quest, data.gridScale)
   const label = useQuestDisplayTitle(data.quest, data.dict, data.locale)
   const subtitle = resolveQuestText(data.dict, data.quest.subtitle)
-  const icon = resolveQuestIcon(data.quest)
   const tooltipLabel = label || subtitle
 
   useEffect(() => {
@@ -140,8 +146,10 @@ function QuestNodeComponent({ data, selected }: NodeProps<Node<QuestNodeData>>) 
         className="quest-flow-handle"
       />
       <QuestIcon
-        icon={icon}
-        iconItems={data.quest.iconItems}
+        display={data.quest.iconDisplay}
+        icon={data.quest.icon}
+        globalAtlas={data.globalAtlas}
+        chapterAtlas={data.chapterAtlas}
         size={iconSize}
         shape={data.quest.shape}
         selected={selected}
@@ -555,6 +563,8 @@ function chapterToFlow(
   dict: Record<string, string>,
   locale: string,
   gridScale: number,
+  globalAtlas: GlobalAtlasContext | null,
+  chapterAtlas: ChapterAtlasContext | null,
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = []
   const visibleQuestIds = new Set(
@@ -590,7 +600,7 @@ function chapterToFlow(
 
   for (const quest of chapter.quests) {
     if (!visibleQuestIds.has(quest.id)) continue
-    const iconSize = questIconPx(quest.size, gridScale)
+    const iconSize = questNodeOuterPx(quest, gridScale)
     nodes.push({
       id: quest.id,
       type: 'quest',
@@ -600,6 +610,8 @@ function chapterToFlow(
         dict,
         locale,
         gridScale,
+        globalAtlas,
+        chapterAtlas,
       },
       width: iconSize,
       height: iconSize,
@@ -638,22 +650,27 @@ function chapterToFlow(
     const linkedQuest = linkedEntry.quest
 
     const linkSize = link.size ?? DEFAULT_QUEST_NODE_SIZE
-    const iconSize = questIconPx(linkSize, gridScale)
+    const iconDisplay = resolveQuestLinkIconDisplay(link, linkedQuest.iconDisplay, gridScale)
+    const linkedQuestData: QuestData = {
+      ...linkedQuest,
+      x: link.x,
+      y: link.y,
+      size: linkSize,
+      shape: link.shape ?? linkedQuest.shape,
+      iconDisplay,
+    }
+    const iconSize = iconDisplay?.nodeOuterPx ?? questIconPx(linkSize, gridScale)
     nodes.push({
       id: link.linkedQuest,
       type: 'quest',
       position: { x: gridToPx(link.x, gridScale), y: gridToPx(link.y, gridScale) },
       data: {
-        quest: {
-          ...linkedQuest,
-          x: link.x,
-          y: link.y,
-          size: linkSize,
-          shape: link.shape ?? linkedQuest.shape,
-        },
+        quest: linkedQuestData,
         dict,
         locale,
         gridScale,
+        globalAtlas,
+        chapterAtlas,
       },
       width: iconSize,
       height: iconSize,
@@ -677,6 +694,8 @@ export interface QuestCanvasProps {
   drawerInset?: number
   layoutEpoch?: number
   sidebarCollapsed?: boolean
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
   onSelectQuest: (id: string) => void
   onClearSelection?: () => void
 }
@@ -689,8 +708,18 @@ function QuestCanvasInner(props: QuestCanvasProps) {
       props.dict,
       props.locale,
       props.gridScale,
+      props.globalAtlas ?? null,
+      props.chapterAtlas ?? null,
     ),
-    [props.catalog, props.chapter, props.dict, props.gridScale, props.locale],
+    [
+      props.catalog,
+      props.chapter,
+      props.chapterAtlas,
+      props.dict,
+      props.globalAtlas,
+      props.gridScale,
+      props.locale,
+    ],
   )
   const nodes = useMemo(
     () => withQuestSelection(layoutNodes, props.selectedId),

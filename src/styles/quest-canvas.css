@@ -187,7 +187,6 @@
   background: var(--bg);
   --quest-layout-transition-ms: 300ms;
   --quest-grid-dot: color-mix(in srgb, var(--muted) 72%, var(--text));
-  --quest-icon-inner-ratio: 0.6666667;
 
   --ftb-quest-shape-occlude: #212121;
   --ftb-quest-shape-fill: rgba(255, 255, 255, 0.5882352941);
@@ -443,30 +442,13 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(100% * var(--quest-icon-inner-ratio));
-  height: calc(100% * var(--quest-icon-inner-ratio));
   flex-shrink: 0;
 }
 
-.quest-icon__carousel {
-  position: relative;
-}
-
-.quest-icon__carousel .quest-icon__img {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.quest-icon__carousel .quest-icon__img.is-active {
-  opacity: 1;
-}
-
-.quest-icon__img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.quest-icon__img,
+.quest-icon__sprite {
+  display: block;
+  flex-shrink: 0;
   pointer-events: none;
 }
 
@@ -614,12 +596,8 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   height: 100%;
   pointer-events: none;
   user-select: none;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
 }
 
 .quest-icon--ftb-shape .quest-icon__shape-occlude {
@@ -669,11 +647,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 .quest-icon.quest-icon--tile.is-selected {
   border: none;
   box-shadow: none;
-}
-
-.quest-icon.quest-icon--tile .quest-icon__inner {
-  width: 100%;
-  height: 100%;
 }
 
 .quest-icon__fallback {

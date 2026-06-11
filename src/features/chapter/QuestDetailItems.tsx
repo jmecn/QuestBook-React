@@ -5,11 +5,21 @@ import {
   isCompactGridTask,
   taskDisplayItemIds,
 } from '@/shared/lib/quest-task-items'
+import { iconDisplayForItemList } from '@/shared/lib/quest-detail-icon'
+import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest-atlas/types'
 import { QuestItemRow } from '@/shared/ui/QuestItemRow'
 import { QuestTagLinkedText } from '@/shared/ui/QuestTagLinkedText'
-import type { QuestReward, QuestTask } from '@/shared/types/quest'
+import type { IconDisplay, QuestReward, QuestTask } from '@/shared/types/quest'
 import { resolveQuestText } from '@/shared/lib/quest-text'
 import { formatRewardLabel } from '@/shared/lib/reward-text'
+
+function taskItemIconDisplay(task: QuestTask, itemId: string): IconDisplay | undefined {
+  return iconDisplayForItemList(task.iconDisplay, itemId, task.items)
+}
+
+function rewardItemIconDisplay(reward: QuestReward, itemId: string): IconDisplay | undefined {
+  return iconDisplayForItemList(reward.iconDisplay, itemId, reward.items)
+}
 
 function TaskTitle({
   task,
@@ -56,11 +66,15 @@ function TaskRow({
   dict,
   locale,
   iconSize = 32,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   task: QuestTask
   dict: Record<string, string>
   locale: string
   iconSize?: number
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   const title = resolveQuestText(dict, task.title)
   const displayItems = taskDisplayItemIds(task)
@@ -74,6 +88,9 @@ function TaskRow({
             itemId={itemId}
             locale={locale}
             iconSize={iconSize}
+            iconDisplay={taskItemIconDisplay(task, itemId)}
+            globalAtlas={globalAtlas}
+            chapterAtlas={chapterAtlas}
           />
         ))}
       </span>
@@ -95,10 +112,16 @@ function TaskItemLabel({
   itemId,
   locale,
   iconSize = 32,
+  iconDisplay,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   itemId: string
   locale: string
   iconSize?: number
+  iconDisplay?: IconDisplay
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   const [label, setLabel] = useState(itemId)
 
@@ -112,17 +135,31 @@ function TaskItemLabel({
     }
   }, [itemId, locale])
 
-  return <QuestItemRow itemId={itemId} label={label} locale={locale} iconSize={iconSize} />
+  return (
+    <QuestItemRow
+      itemId={itemId}
+      label={label}
+      locale={locale}
+      iconSize={iconSize}
+      iconDisplay={iconDisplay}
+      globalAtlas={globalAtlas}
+      chapterAtlas={chapterAtlas}
+    />
+  )
 }
 
 function TaskGridCell({
   task,
   locale,
   iconSize = 32,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   task: QuestTask
   locale: string
   iconSize?: number
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   const displayItems = taskDisplayItemIds(task)
 
@@ -139,6 +176,9 @@ function TaskGridCell({
             itemId={itemId}
             locale={locale}
             iconSize={iconSize}
+            iconDisplay={taskItemIconDisplay(task, itemId)}
+            globalAtlas={globalAtlas}
+            chapterAtlas={chapterAtlas}
           />
         ))}
       </>
@@ -152,10 +192,14 @@ function RewardRow({
   reward,
   locale,
   iconSize = 32,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   reward: QuestReward
   locale: string
   iconSize?: number
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   const [labels, setLabels] = useState<string[]>([])
 
@@ -187,6 +231,9 @@ function RewardRow({
             label={labels[index] ?? itemId}
             locale={locale}
             iconSize={iconSize}
+            iconDisplay={rewardItemIconDisplay(reward, itemId)}
+            globalAtlas={globalAtlas}
+            chapterAtlas={chapterAtlas}
           />
         ))}
       </span>
@@ -200,10 +247,14 @@ function RewardGridCell({
   reward,
   locale,
   iconSize = 32,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   reward: QuestReward
   locale: string
   iconSize?: number
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   const [labels, setLabels] = useState<string[]>([])
 
@@ -238,6 +289,9 @@ function RewardGridCell({
           label={labels[index] ?? itemId}
           locale={locale}
           iconSize={iconSize}
+          iconDisplay={rewardItemIconDisplay(reward, itemId)}
+          globalAtlas={globalAtlas}
+          chapterAtlas={chapterAtlas}
         />
       ))}
     </>
@@ -249,22 +303,39 @@ export function QuestTaskList({
   dict,
   locale,
   iconSize = 32,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   tasks: QuestTask[]
   dict: Record<string, string>
   locale: string
   iconSize?: number
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   return (
     <div className="quest-task-grid">
       {tasks.map((task) =>
         isCompactGridTask(task, dict) ? (
           <div key={task.id} className="quest-task-grid__cell">
-            <TaskGridCell task={task} locale={locale} iconSize={iconSize} />
+            <TaskGridCell
+              task={task}
+              locale={locale}
+              iconSize={iconSize}
+              globalAtlas={globalAtlas}
+              chapterAtlas={chapterAtlas}
+            />
           </div>
         ) : (
           <div key={task.id} className="quest-task-grid__text-row">
-            <TaskRow task={task} dict={dict} locale={locale} iconSize={iconSize} />
+            <TaskRow
+              task={task}
+              dict={dict}
+              locale={locale}
+              iconSize={iconSize}
+              globalAtlas={globalAtlas}
+              chapterAtlas={chapterAtlas}
+            />
           </div>
         ),
       )}
@@ -276,21 +347,37 @@ export function QuestRewardList({
   rewards,
   locale,
   iconSize = 32,
+  globalAtlas = null,
+  chapterAtlas = null,
 }: {
   rewards: QuestReward[]
   locale: string
   iconSize?: number
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
 }) {
   return (
     <div className="quest-task-grid">
       {rewards.map((reward) =>
         reward.type === 'item' && reward.items?.length ? (
           <div key={reward.id} className="quest-task-grid__cell">
-            <RewardGridCell reward={reward} locale={locale} iconSize={iconSize} />
+            <RewardGridCell
+              reward={reward}
+              locale={locale}
+              iconSize={iconSize}
+              globalAtlas={globalAtlas}
+              chapterAtlas={chapterAtlas}
+            />
           </div>
         ) : (
           <div key={reward.id} className="quest-task-grid__text-row">
-            <RewardRow reward={reward} locale={locale} iconSize={iconSize} />
+            <RewardRow
+              reward={reward}
+              locale={locale}
+              iconSize={iconSize}
+              globalAtlas={globalAtlas}
+              chapterAtlas={chapterAtlas}
+            />
           </div>
         ),
       )}

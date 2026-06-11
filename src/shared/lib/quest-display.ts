@@ -3,14 +3,6 @@ import { resolveQuestText } from '@/shared/lib/quest-text'
 import type { QuestNode } from '@/shared/types/quest'
 import { useEffect, useState } from 'react'
 
-export function resolveQuestIcon(quest: QuestNode): string | undefined {
-  if (quest.icon) {
-    return quest.icon
-  }
-  const itemTask = quest.tasks?.find((task) => task.type === 'item' && task.items?.length)
-  return itemTask?.items?.[0]
-}
-
 export function formatQuestItemTitle(count: number | undefined, name: string): string {
   return count != null && count > 1 ? `${count}x ${name}` : name
 }

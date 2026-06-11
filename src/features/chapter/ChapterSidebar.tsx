@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
+import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
 import { loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
 import { resolveQuestText, resolveQuestRichText, resolveQuestLines } from '@/shared/lib/quest-text'
@@ -89,6 +90,7 @@ export function ChapterSidebar() {
   const navigate = useNavigate()
   const { locale, t } = useI18n()
   const { sidebarCollapsed: collapsed, toggleSidebar } = useBookLayout()
+  const { globalAtlas } = useQuestGlobalAtlas()
   const activeChapter = params.get('chapter') ?? ''
 
   const [index, setIndex] = useState<QuestIndex | null>(null)
@@ -184,7 +186,13 @@ export function ChapterSidebar() {
                         onClick={() => selectChapter(chapter.filename)}
                         aria-current={active ? 'page' : undefined}
                       >
-                        <QuestIcon icon={chapter.icon} size={32} variant="tile" />
+                        <QuestIcon
+                          display={chapter.iconDisplay}
+                          icon={chapter.icon}
+                          globalAtlas={globalAtlas}
+                          size={32}
+                          variant="tile"
+                        />
                         <span className="chapter-sidebar__label">
                           <QuestRichText nodes={chapterLabelNodes(chapter, dict)} />
                         </span>

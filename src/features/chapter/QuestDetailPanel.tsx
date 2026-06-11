@@ -7,6 +7,7 @@ import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-cata
 import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
 import { fieldGuidePageUrl, fieldGuideSiteBase } from '@/shared/lib/field-guide-links'
 import { resolveQuestRichText } from '@/shared/lib/quest-text'
+import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest-atlas/types'
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
 import { QuestDescription } from '@/shared/ui/QuestDescription'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
@@ -17,6 +18,8 @@ export interface QuestDetailPanelProps {
   catalog: Map<string, QuestCatalogEntry>
   dict: Record<string, string>
   locale: string
+  globalAtlas?: GlobalAtlasContext | null
+  chapterAtlas?: ChapterAtlasContext | null
   onNavigateQuest: (chapterFilename: string, questId: string) => void
 }
 
@@ -125,6 +128,8 @@ export function QuestDetailPanel({
   catalog,
   dict,
   locale,
+  globalAtlas = null,
+  chapterAtlas = null,
   onNavigateQuest,
 }: QuestDetailPanelProps) {
   const { t } = useI18n()
@@ -175,6 +180,8 @@ export function QuestDetailPanel({
               dict={dict}
               locale={locale}
               iconSize={DETAIL_ICON_SIZE}
+              globalAtlas={globalAtlas}
+              chapterAtlas={chapterAtlas}
             />
           ) : (
             <p className="quest-detail__none">{t('detailNone')}</p>
@@ -188,6 +195,8 @@ export function QuestDetailPanel({
               rewards={rewards}
               locale={locale}
               iconSize={DETAIL_ICON_SIZE}
+              globalAtlas={globalAtlas}
+              chapterAtlas={chapterAtlas}
             />
           ) : (
             <p className="quest-detail__none">{t('detailNone')}</p>

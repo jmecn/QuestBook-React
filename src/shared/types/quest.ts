@@ -1,3 +1,43 @@
+export interface IconDisplayFrame {
+  spriteId: string
+}
+
+export interface IconDisplay {
+  spriteId: string
+  nodeOuterPx: number
+  innerPx: number
+  frames?: IconDisplayFrame[]
+}
+
+export interface IconSpriteRect {
+  a: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export interface IconAtlasPage {
+  src: string
+  width: number
+  height: number
+}
+
+export interface GlobalSpriteRect {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export interface GlobalAtlas {
+  src: string
+  width: number
+  height: number
+  missingIconId: string
+  sprites: Record<string, GlobalSpriteRect>
+}
+
 export interface QuestTask {
   id: string
   type: string
@@ -7,6 +47,7 @@ export interface QuestTask {
   filterRaw?: string
   toObserve?: string
   dimension?: string
+  iconDisplay?: IconDisplay
 }
 
 export interface ChapterImage {
@@ -45,6 +86,7 @@ export interface QuestReward {
   items?: string[]
   count?: number
   xp?: number
+  iconDisplay?: IconDisplay
 }
 
 export interface QuestNode {
@@ -71,6 +113,7 @@ export interface QuestNode {
   guidePage?: string
   tasks?: QuestTask[]
   rewards?: QuestReward[]
+  iconDisplay?: IconDisplay
 }
 
 export interface QuestLink {
@@ -80,6 +123,7 @@ export interface QuestLink {
   y: number
   size?: number
   shape?: string
+  iconDisplay?: IconDisplay
 }
 
 export interface ChapterData {
@@ -93,6 +137,8 @@ export interface ChapterData {
   quests: QuestNode[]
   questLinks?: QuestLink[]
   images?: ChapterImage[]
+  iconAtlases?: Record<string, IconAtlasPage>
+  iconSprites?: Record<string, IconSpriteRect>
 }
 
 export interface ChapterSummary {
@@ -103,6 +149,7 @@ export interface ChapterSummary {
   icon?: string
   title?: string
   subtitle?: string | string[]
+  iconDisplay?: IconDisplay
 }
 
 export interface ChapterGroup {
@@ -117,6 +164,7 @@ export interface QuestIndex {
   gridScale?: number
   chapterGroups?: ChapterGroup[]
   chapters?: ChapterSummary[]
+  globalAtlas?: GlobalAtlas
 }
 
 export interface LanguageConfig {
