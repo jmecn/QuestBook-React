@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { NodeProps, Node } from '@xyflow/react'
 import { chapterDecorationBounds, type ChapterDecorationBounds } from '@/shared/lib/chapter-decoration-bounds'
 import {
+  planChapterDecorationDraws,
+  type ChapterDecorationDrawOp,
+} from '@/shared/lib/chapter-decoration-draw'
+import {
   chapterImageLayout,
   isAnimatedChapterImage,
-  sortedChapterImages,
 } from '@/shared/lib/chapter-image-style'
 import {
   chapterSpriteAnimationIntervalMs,
@@ -58,31 +61,98 @@ function drawDecoration(
   ctx.restore()
 }
 
-/** Single canvas layer for chapter decorations — avoids per-tile DOM alpha stacking. */
+function drawPatternRegion(
+  ctx: CanvasRenderingContext2D,
+  op: Extract<ChapterDecorationDrawOp, { type: 'pattern' }>,
+  bitmap: HTMLImageElement,
+  frameIndex: number,
+): void {
+  const sample = op.images[0]!
+  const tileW = op.tileWidthPx
+  const tileH = op.tileHeightPx
+
+  const tileCanvas = document.createElement('canvas')
+  tileCanvas.width = Math.max(1, Math.round(tileW))
+  tileCanvas.height = Math.max(1, Math.round(tileH))
+  const tileCtx = tileCanvas.getContext('2d')
+  if (!tileCtx) return
+
+  if (isAnimatedChapterImage(sample)) {
+    const frameCount = sample.frameCount ?? 1
+    const frameW = sample.frameWidth ?? bitmap.naturalWidth
+    const frameH = sample.frameHeight ?? Math.floor(bitmap.naturalHeight / frameCount)
+    const sy = frameIndex * frameH
+    tileCtx.drawImage(bitmap, 0, sy, frameW, frameH, 0, 0, tileCanvas.width, tileCanvas.height)
+  } else {
+    tileCtx.drawImage(bitmap, 0, 0, tileCanvas.width, tileCanvas.height)
+  }
+
+  const pattern = ctx.createPattern(tileCanvas, 'repeat')
+  if (!pattern) return
+
+  ctx.save()
+  ctx.fillStyle = pattern
+  ctx.fillRect(op.left, op.top, op.widthPx, op.heightPx)
+  ctx.restore()
+}
+
+function executeDrawOp(
+  ctx: CanvasRenderingContext2D,
+  op: ChapterDecorationDrawOp,
+  bounds: ChapterDecorationBounds,
+  bitmaps: Map<string, HTMLImageElement>,
+  gridScale: number,
+  now: number,
+): void {
+  if (op.type === 'pattern') {
+    const src = questExportAssetUrl(op.baked)
+    const bitmap = bitmaps.get(src)
+    if (!bitmap?.complete || bitmap.naturalWidth === 0) return
+    const frameIndex = chapterSpriteTextureFrame(op.images[0]!, now)
+    drawPatternRegion(ctx, op, bitmap, frameIndex)
+    return
+  }
+
+  const src = decorationSrc(op.image)
+  if (!src) return
+  const bitmap = bitmaps.get(src)
+  if (!bitmap?.complete || bitmap.naturalWidth === 0) return
+  const frameIndexForImage = chapterSpriteTextureFrame(op.image, now)
+  drawDecoration(ctx, op.image, bounds, bitmap, gridScale, frameIndexForImage)
+}
+
+/** Single canvas layer for chapter decorations — tiled regions use repeat, not stacked alpha. */
 export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecorationsNodeData>>) {
   const { images, gridScale, bounds } = data
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const bitmapsRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const [ready, setReady] = useState(false)
 
-  const sorted = useMemo(() => sortedChapterImages(images), [images])
+  const drawOps = useMemo(
+    () => planChapterDecorationDraws(images, gridScale, bounds),
+    [bounds, gridScale, images],
+  )
   const sources = useMemo(() => {
-    const unique = new Map<string, string>()
-    for (const image of sorted) {
-      const src = decorationSrc(image)
-      if (src) unique.set(src, src)
+    const unique = new Set<string>()
+    for (const op of drawOps) {
+      if (op.type === 'pattern') {
+        unique.add(questExportAssetUrl(op.baked))
+      } else {
+        const src = decorationSrc(op.image)
+        if (src) unique.add(src)
+      }
     }
-    return [...unique.values()]
-  }, [sorted])
+    return [...unique]
+  }, [drawOps])
 
   const tickMs = useMemo(() => {
     let min = Number.POSITIVE_INFINITY
-    for (const image of sorted) {
+    for (const image of images) {
       const ms = chapterSpriteAnimationIntervalMs(image)
       if (ms != null) min = Math.min(min, ms)
     }
     return Number.isFinite(min) ? min : undefined
-  }, [sorted])
+  }, [images])
 
   useEffect(() => {
     let cancelled = false
@@ -126,13 +196,8 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
       const ctx = canvas.getContext('2d')
       if (!ctx) return
       ctx.clearRect(0, 0, bounds.widthPx, bounds.heightPx)
-      for (const image of sorted) {
-        const src = decorationSrc(image)
-        if (!src) continue
-        const bitmap = bitmapsRef.current.get(src)
-        if (!bitmap?.complete || bitmap.naturalWidth === 0) continue
-        const frameIndex = chapterSpriteTextureFrame(image, now)
-        drawDecoration(ctx, image, bounds, bitmap, gridScale, frameIndex)
+      for (const op of drawOps) {
+        executeDrawOp(ctx, op, bounds, bitmapsRef.current, gridScale, now)
       }
     }
 
@@ -140,7 +205,7 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
     if (tickMs == null) return undefined
     const id = window.setInterval(() => paint(Date.now()), tickMs)
     return () => window.clearInterval(id)
-  }, [bounds.heightPx, bounds.widthPx, gridScale, ready, sorted, tickMs])
+  }, [bounds.heightPx, bounds.widthPx, drawOps, gridScale, ready, tickMs])
 
   return (
     <canvas
