@@ -2,14 +2,14 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
+import { useQuestExport } from '@/app/context/QuestExportContext'
 import { QuestDetailPanel } from '@/features/chapter/QuestDetailPanel'
 import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { loadChapterAtlasContext } from '@/shared/lib/quest-atlas/chapter-atlas'
 import type { ChapterAtlasContext } from '@/shared/lib/quest-atlas/types'
-import { buildQuestCatalog } from '@/shared/lib/quest-catalog'
-import { loadChapter, loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
+import { questIdFromHash, setQuestHash } from '@/shared/lib/quest-hash'
 import { questDrawerInsetPx } from '@/shared/lib/viewport-inset'
-import type { ChapterData, QuestIndex, QuestNode } from '@/shared/types/quest'
+import type { ChapterData, QuestNode } from '@/shared/types/quest'
 
 const QuestCanvas = lazy(() =>
   import('@/features/chapter/QuestCanvas').then((m) => ({ default: m.QuestCanvas })),
@@ -22,7 +22,7 @@ function findQuest(chapter: ChapterData, id: string): QuestNode | null {
 function normalizeSelectedQuestId(
   selectedId: string | null,
   chapter: ChapterData | null,
-  catalog: ReturnType<typeof buildQuestCatalog>,
+  catalog: ReturnType<typeof import('@/shared/lib/quest-catalog').buildQuestCatalog>,
 ): string | null {
   if (!selectedId || !chapter) return selectedId
   if (catalog.has(selectedId)) return selectedId
@@ -30,11 +30,6 @@ function normalizeSelectedQuestId(
     return chapter.quests[0].id
   }
   return selectedId
-}
-
-function questIdFromHash(hash: string): string | null {
-  const match = hash.match(/quest=([^&]+)/)
-  return match ? decodeURIComponent(match[1]) : null
 }
 
 export function ChapterPage() {
@@ -45,12 +40,20 @@ export function ChapterPage() {
   const chapterFile = params.get('chapter') ?? ''
 
   const { globalAtlas } = useQuestGlobalAtlas()
-  const [chapterAtlas, setChapterAtlas] = useState<ChapterAtlasContext | null>(null)
+  const {
+    index,
+    dict,
+    chapters,
+    catalog,
+    ready,
+    error,
+    ensureChapter,
+    ensureChaptersForQuestIds,
+  } = useQuestExport()
 
-  const [index, setIndex] = useState<QuestIndex | null>(null)
-  const [chapters, setChapters] = useState<ChapterData[]>([])
-  const [dict, setDict] = useState<Record<string, string>>({})
-  const [error, setError] = useState<string | null>(null)
+  const [chapterAtlas, setChapterAtlas] = useState<ChapterAtlasContext | null>(null)
+  const [chapterLoading, setChapterLoading] = useState(false)
+  const [chapterError, setChapterError] = useState<string | null>(null)
 
   const { layoutEpoch, sidebarCollapsed, setSidebarCollapsed } = useBookLayout()
   const drawerRef = useRef<HTMLElement>(null)
@@ -61,42 +64,38 @@ export function ChapterPage() {
   )
 
   useEffect(() => {
-    const onHash = () => {
-      setSelectedId(questIdFromHash(window.location.hash))
-    }
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
-  }, [])
-
-  useEffect(() => {
     setSelectedId(questIdFromHash(location.hash || window.location.hash))
   }, [chapterFile, location.hash])
 
   useEffect(() => {
+    if (!ready || !chapterFile) return undefined
     let cancelled = false
-    ;(async () => {
+    setChapterLoading(true)
+    setChapterError(null)
+
+    void (async () => {
       try {
-        setError(null)
-        const [idx, langDict] = await Promise.all([
-          loadQuestIndex(),
-          loadLangDict(locale),
-        ])
-        const filenames = idx.chapters?.map((ch) => ch.filename).filter(Boolean) ?? []
-        const loadedChapters = await Promise.all(filenames.map((filename) => loadChapter(filename)))
+        const loaded = await ensureChapter(chapterFile)
         if (cancelled) return
-        setIndex(idx)
-        setChapters(loadedChapters)
-        setDict(langDict)
+        const linkIds = (loaded.questLinks ?? [])
+          .map((link) => link.linkedQuest)
+          .filter(Boolean)
+        if (linkIds.length) {
+          await ensureChaptersForQuestIds(linkIds)
+        }
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : String(e))
+          setChapterError(e instanceof Error ? e.message : String(e))
         }
+      } finally {
+        if (!cancelled) setChapterLoading(false)
       }
     })()
+
     return () => {
       cancelled = true
     }
-  }, [locale])
+  }, [chapterFile, ensureChapter, ensureChaptersForQuestIds, ready])
 
   const chapter = useMemo(
     () => chapters.find((ch) => ch.filename === chapterFile) ?? null,
@@ -117,8 +116,6 @@ export function ChapterPage() {
     }
   }, [chapter])
 
-  const catalog = useMemo(() => buildQuestCatalog(chapters), [chapters])
-
   const effectiveSelectedId = useMemo(
     () => normalizeSelectedQuestId(selectedId, chapter, catalog),
     [catalog, chapter, selectedId],
@@ -127,7 +124,7 @@ export function ChapterPage() {
   useEffect(() => {
     if (!effectiveSelectedId || effectiveSelectedId === selectedId) return
     setSelectedId(effectiveSelectedId)
-    window.location.hash = `quest=${encodeURIComponent(effectiveSelectedId)}`
+    setQuestHash(effectiveSelectedId)
   }, [effectiveSelectedId, selectedId])
 
   const selectedQuest = effectiveSelectedId
@@ -139,27 +136,25 @@ export function ChapterPage() {
       setSidebarCollapsed(true)
     }
     setSelectedId(id)
-    window.location.hash = `quest=${encodeURIComponent(id)}`
+    setQuestHash(id)
   }
 
   const onNavigateQuest = (targetChapter: string, questId: string) => {
     setSelectedId(questId)
-    const hash = `#quest=${encodeURIComponent(questId)}`
     if (targetChapter === chapterFile) {
-      window.location.hash = hash
+      setQuestHash(questId)
       return
     }
     navigate({
       pathname: '/',
       search: `?lang=${encodeURIComponent(locale)}&chapter=${encodeURIComponent(targetChapter)}`,
-      hash,
+      hash: `#quest=${encodeURIComponent(questId)}`,
     })
   }
 
   const onCloseDetail = () => {
     setSelectedId(null)
-    const next = `${window.location.pathname}${window.location.search}`
-    window.history.replaceState(null, '', next)
+    setQuestHash(null)
   }
 
   useEffect(() => {
@@ -194,11 +189,11 @@ export function ChapterPage() {
     }
   }, [layoutEpoch, selectedQuest])
 
-  if (error) {
-    return <p className="page-message page-message--error">{error}</p>
+  if (error || chapterError) {
+    return <p className="page-message page-message--error">{error ?? chapterError}</p>
   }
 
-  if (!chapter || !index) {
+  if (!ready || !index || chapterLoading || !chapter) {
     return <p className="page-message">{t('loadingChapter')}</p>
   }
 

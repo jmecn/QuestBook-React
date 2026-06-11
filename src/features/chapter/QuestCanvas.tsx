@@ -856,16 +856,6 @@ function QuestCanvasFlow({
 }
 
 export const QuestCanvas = memo(function QuestCanvas(props: QuestCanvasProps) {
-  const { selectedId } = props
-
-  useEffect(() => {
-    if (!selectedId) return
-    const hash = `#quest=${encodeURIComponent(selectedId)}`
-    if (window.location.hash !== hash) {
-      window.history.replaceState(null, '', hash)
-    }
-  }, [selectedId])
-
   return (
     <ReactFlowProvider key={props.chapter.id}>
       <QuestCanvasInner {...props} />

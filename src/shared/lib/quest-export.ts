@@ -2,12 +2,21 @@ import type { ChapterData, QuestIndex } from '@/shared/types/quest'
 import { FALLBACK_LOCALE, normalizeLocale } from '@/shared/i18n/locale'
 import { questExportUrl, siteUrl } from '@/shared/lib/site-base'
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${url}: ${res.status}`)
+const jsonCache = new Map<string, Promise<unknown>>()
+
+async function fetchJsonCached<T>(url: string): Promise<T> {
+  let pending = jsonCache.get(url)
+  if (!pending) {
+    pending = (async () => {
+      const res = await fetch(url)
+      if (!res.ok) {
+        throw new Error(`Failed to fetch ${url}: ${res.status}`)
+      }
+      return res.json() as Promise<T>
+    })()
+    jsonCache.set(url, pending)
   }
-  return res.json() as Promise<T>
+  return pending as Promise<T>
 }
 
 export interface SiteConfig {
@@ -16,32 +25,34 @@ export interface SiteConfig {
 }
 
 export async function loadSiteConfig(): Promise<SiteConfig> {
-  const res = await fetch(siteUrl('site-config.json'))
-  if (!res.ok) return {}
-  return res.json() as Promise<SiteConfig>
+  try {
+    return await fetchJsonCached<SiteConfig>(siteUrl('site-config.json'))
+  } catch {
+    return {}
+  }
 }
 
 export async function loadQuestIndex(): Promise<QuestIndex> {
-  return fetchJson<QuestIndex>(questExportUrl('quests/index.json'))
+  return fetchJsonCached<QuestIndex>(questExportUrl('quests/index.json'))
 }
 
 export async function loadChapter(filename: string): Promise<ChapterData> {
-  return fetchJson<ChapterData>(questExportUrl(`quests/chapters/${filename}.json`))
+  return fetchJsonCached<ChapterData>(questExportUrl(`quests/chapters/${filename}.json`))
 }
 
-let enUsDictCache: Record<string, string> | null = null
+const langDictCache = new Map<string, Promise<Record<string, string>>>()
 
 async function fetchLangFile(locale: string): Promise<Record<string, string>> {
-  const res = await fetch(questExportUrl(`lang/${locale}.json`))
-  if (!res.ok) return {}
-  return res.json() as Promise<Record<string, string>>
+  const url = questExportUrl(`lang/${locale}.json`)
+  try {
+    return await fetchJsonCached<Record<string, string>>(url)
+  } catch {
+    return {}
+  }
 }
 
 async function loadEnUsDict(): Promise<Record<string, string>> {
-  if (!enUsDictCache) {
-    enUsDictCache = await fetchLangFile(FALLBACK_LOCALE)
-  }
-  return enUsDictCache
+  return fetchLangFile(FALLBACK_LOCALE)
 }
 
 export function mergeLangDicts(
@@ -55,23 +66,35 @@ export function mergeLangDicts(
 
 export async function loadLangDict(locale: string): Promise<Record<string, string>> {
   const normalized = normalizeLocale(locale)
-  if (normalized === FALLBACK_LOCALE) {
-    return loadEnUsDict()
-  }
-  const [fallback, primary] = await Promise.all([
-    loadEnUsDict(),
-    fetchLangFile(normalized),
-  ])
-  return mergeLangDicts(fallback, primary)
+  const cached = langDictCache.get(normalized)
+  if (cached) return cached
+
+  const promise = (async () => {
+    if (normalized === FALLBACK_LOCALE) {
+      return loadEnUsDict()
+    }
+    const [fallback, primary] = await Promise.all([
+      loadEnUsDict(),
+      fetchLangFile(normalized),
+    ])
+    return mergeLangDicts(fallback, primary)
+  })()
+
+  langDictCache.set(normalized, promise)
+  return promise
 }
 
 export interface ItemNameKeysPayload {
   items?: Record<string, string>
 }
 
+let itemNameKeysPromise: Promise<Record<string, string>> | null = null
+
 export async function loadItemNameKeys(): Promise<Record<string, string>> {
-  const res = await fetch(questExportUrl('items/name-keys.json'))
-  if (!res.ok) return {}
-  const data = (await res.json()) as ItemNameKeysPayload
-  return data.items ?? {}
+  if (!itemNameKeysPromise) {
+    itemNameKeysPromise = fetchJsonCached<ItemNameKeysPayload>(
+      questExportUrl('items/name-keys.json'),
+    ).then((data) => data.items ?? {}).catch(() => ({}))
+  }
+  return itemNameKeysPromise
 }

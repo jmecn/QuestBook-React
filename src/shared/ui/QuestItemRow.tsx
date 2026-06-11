@@ -46,12 +46,11 @@ export function QuestItemRow({
   if (recipeHref) {
     return (
       <QuestHoverLabel
-        as="a"
+        as="button"
+        type="button"
         className={className}
-        href={recipeHref}
-        target="_blank"
-        rel="noopener noreferrer"
         label={tooltip}
+        onClick={() => window.open(recipeHref, '_blank', 'noopener,noreferrer')}
       >
         {content}
       </QuestHoverLabel>

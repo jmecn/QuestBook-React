@@ -823,6 +823,14 @@ html[data-theme="dark"] .quest-zoom-controls__select {
 
 .quest-item-row--link {
   cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .quest-item-row--link:hover .quest-icon,

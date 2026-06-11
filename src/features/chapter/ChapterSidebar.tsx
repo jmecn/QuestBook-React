@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
+import { useQuestExport } from '@/app/context/QuestExportContext'
 import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
-import { loadLangDict, loadQuestIndex } from '@/shared/lib/quest-export'
+import { setQuestHash } from '@/shared/lib/quest-hash'
 import { resolveQuestText, resolveQuestRichText, resolveQuestLines } from '@/shared/lib/quest-text'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
 import { QuestHoverLabel } from '@/shared/ui/QuestHoverLabel'
@@ -91,45 +91,20 @@ export function ChapterSidebar() {
   const { locale, t } = useI18n()
   const { sidebarCollapsed: collapsed, toggleSidebar } = useBookLayout()
   const { globalAtlas } = useQuestGlobalAtlas()
+  const { index, dict, ready, error } = useQuestExport()
   const activeChapter = params.get('chapter') ?? ''
-
-  const [index, setIndex] = useState<QuestIndex | null>(null)
-  const [dict, setDict] = useState<Record<string, string>>({})
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const [idx, langDict] = await Promise.all([
-          loadQuestIndex(),
-          loadLangDict(locale),
-        ])
-        if (cancelled) return
-        setIndex(idx)
-        setDict(langDict)
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : String(e))
-        }
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [locale])
 
   const selectChapter = (filename: string) => {
     setParams({ lang: locale, chapter: filename })
     navigate(`/?lang=${locale}&chapter=${filename}`, { replace: true })
-    window.location.hash = ''
+    setQuestHash(null)
   }
 
   if (error) {
     return <aside className="chapter-sidebar"><p className="page-message page-message--error">{error}</p></aside>
   }
 
-  if (!index) {
+  if (!ready || !index) {
     return <aside className="chapter-sidebar"><p className="page-message">{t('loading')}</p></aside>
   }
 
@@ -192,6 +167,7 @@ export function ChapterSidebar() {
                           globalAtlas={globalAtlas}
                           size={32}
                           variant="tile"
+                          tooltip=""
                         />
                         <span className="chapter-sidebar__label">
                           <QuestRichText nodes={chapterLabelNodes(chapter, dict)} />
