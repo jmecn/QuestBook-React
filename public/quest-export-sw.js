@@ -11,6 +11,8 @@ const PENDING_CACHE = `${CACHE_PREFIX}pending`
 
 /** @type {string | null} */
 let activeContentHash = null
+/** @type {Promise<string | null> | null} */
+let contentHashInflight = null
 
 function isQuestExportUrl(url) {
   return url.pathname.includes(EXPORT_PATH)
@@ -23,6 +25,12 @@ function buildJsonUrl() {
 function cacheNameForContentHash(contentHash) {
   const safe = String(contentHash || 'unknown').replace(/[^a-zA-Z0-9._-]/g, '_')
   return `${CACHE_PREFIX}${safe}`
+}
+
+function rememberContentHashFromCacheName(cacheName) {
+  if (!cacheName.startsWith(CACHE_PREFIX) || cacheName === PENDING_CACHE) return
+  const hash = cacheName.slice(CACHE_PREFIX.length)
+  if (hash && hash !== 'unknown') activeContentHash = hash
 }
 
 async function purgeOldExportCaches(keepName) {
@@ -45,16 +53,25 @@ async function readContentHash(response) {
 
 async function fetchContentHash({ forceNetwork = false } = {}) {
   if (!forceNetwork && activeContentHash) return activeContentHash
+  if (!forceNetwork && contentHashInflight) return contentHashInflight
 
-  try {
-    const response = await fetch(buildJsonUrl(), { cache: forceNetwork ? 'no-store' : 'default' })
-    if (!response.ok) return null
-    const hash = await readContentHash(response)
-    if (hash) activeContentHash = hash
-    return hash
-  } catch {
-    return null
-  }
+  contentHashInflight = (async () => {
+    try {
+      const response = await fetch(buildJsonUrl(), {
+        cache: forceNetwork ? 'no-store' : 'default',
+      })
+      if (!response.ok) return null
+      const hash = await readContentHash(response)
+      if (hash) activeContentHash = hash
+      return hash
+    } catch {
+      return null
+    } finally {
+      contentHashInflight = null
+    }
+  })()
+
+  return contentHashInflight
 }
 
 async function syncCacheFromBuildJson({ forceNetwork = false } = {}) {
@@ -75,9 +92,13 @@ async function getActiveCacheName() {
   const named = keys.filter(
     (key) => key.startsWith(CACHE_PREFIX) && key !== PENDING_CACHE,
   )
-  if (named.length === 1) return named[0]
+  if (named.length === 1) {
+    rememberContentHashFromCacheName(named[0])
+    return named[0]
+  }
   if (named.length > 1) {
     named.sort()
+    rememberContentHashFromCacheName(named[named.length - 1])
     return named[named.length - 1]
   }
   return PENDING_CACHE
@@ -87,9 +108,7 @@ async function handleQuestExportFetch(request) {
   let cacheName = await getActiveCacheName()
 
   if (cacheName === PENDING_CACHE) {
-    cacheName = await syncCacheFromBuildJson({ forceNetwork: true })
-  } else {
-    void syncCacheFromBuildJson({ forceNetwork: true })
+    cacheName = await syncCacheFromBuildJson()
   }
 
   const cache = await caches.open(cacheName)
