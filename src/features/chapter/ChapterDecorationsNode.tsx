@@ -68,13 +68,13 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
   const [alphaFlagTick, setAlphaFlagTick] = useState(0)
 
   const drawOps = useMemo(() => planChapterDecorationDraws(images), [images])
-  const sources = useMemo(() => {
+  const sourcesKey = useMemo(() => {
     const unique = new Set<string>()
     for (const op of drawOps) {
       const src = decorationSrc(op.image)
       if (src) unique.add(src)
     }
-    return [...unique]
+    return [...unique].sort().join('\0')
   }, [drawOps])
 
   const tickMs = useMemo(() => {
@@ -91,10 +91,11 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
     bitmapsRef.current.clear()
     setReady(false)
 
-    if (!sources.length) {
+    if (!sourcesKey) {
       return undefined
     }
 
+    const sources = sourcesKey.split('\0')
     let pending = sources.length
     for (const src of sources) {
       const img = new Image()
@@ -116,7 +117,7 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
     return () => {
       cancelled = true
     }
-  }, [sources])
+  }, [sourcesKey])
 
   useEffect(() => {
     if (!import.meta.env.DEV) return undefined

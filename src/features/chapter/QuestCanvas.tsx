@@ -538,11 +538,22 @@ function ZoomControls() {
   )
 }
 
+function withQuestSelection(nodes: Node[], selectedId: string | null): Node[] {
+  let changed = false
+  const next = nodes.map((node) => {
+    if (node.type !== 'quest') return node
+    const selected = selectedId != null && node.id === selectedId
+    if (node.selected === selected) return node
+    changed = true
+    return { ...node, selected }
+  })
+  return changed ? next : nodes
+}
+
 function chapterToFlow(
   chapter: ChapterData,
   catalog: Map<string, QuestCatalogEntry>,
   dict: Record<string, string>,
-  selectedId: string | null,
   locale: string,
   gridScale: number,
 ): { nodes: Node[]; edges: Edge[] } {
@@ -595,7 +606,6 @@ function chapterToFlow(
       height: iconSize,
       measured: { width: iconSize, height: iconSize },
       style: { width: iconSize, height: iconSize },
-      selected: quest.id === selectedId,
       zIndex: 1,
     })
   }
@@ -650,7 +660,6 @@ function chapterToFlow(
       height: iconSize,
       measured: { width: iconSize, height: iconSize },
       style: { width: iconSize, height: iconSize },
-      selected: link.linkedQuest === selectedId,
       zIndex: 1,
     })
     nodeIds.add(link.linkedQuest)
@@ -679,11 +688,14 @@ function QuestCanvasInner(props: QuestCanvasProps) {
       props.chapter,
       props.catalog,
       props.dict,
-      props.selectedId,
       props.locale,
       props.gridScale,
     ),
-    [props.catalog, props.chapter, props.dict, props.gridScale, props.locale, props.selectedId],
+    [props.catalog, props.chapter, props.dict, props.gridScale, props.locale],
+  )
+  const nodes = useMemo(
+    () => withQuestSelection(layoutNodes, props.selectedId),
+    [layoutNodes, props.selectedId],
   )
 
   return (
@@ -692,6 +704,7 @@ function QuestCanvasInner(props: QuestCanvasProps) {
         {...props}
         layoutNodes={layoutNodes}
         layoutEdges={layoutEdges}
+        nodes={nodes}
       />
     </QuestCanvasHoverProvider>
   )
@@ -709,7 +722,8 @@ function QuestCanvasFlow({
   onClearSelection,
   layoutNodes,
   layoutEdges,
-}: QuestCanvasProps & { layoutNodes: Node[]; layoutEdges: Edge[] }) {
+  nodes,
+}: QuestCanvasProps & { layoutNodes: Node[]; layoutEdges: Edge[]; nodes: Node[] }) {
   const { highlightQuestId } = useQuestCanvasHover()
 
   const flowEdges = useMemo(
@@ -744,7 +758,7 @@ function QuestCanvasFlow({
   const gridStep = gridStepPx(gridScale)
   const backgroundDotGap = Math.max(12, Math.round(gridStep / 3))
 
-  const chapterLayoutReady = layoutNodes.length > 0
+  const chapterLayoutReady = nodes.length > 0
 
   const focusNodeId = useMemo(() => {
     if (!selectedId) return null
@@ -767,7 +781,7 @@ function QuestCanvasFlow({
 
   return (
     <ReactFlow
-      nodes={layoutNodes}
+      nodes={nodes}
       edges={flowEdges}
       onNodesChange={() => {}}
       onEdgesChange={() => {}}
