@@ -2,10 +2,6 @@ import { loadSiteConfig } from '@/shared/lib/quest-export'
 
 let cachedRecipeBookBase: string | null | undefined
 
-/**
- * External TFG-Recipe-Viewer base for item/tag tooltip links ({@code site-config.json}).
- * Empty when unset — never used for icon atlas data.
- */
 export async function recipeBookSiteBase(): Promise<string> {
   if (cachedRecipeBookBase !== undefined) {
     return cachedRecipeBookBase ?? ''

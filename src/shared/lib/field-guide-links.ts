@@ -16,7 +16,6 @@ export async function fieldGuideSiteBase(): Promise<string> {
   return cachedFieldGuideBase
 }
 
-/** {@code tfc:field_guide tfc:mechanics/hydration} → mechanics/hydration */
 export function fieldGuidePathFromGuidePage(guidePage: string): string | null {
   const trimmed = guidePage.trim()
   if (!trimmed) {

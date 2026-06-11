@@ -1,14 +1,10 @@
-/**
- * Minecraft / FTB Quests JSON text components in description lines.
- * See {@code MultilineTextEditorScreen.LINK_TEXT_TEMPLATE} and {@code ViewQuestPanel.handleCustomClickEvent}.
- */
+
 
 import type { McTextStyle, RichTextNode } from '@/shared/lib/quest-rich-text-parser'
 import { parseRichText } from '@/shared/lib/quest-rich-text-parser'
 
 type McComponent = Record<string, unknown>
 
-/** Minecraft named text colors → {@code &} code used by quest CSS. */
 const NAMED_COLORS: Record<string, string> = {
   black: '0',
   dark_blue: '1',
@@ -232,10 +228,6 @@ function parseRoot(value: unknown, dict: Record<string, string>): RichTextNode[]
   return parseComponent(value as McComponent, dict, {})
 }
 
-/**
- * Parse a description line that is a Minecraft JSON text component (or array of components).
- * Returns {@code null} when the line is not valid JSON text component syntax.
- */
 export function tryParseMinecraftTextComponentLine(
   line: string,
   dict: Record<string, string>,

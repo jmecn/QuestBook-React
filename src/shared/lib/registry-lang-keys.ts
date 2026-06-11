@@ -1,4 +1,4 @@
-/** Aligns with minecraft-web-export {@code RegistryLangKeys}. */
+
 
 export function normalizeRegistryId(registryId: string): string {
   let id = registryId.trim()
@@ -17,10 +17,9 @@ export function normalizeRegistryId(registryId: string): string {
 }
 
 export function dottedRegistryId(registryId: string): string {
-  return normalizeRegistryId(registryId).replace(/\//g, '.').replace(':', '.')
+  return normalizeRegistryId(registryId).replace(/\//g, '.').replace(/:/g, '.')
 }
 
-/** Keys tried for item registry ids: item, then block, then fluid. */
 export function itemLookupKeys(registryId: string): string[] {
   const dotted = dottedRegistryId(registryId)
   if (!dotted) return []

@@ -20,7 +20,6 @@ function raySegmentIntersect(
   return t
 }
 
-/** {@code vertices} are offsets from node center (local space). */
 function polygonBorderToward(
   center: Point,
   toward: Point,
@@ -62,7 +61,6 @@ function scalePolygon(points: Array<[number, number]>, halfW: number, halfH: num
   return points.map(([nx, ny]) => ({ x: nx * halfW, y: ny * halfH }))
 }
 
-/** Flat-top regular hexagon inscribed in the node box. */
 function hexagonVertices(halfW: number, halfH: number): Point[] {
   const s = Math.min(halfW, halfH)
   const w = (Math.sqrt(3) / 2) * s
@@ -76,7 +74,6 @@ function hexagonVertices(halfW: number, halfH: number): Point[] {
   ], 1, 1)
 }
 
-/** Flat-top regular octagon. */
 function octagonVertices(halfW: number, halfH: number): Point[] {
   const s = Math.min(halfW, halfH)
   const a = s * (Math.SQRT2 - 1)
@@ -92,7 +89,6 @@ function octagonVertices(halfW: number, halfH: number): Point[] {
   ]
 }
 
-/** Point-up regular pentagon. */
 function pentagonVertices(halfW: number, halfH: number): Point[] {
   const s = Math.min(halfW, halfH)
   const points: Point[] = []
@@ -132,9 +128,6 @@ function diamondBorderToward(center: Point, toward: Point, halfW: number, halfH:
   return { x: center.x + dx * t, y: center.y + dy * t }
 }
 
-/**
- * Exit point on the quest shape border toward another node — matches FTB {@code QuestShape} silhouettes.
- */
 export function questShapeBorderToward(
   center: Point,
   toward: Point,

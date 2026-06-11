@@ -188,7 +188,7 @@
   --quest-layout-transition-ms: 300ms;
   --quest-grid-dot: color-mix(in srgb, var(--muted) 72%, var(--text));
   --quest-icon-inner-ratio: 0.6666667;
-  /* FTB QuestButton.draw: DARK_GRAY shape, WHITE@150 fill/outline (ftb_quests_theme.txt). */
+
   --ftb-quest-shape-occlude: #212121;
   --ftb-quest-shape-fill: rgba(255, 255, 255, 0.5882352941);
   --ftb-quest-shape-outline: rgba(255, 255, 255, 0.5882352941);
@@ -219,10 +219,6 @@
   fill: var(--quest-grid-dot);
 }
 
-/*
- * PS-style marching ants. SVG stroke-dasharray cannot use CSS variables in most
- * engines (falls back to solid). vector-effect keeps dash size stable when zooming.
- */
 .chapter-map .quest-dependency-edge__stroke {
   fill: none;
   vector-effect: non-scaling-stroke;
@@ -269,7 +265,6 @@
   }
 }
 
-/* FTB QuestPanel pass 2: requires = incoming (cyan), required-for = outgoing (yellow). */
 .chapter-map .quest-dependency-edge--incoming .quest-dependency-edge__stroke--main {
   stroke: #00c8c8;
 }
@@ -278,7 +273,6 @@
   stroke: #c8c800;
 }
 
-/* Keep dash period > stroke-width so square caps do not close gaps (solid-looking line). */
 .chapter-map .quest-dependency-edge--incoming .quest-dependency-edge__stroke,
 .chapter-map .quest-dependency-edge--outgoing .quest-dependency-edge__stroke {
   stroke-dasharray: 8 8;
@@ -436,7 +430,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   outline: none;
 }
 
-/* Nearest-neighbor when upscaling export PNGs and chapter art. */
 .quest-icon__img,
 .quest-chapter-image,
 .quest-chapter-image__sprite,
@@ -446,7 +439,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   image-rendering: pixelated;
 }
 
-/* FTB: item icon is 2/3 of the shape; 32px PNG → 48px outer at size 1. */
 .quest-icon__inner {
   display: flex;
   align-items: center;
@@ -487,7 +479,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   border-width: 3px;
 }
 
-/* Legacy CSS fallback when FTB shape PNGs are unavailable in the export bundle. */
 .quest-icon--shape-heart:not(.quest-icon--ftb-shape) {
   border-radius: 0;
   clip-path: polygon(50% 92%, 6% 42%, 6% 22%, 26% 8%, 50% 26%, 74% 8%, 94% 22%, 94% 42%);
@@ -527,7 +518,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   object-fit: fill;
 }
 
-/* FTB vertex tint: texture first, then multiply overlay (not a colored backdrop). */
 .quest-chapter-image__tint {
   position: absolute;
   inset: 0;
@@ -560,7 +550,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Lines sit under nodes; occlusion follows FTB shape mask (see quest-icon__shape-occlude). */
+
   background: transparent;
 }
 
@@ -590,7 +580,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   flex-shrink: 0;
 }
 
-/* Default circular chrome when shape PNGs are missing (fallback only). */
 .quest-icon:not(.quest-icon--ftb-shape):not(.quest-icon--tile) {
   border-radius: 50%;
   background: color-mix(in srgb, var(--panel) 85%, var(--bg));
@@ -604,10 +593,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
-/*
- * FTB QuestShape layers (background + outline PNGs); item icon sits on top at 2/3 size,
- * same as {@code QuestButton.draw} — not clipped by the shape mask.
- */
 .quest-icon--ftb-shape {
   position: relative;
   border: none;
@@ -652,7 +637,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   background: var(--ftb-quest-shape-outline);
 }
 
-/* Hover: brighten shape background only — item icon stays untouched (z-index above). */
 .quest-icon--ftb-shape .quest-icon__shape-bg {
   transition: background 0.12s ease;
 }
@@ -674,7 +658,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   z-index: 3;
 }
 
-/* Sidebar chapter icons and task list rows: plain 32×32 PNGs, no quest-node chrome. */
 .quest-icon.quest-icon--tile {
   border-radius: 0;
   border: none;
@@ -769,7 +752,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   margin: 2px 0;
 }
 
-/* FTB ViewQuestPanel: CompactGridLayout — icon cells wrap, titled tasks full width. */
 .quest-task-grid {
   --quest-detail-icon-size: 32px;
   --quest-detail-icon-cell: 36px;
@@ -1018,7 +1000,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   font-weight: 600;
 }
 
-/* Minecraft color codes — dark theme matches in-game; light theme remaps low-contrast colors. */
 .quest-rich-text__mc-0 { color: #000000; }
 .quest-rich-text__mc-1 { color: #0000aa; }
 .quest-rich-text__mc-2 { color: #00aa00; }

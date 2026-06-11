@@ -66,7 +66,6 @@ import type { ChapterData, ChapterImage, QuestNode as QuestData } from '@/shared
 import { gridStepPx, gridToPx } from '@/shared/lib/quest-text'
 import '@/styles/quest-canvas.css'
 
-/** Minimal handles so React Flow can mount edges; geometry uses node centers. */
 const QUEST_EDGE_HANDLE_ID = 'edge'
 
 const QUEST_EDGE_OPTIONS: DefaultEdgeOptions = {
@@ -276,7 +275,6 @@ const nodeTypes = {
 }
 const edgeTypes = { questDependency: QuestDependencyEdge }
 
-/** Place a flow point at the visible map center (left of the detail drawer overlay). */
 function centerFlowPointInVisibleViewport(
   setCenter: ReturnType<typeof useReactFlow>['setCenter'],
   flowPoint: { x: number; y: number },
@@ -292,7 +290,6 @@ function centerFlowPointInVisibleViewport(
   })
 }
 
-/** Map-pane center in flow coordinates (respects drawer overlay when open). */
 function captureVisibleMapCenter(
   screenToFlowPosition: ReturnType<typeof useReactFlow>['screenToFlowPosition'],
   drawerInset: number,
@@ -305,7 +302,6 @@ function captureVisibleMapCenter(
   return screenToFlowPosition({ x: centerX, y: centerY })
 }
 
-/** Focus selected quest or restore chapter center once pan/zoom is ready. */
 function QuestViewportController({
   chapter,
   catalog,
@@ -403,7 +399,6 @@ function QuestViewportController({
   return null
 }
 
-/** Persist chapter center when the viewport settles after user pan/zoom. */
 function RememberChapterViewportOnSettle({
   chapterId,
   gridScale,
@@ -628,11 +623,11 @@ function chapterToFlow(
   for (const link of chapter.questLinks ?? []) {
     const linkedEntry = catalog.get(link.linkedQuest)
     if (!linkedEntry || !isQuestLinkVisibleOnMap(linkedEntry.quest)) continue
-    // Dependency edges use linked quest ids; node id must match (not link:${link.id}).
+
     if (nodeIds.has(link.linkedQuest)) continue
 
     const linkedQuest = linkedEntry.quest
-    // Link placement uses link width (default 1); do not inherit the source chapter quest size.
+
     const linkSize = link.size ?? DEFAULT_QUEST_NODE_SIZE
     const iconSize = questIconPx(linkSize, gridScale)
     nodes.push({
@@ -723,7 +718,7 @@ function QuestCanvasFlow({
       const incoming = highlightQuestId != null && edge.target === highlightQuestId
       return {
         ...edge,
-        // Keep all edges under quest nodes (FTB draws connections below buttons).
+
         zIndex: 0,
         data: {
           ...(edge.data ?? {}),

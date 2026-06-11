@@ -3,7 +3,6 @@ import { resolveQuestText } from '@/shared/lib/quest-text'
 import type { QuestNode } from '@/shared/types/quest'
 import { useEffect, useState } from 'react'
 
-/** FTB-style quest icon: explicit {@code icon}, else first task item id. */
 export function resolveQuestIcon(quest: QuestNode): string | undefined {
   if (quest.icon) {
     return quest.icon
@@ -21,7 +20,6 @@ function registryIdFallback(itemId: string): string {
   return segment.replace(/_/g, ' ')
 }
 
-/** Sync label: lang title, then registry-id stub for {@code titleItem}. */
 export function syncQuestDisplayTitle(quest: QuestNode, dict: Record<string, string>): string {
   const fromLang = resolveQuestText(dict, quest.title)
   if (fromLang) {

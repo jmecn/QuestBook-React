@@ -2,7 +2,6 @@ import { questExportTextureCandidates } from '@/shared/lib/quest-export-asset'
 
 export type QuestShapeLayer = 'background' | 'outline' | 'shape'
 
-/** FTB {@code QuestShape} id; empty/default → circle (game default). */
 export function resolveQuestShapeId(shape?: string | null): string {
   const trimmed = shape?.trim()
   if (!trimmed || trimmed === 'default') return 'circle'

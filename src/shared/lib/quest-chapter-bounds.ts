@@ -4,7 +4,6 @@ import { DEFAULT_QUEST_NODE_SIZE } from '@/shared/lib/quest-node-size'
 import { isQuestLinkVisibleOnMap, isQuestVisibleOnMap } from '@/shared/lib/quest-visibility'
 import { gridToPx } from '@/shared/lib/quest-text'
 
-/** FTB {@code QuestPanel.updateMinMax} padding in chapter grid units. */
 const BOUNDS_PAD_X = 40
 const BOUNDS_PAD_Y = 30
 
@@ -58,7 +57,6 @@ function includeImage(bounds: ChapterGridBounds, image: ChapterImage): void {
   expandBounds(bounds, image.x, image.y, width, height)
 }
 
-/** Bounds of visible chapter content in FTB grid coordinates. */
 export function computeChapterGridBounds(
   chapter: ChapterData,
   catalog: Map<string, QuestCatalogEntry>,
@@ -99,7 +97,6 @@ export function computeChapterGridBounds(
   }
 }
 
-/** FTB {@code resetScroll} — center of the virtual chapter canvas. */
 export function chapterGridCenter(bounds: ChapterGridBounds): ChapterGridPoint {
   return {
     x: (bounds.minX + bounds.maxX) / 2,
@@ -107,7 +104,6 @@ export function chapterGridCenter(bounds: ChapterGridBounds): ChapterGridPoint {
   }
 }
 
-/** FTB {@code resetScroll} default — center of visible chapter content in grid units. */
 export function getDefaultChapterViewCenter(
   chapter: ChapterData,
   catalog: Map<string, QuestCatalogEntry>,
@@ -141,7 +137,6 @@ export function viewportCenterGrid(
   return flowToGridPoint(flowX, flowY, gridScale)
 }
 
-/** FTB {@code scrollTo} target for quest / quest-link autofocus ids. */
 export function resolveAutofocusGridPoint(
   chapter: ChapterData,
   catalog: Map<string, QuestCatalogEntry>,

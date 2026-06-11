@@ -1,6 +1,5 @@
 import { questExportUrl } from '@/shared/lib/site-base'
 
-/** Placeholder item written by ftb-quest-export when icon render fails. */
 export const QUEST_MISSING_ITEM_ICON = 'minecraft_web_export:missing_icon'
 
 function splitRef(ref: string): { namespace: string; path: string } | null {
@@ -20,7 +19,6 @@ function isRegistryItemPath(path: string): boolean {
     && !path.endsWith('.png')
 }
 
-/** Per-item PNG under {@code assets/icons/items/<ns>/<path>.png}. */
 export function questItemIconUrl(itemId: string): string | null {
   const parts = splitRef(itemId)
   if (!parts || !isRegistryItemPath(parts.path)) return null

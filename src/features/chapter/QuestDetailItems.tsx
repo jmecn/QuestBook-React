@@ -26,7 +26,7 @@ function TaskTitle({
     let cancelled = false
     const base = resolveQuestText(dict, task.title)
     const observe = task.toObserve?.trim()
-    // Tags (#namespace:path) stay in title; only resolve registry ids (blocks/entities/items).
+
     if (!observe || observe.startsWith('#') || !base.includes(observe)) {
       setLabel(base)
       return undefined
@@ -244,7 +244,6 @@ function RewardGridCell({
   )
 }
 
-/** FTB {@code CompactGridLayout}: one wrap grid for icon tasks, full-width rows for titles. */
 export function QuestTaskList({
   tasks,
   dict,

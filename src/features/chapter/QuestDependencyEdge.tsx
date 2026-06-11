@@ -8,10 +8,6 @@ import {
   questNodeCenter,
 } from '@/shared/lib/quest-dependency-handles'
 
-/**
- * Straight dependency line clipped at each quest shape's border (not always a circle).
- * Rendered as a dual-stroke marching-ants animation (PS-style selection marquee).
- */
 export function QuestDependencyEdge({
   id,
   source,

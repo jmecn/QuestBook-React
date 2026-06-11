@@ -7,11 +7,10 @@ const HASH_TAG_SPLIT = /(#[a-z0-9_.\-/]+:[a-z0-9_.\-/]+)/gi
 export interface QuestTagLinkedTextProps {
   text: string
   locale: string
-  /** Tags from {@code filterRaw} when not already present as {@code #id} in {@code text}. */
+
   extraTagIds?: string[]
 }
 
-/** Inline task label with {@code #tag} links to the recipe book tag page when configured. */
 export function QuestTagLinkedText({
   text,
   locale,

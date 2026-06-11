@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom'
 
 type QuestHoverLabelProps = {
   label: string
-  /** Plain-text secondary line (e.g. quest/chapter subtitle). */
+
   subtitle?: string
   className?: string
   children: ReactNode
@@ -26,7 +26,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
-/** Floating label on hover/focus; rendered in a portal so drawer overflow cannot clip it. */
 export function QuestHoverLabel(props: QuestHoverLabelProps): ReactElement {
   const { label, subtitle, className, children, as = 'span', ...rest } = props
   const tooltipLabel = subtitle?.trim() ? `${label}. ${subtitle}` : label

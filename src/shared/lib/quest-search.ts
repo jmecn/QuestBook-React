@@ -4,11 +4,11 @@ import type { NavigateFunction } from 'react-router-dom'
 
 export interface QuestSearchRow {
   id: string
-  /** Chapter JSON filename (deep-link target). */
+
   chapter: string
-  /** Localized chapter display name. */
+
   chapterTitle?: string
-  /** Localized quest title for result cards. */
+
   title?: string
   content: string
 }

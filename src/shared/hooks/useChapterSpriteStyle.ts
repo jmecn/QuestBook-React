@@ -6,7 +6,6 @@ import {
 } from '@/shared/lib/chapter-sprite-frame'
 import type { ChapterImage } from '@/shared/types/quest'
 
-/** Vertical strip: frame {@code index} of {@code textureFrameCount} as CSS {@code background-position-y}. */
 export function chapterSpriteBackgroundY(textureFrameIndex: number, textureFrameCount: number): string {
   if (textureFrameCount <= 1) {
     return '0'
@@ -15,10 +14,6 @@ export function chapterSpriteBackgroundY(textureFrameIndex: number, textureFrame
   return `${(clamped / (textureFrameCount - 1)) * 100}%`
 }
 
-/**
- * Minecraft-style sprite animation: discrete keyframes from {@code .mcmeta frames[]},
- * not continuous UV scroll. All instances share a global clock (atlas behaviour).
- */
 export function useChapterSpriteStyle(image: ChapterImage): CSSProperties | undefined {
   const textureFrames = image.frameCount ?? 1
   const msPerStep = chapterSpriteAnimationIntervalMs(image) ?? 100

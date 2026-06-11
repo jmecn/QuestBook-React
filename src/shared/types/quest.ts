@@ -3,7 +3,7 @@ export interface QuestTask {
   type: string
   title?: string
   items?: string[]
-  /** {@code ftbfiltersystem:smart_filter} expression when task accepts a tag/filter, not one item. */
+
   filterRaw?: string
   toObserve?: string
   dimension?: string
@@ -11,7 +11,7 @@ export interface QuestTask {
 
 export interface ChapterImage {
   image: string
-  /** Pre-baked PNG (or vertical sprite strip) under quest-export {@code assets/chapter-images/}. */
+
   baked?: string
   x: number
   y: number
@@ -20,16 +20,16 @@ export interface ChapterImage {
   rotation?: number
   click?: string | null
   order?: number
-  /** 0–255; export always writes (default 255). */
+
   alpha?: number
-  /** FTB {@code Color4I.rgb()} when not white. */
+
   color?: number
   alignToCorner?: boolean
   animated?: boolean
   frameCount?: number
-  /** Minecraft texture {@code .mcmeta} {@code animation.frametime} (ticks per frame, default 2). */
+
   frameTime?: number
-  /** {@code .mcmeta animation.frames} indices; defaults to {@code [0..frameCount-1]}. */
+
   frameSequence?: number[]
   frameWidth?: number
   frameHeight?: number
@@ -52,22 +52,22 @@ export interface QuestNode {
   x: number
   y: number
   size?: number
-  /** SNBT {@code invisible} — hidden in-game until the quest is completed. */
+
   invisible?: boolean
   shape?: string
   title?: string
-  /** First-task item id when {@code title} is unset (FTB {@code getAltTitle}). */
+
   titleItem?: string
-  /** Item-task count prefix for {@code titleItem} (e.g. {@code 3x Stick}). */
+
   titleCount?: number
   subtitle?: string
   description?: string | string[]
   icon?: string
-  /** Extra task icon item ids when FTB uses {@code AnimatedIcon}. */
+
   iconItems?: string[]
   dependencies?: string[]
   hideDependencyLines?: boolean
-  /** FTB {@code guide_page} — Field Guide deep link target. */
+
   guidePage?: string
   tasks?: QuestTask[]
   rewards?: QuestReward[]
@@ -88,7 +88,7 @@ export interface ChapterData {
   group?: string | null
   title?: string
   subtitle?: string | string[]
-  /** FTB {@code autofocus_id} — quest or quest-link id to center on when opening the chapter. */
+
   autofocusId?: string
   quests: QuestNode[]
   questLinks?: QuestLink[]
@@ -108,7 +108,7 @@ export interface ChapterSummary {
 export interface ChapterGroup {
   id: string
   title?: string
-  /** List index in FTB {@code chapterGroups} (group order in sidebar). */
+
   orderIndex?: number
 }
 

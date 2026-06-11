@@ -8,13 +8,6 @@ function splitRef(ref: string): { namespace: string; path: string } | null {
   return { namespace, path }
 }
 
-/**
- * Resolve exported PNG URLs under {@code quest-export/assets/}.
- *
- * Registry item ids use per-item PNGs under {@code assets/icons/items/} (see {@code quest-item-icon.ts}).
- * Texture paths resolve to copied PNGs under {@code assets/<ns>/textures/}.
- */
-/** Asset path from export manifest, e.g. {@code assets/chapter-images/<hash>.png}. */
 export function questExportAssetUrl(relativePath: string): string {
   return questExportUrl(relativePath)
 }

@@ -1,17 +1,13 @@
 import type { ChapterGridPoint } from '@/shared/lib/quest-chapter-bounds'
 
-/** React Flow zoom at 100% — one FTB grid unit between node centers; nodes are ~6/7 of cell width. */
 export const QUEST_ZOOM_BASE = 1
 
-/** Match {@code --quest-layout-transition-ms} in quest-canvas.css. */
 export const QUEST_LAYOUT_TRANSITION_MS = 300
 
 const CHAPTER_CENTERS_STORAGE_KEY = 'questbook-chapter-centers-v2'
 
-/** Persisted across chapter switches within the session. */
 let savedZoom = QUEST_ZOOM_BASE
 
-/** Per-chapter map center in FTB grid units (FTB {@code centerQuestX/Y}). */
 const chapterCenters = new Map<string, ChapterGridPoint>()
 
 let suppressRememberDepth = 0
@@ -28,7 +24,7 @@ function loadStoredChapterCenters(): void {
       }
     }
   } catch {
-    // ignore corrupt storage
+
   }
 }
 
@@ -41,7 +37,7 @@ function persistChapterCenters(): void {
     }
     sessionStorage.setItem(CHAPTER_CENTERS_STORAGE_KEY, JSON.stringify(payload))
   } catch {
-    // ignore quota / privacy mode
+
   }
 }
 
@@ -71,7 +67,6 @@ export function shouldRememberViewportOnSettle(): boolean {
   return suppressRememberDepth === 0
 }
 
-/** Skip persisting viewport while programmatic pan/zoom animations run. */
 export function runProgrammaticViewportMove(run: () => void | Promise<void>): void {
   suppressRememberDepth += 1
   void Promise.resolve(run()).finally(() => {

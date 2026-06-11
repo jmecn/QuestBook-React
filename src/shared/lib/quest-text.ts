@@ -3,7 +3,6 @@ import { parseRichText, plainQuestText } from '@/shared/lib/quest-rich-text-pars
 export { parseQuestDescription, parseRichText, plainQuestText, richTextToPlain } from '@/shared/lib/quest-rich-text-parser'
 export type { QuestDescriptionBlock, RichTextNode } from '@/shared/lib/quest-rich-text-parser'
 
-/** @deprecated Prefer {@link plainQuestText}; kept for callers that only need a plain string. */
 export function stripColorCodes(text: string): string {
   return text.replace(/[&§]./g, '')
 }
@@ -34,7 +33,6 @@ export function resolveQuestLines(
   return resolveQuestText(dict, raw)
 }
 
-/** Rich-text nodes for titles/subtitles that may contain {@code &} color codes. */
 export function resolveQuestRichText(
   dict: Record<string, string>,
   raw: string | undefined | null,
@@ -50,7 +48,6 @@ export function resolveQuestRichText(
   return parseRichText(raw, dict)
 }
 
-/** FTB Quests chapter grid: one unit = 24px at gridScale 1; smaller gridScale = coarser grid in editor. */
 export function gridToPx(value: number, gridScale = 0.5): number {
   const GRID_SIZE = 24
   const scale = gridScale > 0 ? gridScale : 0.5

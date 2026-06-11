@@ -44,7 +44,6 @@ async function loadEnUsDict(): Promise<Record<string, string>> {
   return enUsDictCache
 }
 
-/** {@code primary} wins per key; missing keys come from {@code fallback}. */
 export function mergeLangDicts(
   fallback: Record<string, string>,
   primary: Record<string, string>,
@@ -54,7 +53,6 @@ export function mergeLangDicts(
   return { ...fallback, ...primary }
 }
 
-/** Quest / item lang table with {@code en_us} fallback for missing keys. */
 export async function loadLangDict(locale: string): Promise<Record<string, string>> {
   const normalized = normalizeLocale(locale)
   if (normalized === FALLBACK_LOCALE) {
@@ -71,7 +69,6 @@ export interface ItemNameKeysPayload {
   items?: Record<string, string>
 }
 
-/** Registry id → in-game description lang key ({@code items/name-keys.json}). */
 export async function loadItemNameKeys(): Promise<Record<string, string>> {
   const res = await fetch(questExportUrl('items/name-keys.json'))
   if (!res.ok) return {}

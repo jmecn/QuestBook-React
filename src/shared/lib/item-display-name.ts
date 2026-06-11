@@ -67,7 +67,7 @@ function resolveFromNameKey(
   const descriptionKey = nameKeys[bare]
   if (descriptionKey) {
     const fromKey = dict[descriptionKey]
-    // name-keys often point at tagprefix.* (%s锭) — leave composition to GT rules.
+
     if (fromKey && fromKey !== descriptionKey && !isLangTemplate(fromKey)) {
       return stripColorCodes(fromKey)
     }
@@ -87,10 +87,6 @@ function resolveComposedLabel(dict: Record<string, string>, itemId: string): str
   return null
 }
 
-/**
- * Registry label from exported {@code lang/} only — no English id fallback.
- * Used for observation task titles (match FTB: keep raw id when lang is missing).
- */
 export async function resolveRegistryDisplayName(
   registryId: string,
   locale = 'en_us',
@@ -111,7 +107,6 @@ export async function resolveRegistryDisplayName(
   }
 }
 
-/** Human-readable item label: name-keys + exported {@code lang/}, with GT compose rules, then id fallback. */
 export async function resolveItemDisplayName(
   itemId: string,
   locale = 'en_us',

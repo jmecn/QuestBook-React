@@ -14,9 +14,9 @@ export interface QuestIconProps {
   iconItems?: string[]
   size?: number
   shape?: string
-  /** {@code tile}: full-size square list icon; {@code node}: FTB shaped quest button (default). */
+
   variant?: 'node' | 'tile'
-  /** Tooltip on hover; defaults to {@code icon} id. Pass {@code ''} to hide. */
+
   tooltip?: string
   selected?: boolean
   className?: string

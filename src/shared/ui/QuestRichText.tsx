@@ -116,7 +116,6 @@ export interface QuestDescriptionImageProps {
   src?: string | null
 }
 
-/** FTB quest image blocks use small pixel sizes (e.g. 100); scale up for readable detail panels. */
 const QUEST_DESCRIPTION_IMAGE_SCALE = 2
 
 export function QuestDescriptionImage({

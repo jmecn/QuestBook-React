@@ -1,13 +1,12 @@
 import { createContext, useContext, useMemo, useState, type ReactElement, type ReactNode } from 'react'
 
-/** FTB default theme: {@code ftb_quests_theme.txt} */
 export const FTB_DEPENDENCY_LINE_REQUIRES_COLOR = '#00C8C8'
 export const FTB_DEPENDENCY_LINE_REQUIRED_FOR_COLOR = '#C8C800'
 
 type QuestCanvasHoverContextValue = {
   hoveredQuestId: string | null
   setHoveredQuestId: (id: string | null) => void
-  /** Hovered quest, else selected quest — drives dependency line highlight like FTB QuestPanel pass 2. */
+
   highlightQuestId: string | null
 }
 

@@ -1,7 +1,4 @@
-/**
- * GregTech-style composed registry labels (tagprefix + material, fluids, buckets).
- * Mirrors TagPrefix.getUnlocalizedName(Material), FluidStorageKeys, GTBucketItem.
- */
+
 
 export type TranslateKey = (key: string) => string
 export type LangTable = Record<string, string> | null | undefined
@@ -30,26 +27,18 @@ interface GtToolPatternEntry {
   templateKey: string
 }
 
-/** Mod id for GregTech CEu composed names (tagprefix + material). */
 export const GTCEU_NAMESPACE = 'gtceu';
 
-/** TFG modpack materials use the same tagprefix + material.* compose rules as GTCEu. */
 export const TFG_NAMESPACE = 'tfg';
 
-/** Greate uses GTCEu materials + tagprefix compose (rose quartz ores, etc.). */
 export const GREATE_NAMESPACE = 'greate';
 
-/**
- * Registry namespaces resolved with mod-specific compose rules before flat `item.*` keys.
- * Add mods here when {@link translateComposedRegistry} gains matching rules (e.g. AE2, AFC).
- */
 export const COMPOSED_REGISTRY_NAMESPACES = new Set([
   GTCEU_NAMESPACE,
   TFG_NAMESPACE,
   GREATE_NAMESPACE,
 ]);
 
-/** Fluid lang templates (FluidStorageKeys.translationKeyFunction). */
 export const GTCEU_FLUID_LANG_KEYS = {
   molten: 'gtceu.fluid.molten',
   plasma: 'gtceu.fluid.plasma',
@@ -64,7 +53,6 @@ export function isComposedRegistryNamespace(namespace: string): boolean {
   return COMPOSED_REGISTRY_NAMESPACES.has(namespace);
 }
 
-/** TagPrefix.idPattern overrides keyed by tagprefix lang suffix (getLowerCaseName). */
 export const GTCEU_TAG_PREFIX_PATTERN_OVERRIDES: Record<string, string> = {
   raw: 'raw_%s',
   raw_ore_block: 'raw_%s_block',
@@ -118,14 +106,12 @@ export const GTCEU_TAG_PREFIX_PATTERN_OVERRIDES: Record<string, string> = {
   unfired_repair_kit: 'unfired_repair_kit_%s',
 };
 
-/** Item paths whose {@code item.<ns>.<path>} template uses {@code %s} as an empty in-game prefix (fluid cells, etc.). */
 const EMPTY_PLACEHOLDER_ITEM_PATHS = new Set([
   'universal_fluid_cell',
   'turbine_rotor',
   'fish_roe',
 ]);
 
-/** GregTech voltage tiers used as registry id prefixes (GTToolType.idFormat). */
 export const GT_VOLTAGE_TIER_PREFIXES = [
   'lv',
   'mv',
@@ -140,7 +126,6 @@ export const GT_VOLTAGE_TIER_PREFIXES = [
   'max',
 ];
 
-/** GTToolType.idFormat overrides when registry id does not match {@code <tier>_%s_<rest>}. */
 export const GT_TOOL_ID_FORMAT_OVERRIDES: Record<string, string> = {
   lv_drill: 'lv_%s_drill',
   mv_drill: 'mv_%s_drill',
@@ -161,11 +146,6 @@ export const GT_TOOL_ID_FORMAT_OVERRIDES: Record<string, string> = {
   iv_screwdriver: 'iv_%s_screwdriver',
 };
 
-/**
- * Electric tools registered by gtmutils ({@code UtilToolType}, assets under {@code item.gtceu.tool.*}).
- * idFormat is always {@code <tier>_%s_<tool>} except wirecutter → {@code <tier>_%s_wire_cutter}.
- * @see net.neganote.gtutilities.common.tools.UtilToolType (gtmutils 2.9.x)
- */
 export const GTMUTILS_ELECTRIC_TOOL_NAMES = [
   'mv_screwdriver',
   'ev_screwdriver',
@@ -193,10 +173,6 @@ export const GTMUTILS_ELECTRIC_TOOL_NAMES = [
   'zpm_buzzsaw',
 ];
 
-/**
- * Registry id pattern for {@code item.gtceu.tool.<toolName>} (GTToolType.idFormat).
- * Tiered electric tools use {@code <tier>_%s_<tool>} (e.g. {@code ev_%s_buzzsaw}).
- */
 export function defaultGtToolIdPattern(toolName: string): string {
   const override = GT_TOOL_ID_FORMAT_OVERRIDES[toolName];
   if (override) return override;
@@ -227,10 +203,6 @@ function formatLangTemplateTrimmed(template: string, ...args: string[]): string 
   return formatLangTemplate(template, ...args).trim();
 }
 
-/**
- * GT fluid cells / universal cell: {@code %s} is often an empty in-game prefix.
- * Per-material cells may embed the material in the template ({@code %s钢单元}) or only in {@code %s} ({@code %s流体单元}).
- */
 function tryEmptyPlaceholderItemLang(
   namespace: string,
   path: string,
@@ -387,10 +359,6 @@ export function buildTagPrefixPatterns(langTable: LangTable): TagPrefixPatternEn
   return patterns;
 }
 
-/**
- * Infer FluidStorageKey variant from registry path (FluidStorageKeys registryNameFunction).
- * @returns {{ storageKey: 'molten'|'plasma'|'liquid'|'gas'|'primary', materialPath: string }}
- */
 export function parseGtceuFluidPath(path: string): ParsedFluidPath {
   const p = String(path || '');
   if (p.startsWith('molten_')) {
@@ -408,10 +376,6 @@ export function parseGtceuFluidPath(path: string): ParsedFluidPath {
   return { storageKey: 'primary', materialPath: p };
 }
 
-/**
- * Heuristic for FluidStorageKeys.GAS element branch (no Material metadata on web).
- * Matches short element ids (oxygen, chlorine) — not polymers (polytetrafluoroethylene) or modpack materials (latex).
- */
 export function isLikelyElementMaterial(materialPath: string): boolean {
   const name = String(materialPath || '');
   if (!name || name.includes('_') || name.length > 12) return false;
@@ -432,7 +396,6 @@ function langKeyPresent(langTable: LangTable, key: string): boolean {
   return langTable != null && typeof langTable === 'object' && langTable[key] != null;
 }
 
-/** TFG fluids use GT bucket items; modpack often has only {@code item.gtceu.bucket}, not {@code item.tfg.bucket}. */
 export function resolveBucketTemplateKey(namespace: string, langTable: LangTable = null): string | null {
   const table = langTable && typeof langTable === 'object' ? langTable : {};
   const own = `item.${namespace}.bucket`;
@@ -459,10 +422,6 @@ function pickGenericFluidTemplate(langTable: LangTable): string {
   );
 }
 
-/**
- * Pick gtceu.fluid.* template key from storage variant (mirrors FluidStorageKeys).
- * @param {string} [namespace] Registry namespace ({@code gtceu}, {@code tfg}, …).
- */
 export function pickGtceuFluidLangKey(
   storageKey: FluidStorageKey,
   materialPath: string,
@@ -519,7 +478,6 @@ function resolveMaterialLabel(
   );
 }
 
-/** Longest material.&lt;ns&gt;.* prefix matching registry path (custom item overrides). */
 function resolveMaterialLabelForItemPath(
   namespace: string,
   path: string,
@@ -555,9 +513,6 @@ function composeFromTemplate(
   return formatLangTemplate(template, matLabel);
 }
 
-/**
- * GregTech fluid display: gtceu.fluid.* template + material.*, then material-only fallback.
- */
 export function translateComposedFluid(
   namespace: string,
   path: string,
@@ -603,9 +558,6 @@ function composeTagPrefixLabel(
   return formatLangTemplate(prefixTemplate, matLabel);
 }
 
-/**
- * item.&lt;modid&gt;.&lt;registry path&gt; when present (TagPrefix.getUnlocalizedName first branch).
- */
 export function tryItemSpecificLang(
   namespace: string,
   path: string,
@@ -693,7 +645,6 @@ export function translateComposedRegistry(
   return null;
 }
 
-/** GT-style tagprefix + material compose (GTCEu and TFG). */
 export function isGtceuComposedNamespace(namespace: string): boolean {
   return isComposedRegistryNamespace(namespace);
 }

@@ -10,7 +10,6 @@ export interface QuestItemRowProps {
   iconSize?: number
 }
 
-/** Icon-only task/reward chip; name on hover; links to recipe book when configured. */
 export function QuestItemRow({
   itemId,
   count,

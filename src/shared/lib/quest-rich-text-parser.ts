@@ -1,15 +1,11 @@
-/**
- * FTB Quests rich text — ports {@code TextComponentParser} + {@code ClientTextComponentUtils}.
- * Supports {@code &}/{@code §} color codes, {@code {lang.key}}, {@code {image:...}}, {@code {@pagebreak}},
- * and Minecraft JSON text components ({@code clickEvent}, {@code extra}, etc.).
- */
+
 
 import { tryParseMinecraftTextComponentLine } from '@/shared/lib/minecraft-text-component'
 
 export interface McTextStyle {
-  /** Minecraft color code {@code 0-9a-f}; rendered via theme-aware CSS classes. */
+
   mcColor?: string
-  /** Custom {@code &#RRGGBB} hex from FTB parser. */
+
   hexColor?: string
   bold?: boolean
   italic?: boolean
@@ -145,7 +141,6 @@ function resolveSubstitute(
   throw new QuestRichTextFormatError(`Invalid formatting! Unknown substitute: ${key}`)
 }
 
-/** Parse inline rich text (color codes + {@code {substitutes}}). */
 export function parseRichText(
   text: string,
   dict: Record<string, string>,
@@ -320,7 +315,6 @@ function parseDescriptionLine(
   return [{ type: 'paragraph', nodes }]
 }
 
-/** Parse quest description lines (array or SNBT-style string). */
 export function parseQuestDescription(
   dict: Record<string, string>,
   raw: string | string[] | undefined | null,
@@ -366,7 +360,6 @@ export function richTextToPlain(nodes: RichTextNode[]): string {
   }).join('')
 }
 
-/** Plain text for tooltips / titles; strips formatting and resolves lang keys. */
 export function plainQuestText(
   dict: Record<string, string>,
   raw: string | undefined | null,

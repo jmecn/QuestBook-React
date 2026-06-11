@@ -41,7 +41,7 @@ export function BookLayoutProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0')
     } catch {
-      // ignore storage failures
+
     }
   }, [sidebarCollapsed])
 

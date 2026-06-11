@@ -23,25 +23,17 @@ export function questNodeSize(node: SizedNode): { width: number; height: number 
   }
 }
 
-/**
- * Geometric center of a quest node.
- *
- * With {@code nodeOrigin=[0.5,0.5]}, {@code node.position} is the center but
- * {@code internals.positionAbsolute} is always the top-left of the node box.
- */
 export function questNodeCenter(node: SizedNode): Point {
   const { width, height } = questNodeSize(node)
   const { x, y } = node.internals.positionAbsolute
   return { x: x + width / 2, y: y + height / 2 }
 }
 
-/** @deprecated Prefer {@link questNodeBorderToward} for shape-aware clipping. */
 export function questNodeRadius(node: SizedNode): number {
   const { width, height } = questNodeSize(node)
   return Math.min(width, height) / 2
 }
 
-/** Point on the node shape border along the ray from center toward another node. */
 export function questNodeBorderToward(node: BorderNode, toward: Point): Point {
   const center = questNodeCenter(node)
   const { width, height } = questNodeSize(node)

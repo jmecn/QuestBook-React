@@ -12,7 +12,6 @@ function resolveFrameSequence(image: ChapterImage): number[] {
   return Array.from({ length: textureFrames }, (_, index) => index)
 }
 
-/** Current texture frame index for a chapter sprite strip (shared global clock). */
 export function chapterSpriteTextureFrame(image: ChapterImage, now = Date.now()): number {
   if (!isAnimatedChapterImage(image)) {
     return 0

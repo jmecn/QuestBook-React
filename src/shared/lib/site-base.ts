@@ -1,11 +1,10 @@
-/** Client routes that must not be treated as the static asset deploy prefix. */
+
 const APP_ROUTE_SEGMENTS = new Set(['search'])
 
 function pathnameWithoutIndexHtml(pathname: string): string {
   return pathname.replace(/\/index\.html$/i, '')
 }
 
-/** Deploy prefix for static assets (excludes client router segments like /search). */
 export function deployPathPrefix(): string {
   const parts = pathnameWithoutIndexHtml(window.location.pathname).split('/').filter(Boolean)
   while (parts.length > 0 && APP_ROUTE_SEGMENTS.has(parts[parts.length - 1]!)) {
