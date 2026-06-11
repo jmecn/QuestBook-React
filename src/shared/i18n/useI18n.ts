@@ -1,10 +1,12 @@
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { FALLBACK_LOCALE, LOCALE_STORAGE_KEY, normalizeLocale } from '@/shared/i18n/locale'
 
 export function useAppLocale() {
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const { i18n } = useTranslation()
 
   const locale = useMemo(() => {
@@ -29,7 +31,15 @@ export function useAppLocale() {
     const normalized = normalizeLocale(next)
     const nextParams = new URLSearchParams(params)
     nextParams.set('lang', normalized)
-    setParams(nextParams)
+    const search = nextParams.toString()
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : '',
+        hash: location.hash,
+      },
+      { replace: true },
+    )
   }
 
   return { locale, setLocale, i18n }
