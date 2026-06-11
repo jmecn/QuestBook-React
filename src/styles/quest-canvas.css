@@ -192,12 +192,14 @@
   --ftb-quest-shape-occlude: #212121;
   --ftb-quest-shape-fill: rgba(255, 255, 255, 0.5882352941);
   --ftb-quest-shape-outline: rgba(255, 255, 255, 0.5882352941);
+  --ftb-quest-shape-fill-hover: rgba(255, 255, 255, 0.78);
 }
 
 .chapter-map .react-flow__node {
   overflow: visible !important;
 }
 
+.chapter-map .react-flow__node:has(.quest-chapter-decorations),
 .chapter-map .react-flow__node:has(.quest-chapter-image-wrap:not(.quest-chapter-image-wrap--clickable)) {
   pointer-events: none !important;
   z-index: -100 !important;
@@ -541,6 +543,17 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   image-rendering: pixelated;
 }
 
+/* Flattened chapter decorations — single canvas, no per-tile DOM alpha seams. */
+.quest-chapter-decorations {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
 .quest-flow-node {
   position: relative;
   width: 100%;
@@ -640,10 +653,21 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   background: var(--ftb-quest-shape-outline);
 }
 
-.quest-icon--ftb-shape.is-selected .quest-icon__shape-bg,
+/* Hover: brighten shape background only — item icon stays untouched (z-index above). */
+.quest-icon--ftb-shape .quest-icon__shape-bg {
+  transition: background 0.12s ease;
+}
+
+.quest-flow-node:hover .quest-icon--ftb-shape:not(.is-selected) .quest-icon__shape-bg {
+  background: var(--ftb-quest-shape-fill-hover);
+}
+
+.quest-icon--ftb-shape.is-selected .quest-icon__shape-bg {
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+}
+
 .quest-icon--ftb-shape.is-selected .quest-icon__shape-outline {
-  /* FTB viewed/selected: pulsing WHITE@~190–240 on fill + outline. */
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--accent);
 }
 
 .quest-icon--ftb-shape .quest-icon__inner {

@@ -64,6 +64,7 @@ export function QuestIcon({
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [failed, setFailed] = useState(false)
   const [shapeLayersFailed, setShapeLayersFailed] = useState(false)
+  const [occludeMaskUrl, setOccludeMaskUrl] = useState<string | null>(null)
 
   const exportSrc = carouselUrls.length > 0
     ? carouselUrls[carouselIndex]
@@ -81,7 +82,8 @@ export function QuestIcon({
     setCarouselIndex(0)
     setFailed(false)
     setShapeLayersFailed(false)
-  }, [icon, iconItems, exportCandidates.length, shapeBackgroundUrl, shapeOutlineUrl])
+    setOccludeMaskUrl(null)
+  }, [icon, iconItems, exportCandidates.length, shapeBackgroundUrl, shapeOutlineUrl, shapeMaskUrl])
 
   useEffect(() => {
     if (!isCarousel) return undefined
@@ -129,6 +131,30 @@ export function QuestIcon({
     }
   }, [shapeBackgroundUrl, shapeOutlineUrl, variant])
 
+  useEffect(() => {
+    if (variant !== 'node' || !shapeBackgroundUrl) {
+      return undefined
+    }
+    let cancelled = false
+    if (!shapeMaskUrl) {
+      setOccludeMaskUrl(shapeBackgroundUrl)
+      return () => {
+        cancelled = true
+      }
+    }
+    const probe = new Image()
+    probe.onload = () => {
+      if (!cancelled) setOccludeMaskUrl(shapeMaskUrl)
+    }
+    probe.onerror = () => {
+      if (!cancelled) setOccludeMaskUrl(shapeBackgroundUrl)
+    }
+    probe.src = shapeMaskUrl
+    return () => {
+      cancelled = true
+    }
+  }, [shapeBackgroundUrl, shapeMaskUrl, variant])
+
   const tooltipText = tooltip !== undefined ? (tooltip || undefined) : icon
 
   const itemIcon = !failed && !isCarousel && exportSrc ? (
@@ -152,12 +178,12 @@ export function QuestIcon({
     >
       {useFtbShapeLayers ? (
         <>
-          {shapeMaskUrl ? (
+          {occludeMaskUrl ? (
             <span
               className="quest-icon__shape-layer quest-icon__shape-occlude"
               style={{
-                WebkitMaskImage: `url("${shapeMaskUrl}")`,
-                maskImage: `url("${shapeMaskUrl}")`,
+                WebkitMaskImage: `url("${occludeMaskUrl}")`,
+                maskImage: `url("${occludeMaskUrl}")`,
               }}
               aria-hidden="true"
             />

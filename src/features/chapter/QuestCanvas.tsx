@@ -17,6 +17,10 @@ import {
   type Node,
   type NodeProps,
 } from '@xyflow/react'
+import {
+  buildChapterDecorationsNode,
+  ChapterDecorationsNode,
+} from '@/features/chapter/ChapterDecorationsNode'
 import { QuestDependencyEdge } from '@/features/chapter/QuestDependencyEdge'
 import {
   QuestCanvasHoverProvider,
@@ -266,7 +270,11 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
   )
 }
 
-const nodeTypes = { quest: QuestNodeComponent, chapterImage: ChapterImageNode }
+const nodeTypes = {
+  quest: QuestNodeComponent,
+  chapterImage: ChapterImageNode,
+  chapterDecorations: ChapterDecorationsNode,
+}
 const edgeTypes = { questDependency: QuestDependencyEdge }
 
 /** Place a flow point at the visible map center (left of the detail drawer overlay). */
@@ -549,9 +557,15 @@ function chapterToFlow(
     chapter.quests.filter(isQuestVisibleOnMap).map((quest) => quest.id),
   )
 
-  for (const image of sortedChapterImages(chapter.images)) {
+  const chapterImages = sortedChapterImages(chapter.images)
+  const decorationsNode = buildChapterDecorationsNode(chapter.id, chapterImages, gridScale)
+  if (decorationsNode) {
+    nodes.push(decorationsNode)
+  }
+
+  for (const image of chapterImages) {
+    if (!isChapterImageClickable(image.click)) continue
     const layout = chapterImageLayout(image, gridScale)
-    const clickable = isChapterImageClickable(image.click)
     nodes.push({
       id: `image:${image.image}:${image.x}:${image.y}:${image.order ?? 0}`,
       type: 'chapterImage',
@@ -562,11 +576,11 @@ function chapterToFlow(
       focusable: false,
       measured: { width: layout.widthPx, height: layout.heightPx },
       style: {
-        pointerEvents: clickable ? 'auto' : 'none',
+        pointerEvents: 'auto',
         width: layout.widthPx,
         height: layout.heightPx,
       },
-      zIndex: clickable ? 2 + (image.order ?? 0) : -100 + (image.order ?? 0),
+      zIndex: 2 + (image.order ?? 0),
     })
   }
 
