@@ -12,9 +12,16 @@ async function fetchJsonCached<T>(url: string): Promise<T> {
       if (!res.ok) {
         throw new Error(`Failed to fetch ${url}: ${res.status}`)
       }
+      const contentType = String(res.headers.get('content-type') || '').toLowerCase()
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Not JSON: ${url}`)
+      }
       return res.json() as Promise<T>
     })()
     jsonCache.set(url, pending)
+    void pending.catch(() => {
+      jsonCache.delete(url)
+    })
   }
   return pending as Promise<T>
 }

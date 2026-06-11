@@ -24,6 +24,8 @@ export default tseslint.config(
             'useQuestRichTextNavigation',
             'useQuestCanvasHover',
             'useQuestSearch',
+            'useQuestGlobalAtlas',
+            'useQuestExport',
             'buildChapterDecorationsNode',
           ],
         },

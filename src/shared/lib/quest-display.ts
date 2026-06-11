@@ -1,4 +1,8 @@
 import { resolveItemDisplayName } from '@/shared/lib/item-display-name'
+import {
+  resolveQuestAltTitle,
+  syncQuestAltTitle,
+} from '@/shared/lib/quest-alt-title'
 import { resolveQuestText } from '@/shared/lib/quest-text'
 import type { QuestNode } from '@/shared/types/quest'
 import { useEffect, useState } from 'react'
@@ -20,7 +24,7 @@ export function syncQuestDisplayTitle(quest: QuestNode, dict: Record<string, str
   if (quest.titleItem) {
     return formatQuestItemTitle(quest.titleCount, registryIdFallback(quest.titleItem))
   }
-  return ''
+  return syncQuestAltTitle(quest, dict)
 }
 
 export function useQuestDisplayTitle(
@@ -29,7 +33,7 @@ export function useQuestDisplayTitle(
   locale: string,
 ): string {
   const [label, setLabel] = useState(
-    () => syncQuestDisplayTitle(quest, dict) || quest.id,
+    () => syncQuestDisplayTitle(quest, dict),
   )
 
   useEffect(() => {
@@ -38,17 +42,22 @@ export function useQuestDisplayTitle(
       setLabel(fromLang)
       return undefined
     }
-    if (!quest.titleItem) {
-      setLabel(quest.id)
-      return undefined
+    if (quest.titleItem) {
+      let cancelled = false
+      void resolveItemDisplayName(quest.titleItem, locale).then((name) => {
+        if (!cancelled) {
+          setLabel(formatQuestItemTitle(quest.titleCount, name))
+        }
+      })
+      return () => {
+        cancelled = true
+      }
     }
 
     let cancelled = false
-    void resolveItemDisplayName(quest.titleItem, locale).then((name) => {
-      if (cancelled) return
-      setLabel(formatQuestItemTitle(quest.titleCount, name))
+    void resolveQuestAltTitle(quest, dict, locale).then((title) => {
+      if (!cancelled) setLabel(title)
     })
-
     return () => {
       cancelled = true
     }

@@ -308,6 +308,36 @@ html[data-theme="dark"] .header-select {
   font-size: 0.9rem;
 }
 
+.page-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.page-loading__spinner,
+.quest-icon__spinner {
+  box-sizing: border-box;
+  border: 2px solid color-mix(in srgb, var(--muted) 28%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: quest-atlas-spin 0.75s linear infinite;
+}
+
+.page-loading__spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+@keyframes quest-atlas-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .page-message--error {
   color: var(--accent);
 }

@@ -11,37 +11,74 @@ export interface ResolvedSprite {
 
 const CHAPTER_SPRITE_TIER_FALLBACK = [32, 64, 128, 16] as const
 
+export type SpriteResolveStatus = 'pending' | 'found' | 'missing'
+
+export interface SpriteResolveResult {
+  status: SpriteResolveStatus
+  sprite: ResolvedSprite | null
+}
+
+export function isGlobalAtlasSprite(
+  spriteId: string,
+  globalAtlas: GlobalAtlasContext | null,
+): boolean {
+  return spriteId.startsWith('chapter:') || globalAtlas?.meta.sprites[spriteId] != null
+}
+
+/** 章图集 sprite；global 未就绪或章图集未加载时应保持 pending，不得 fallback 到 missing。 */
+export function needsChapterAtlasSprite(
+  spriteId: string,
+  globalAtlas: GlobalAtlasContext | null,
+): boolean {
+  return !isGlobalAtlasSprite(spriteId, globalAtlas)
+}
+
+export function resolveSpriteWithStatus(
+  spriteId: string | undefined,
+  globalAtlas: GlobalAtlasContext | null,
+  chapterAtlas: ChapterAtlasContext | null,
+): SpriteResolveResult {
+  if (!spriteId) {
+    if (!globalAtlas) return { status: 'pending', sprite: null }
+    return { status: 'missing', sprite: resolveMissing(globalAtlas) }
+  }
+
+  if (spriteId.startsWith('chapter:')) {
+    const fromGlobal = resolveGlobalSprite(spriteId, globalAtlas)
+    if (fromGlobal) return { status: 'found', sprite: fromGlobal }
+    return globalAtlas
+      ? { status: 'missing', sprite: resolveMissing(globalAtlas) }
+      : { status: 'pending', sprite: null }
+  }
+
+  const fromChapter = resolveChapterSprite(spriteId, chapterAtlas)
+  if (fromChapter) return { status: 'found', sprite: fromChapter }
+
+  const fromGlobal = resolveGlobalSprite(spriteId, globalAtlas)
+  if (fromGlobal) return { status: 'found', sprite: fromGlobal }
+
+  if (needsChapterAtlasSprite(spriteId, globalAtlas)) {
+    if (globalAtlas == null || chapterAtlas == null) {
+      return { status: 'pending', sprite: null }
+    }
+  } else if (globalAtlas == null) {
+    return { status: 'pending', sprite: null }
+  }
+
+  return {
+    status: 'missing',
+    sprite: resolveMissing(globalAtlas),
+  }
+}
+
 export function resolveSprite(
   spriteId: string | undefined,
   globalAtlas: GlobalAtlasContext | null,
   chapterAtlas: ChapterAtlasContext | null,
 ): ResolvedSprite | null {
-  if (!spriteId) {
-    return resolveMissing(globalAtlas)
-  }
-
-  if (spriteId.startsWith('chapter:')) {
-    return resolveGlobalSprite(spriteId, globalAtlas)
-  }
-
-  const fromChapter = resolveChapterSprite(spriteId, chapterAtlas)
-  if (fromChapter) return fromChapter
-
-  const fromGlobal = resolveGlobalSprite(spriteId, globalAtlas)
-  if (fromGlobal) return fromGlobal
-
-  if (chapterAtlas == null && !isGlobalOnlySprite(spriteId, globalAtlas)) {
-    return null
-  }
-
-  return resolveMissing(globalAtlas)
-}
-
-function isGlobalOnlySprite(
-  spriteId: string,
-  globalAtlas: GlobalAtlasContext | null,
-): boolean {
-  return globalAtlas?.meta.sprites[spriteId] != null
+  const result = resolveSpriteWithStatus(spriteId, globalAtlas, chapterAtlas)
+  if (result.status === 'pending') return null
+  return result.sprite
 }
 
 function resolveGlobalSprite(

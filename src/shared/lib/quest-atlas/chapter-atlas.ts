@@ -5,6 +5,14 @@ import type { ChapterAtlasContext } from '@/shared/lib/quest-atlas/types'
 
 const chapterCache = new Map<string, Promise<ChapterAtlasContext | null>>()
 
+export function chapterNeedsIconAtlas(chapter: ChapterData): boolean {
+  return Boolean(
+    chapter.iconAtlases
+    && chapter.iconSprites
+    && Object.keys(chapter.iconSprites).length > 0,
+  )
+}
+
 export async function loadChapterAtlasContext(
   chapter: ChapterData,
 ): Promise<ChapterAtlasContext | null> {

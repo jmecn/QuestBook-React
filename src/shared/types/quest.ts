@@ -43,10 +43,15 @@ export interface QuestTask {
   type: string
   title?: string
   items?: string[]
-
+  optional?: boolean
   filterRaw?: string
-  toObserve?: string
+  fluid?: string
+  stage?: string
+  entity?: string
   dimension?: string
+  biome?: string
+  toObserve?: string
+  value?: number
   iconDisplay?: IconDisplay
 }
 

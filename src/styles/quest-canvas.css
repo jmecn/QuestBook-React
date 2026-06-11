@@ -16,7 +16,7 @@
 }
 
 .chapter-sidebar {
-  flex: 0 0 min(240px, 28vw);
+  flex: 0 0 min(300px, 32vw);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -443,6 +443,19 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.quest-icon__inner--loading {
+  opacity: 0.85;
+}
+
+.quest-icon__spinner {
+  width: 55%;
+  height: 55%;
+  min-width: 10px;
+  min-height: 10px;
+  max-width: 22px;
+  max-height: 22px;
 }
 
 .quest-icon__img,
@@ -1220,7 +1233,7 @@ html:not([data-theme]) .quest-rich-text__mc-0 {
   }
 
   .chapter-sidebar {
-    flex-basis: 200px;
+    flex-basis: 240px;
   }
 
   .chapter-sidebar.is-collapsed {

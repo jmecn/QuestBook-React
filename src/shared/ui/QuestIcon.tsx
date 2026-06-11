@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { questIconFallbackLabel } from '@/shared/lib/quest-icon-fallback'
-import { resolveSprite } from '@/shared/lib/quest-atlas/resolve-sprite'
+import { resolveSpriteWithStatus } from '@/shared/lib/quest-atlas/resolve-sprite'
 import { atlasSpriteBackgroundStyle, globalAtlasMaskStyle } from '@/shared/lib/quest-atlas/sprite-mask-style'
 import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest-atlas/types'
 import { resolveQuestShapeId } from '@/shared/lib/quest-shape-texture'
@@ -56,16 +56,16 @@ function QuestIconSprite({
   chapterAtlas: ChapterAtlasContext | null | undefined
 }) {
   const resolved = useMemo(
-    () => resolveSprite(spriteId, globalAtlas ?? null, chapterAtlas ?? null),
+    () => resolveSpriteWithStatus(spriteId, globalAtlas ?? null, chapterAtlas ?? null),
     [chapterAtlas, globalAtlas, spriteId],
   )
 
-  if (!resolved) return null
+  if (resolved.status === 'pending' || !resolved.sprite) return null
 
   return (
     <span
       className="quest-icon__img quest-icon__sprite"
-      style={atlasSpriteBackgroundStyle(resolved, displayPx)}
+      style={atlasSpriteBackgroundStyle(resolved.sprite, displayPx)}
       aria-hidden="true"
     />
   )
@@ -90,11 +90,9 @@ export function QuestIcon({
   const isCarousel = spriteIds.length > 1
 
   const [carouselIndex, setCarouselIndex] = useState(0)
-  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     setCarouselIndex(0)
-    setFailed(false)
   }, [display?.spriteId, display?.frames?.length, outerPx])
 
   useEffect(() => {
@@ -106,16 +104,18 @@ export function QuestIcon({
   }, [isCarousel, spriteIds.length])
 
   const activeSpriteId = spriteIds[carouselIndex] ?? display?.spriteId
-  const hasResolvedIcon = activeSpriteId != null
-    && resolveSprite(activeSpriteId, globalAtlas, chapterAtlas) != null
+  const spriteResolution = useMemo(
+    () => resolveSpriteWithStatus(activeSpriteId, globalAtlas, chapterAtlas),
+    [activeSpriteId, chapterAtlas, globalAtlas],
+  )
 
-  useEffect(() => {
-    if (display && !hasResolvedIcon) {
-      setFailed(true)
-    } else {
-      setFailed(false)
-    }
-  }, [display, hasResolvedIcon])
+  const iconState = !display || !activeSpriteId
+    ? 'empty'
+    : spriteResolution.status === 'pending'
+      ? 'loading'
+      : spriteResolution.status === 'found'
+        ? 'ready'
+        : 'missing'
 
   const shapeBackgroundRect = globalAtlas?.meta.sprites[`${shapeId}:background`]
   const shapeOutlineRect = globalAtlas?.meta.sprites[`${shapeId}:outline`]
@@ -144,7 +144,7 @@ export function QuestIcon({
 
   const innerStyle = { width: innerPx, height: innerPx }
 
-  const itemLayer = !failed && activeSpriteId ? (
+  const itemLayer = iconState === 'ready' && activeSpriteId ? (
     <span className="quest-icon__inner" style={innerStyle}>
       <QuestIconSprite
         spriteId={activeSpriteId}
@@ -152,6 +152,12 @@ export function QuestIcon({
         globalAtlas={globalAtlas}
         chapterAtlas={chapterAtlas}
       />
+    </span>
+  ) : null
+
+  const loadingLayer = iconState === 'loading' ? (
+    <span className="quest-icon__inner quest-icon__inner--loading" style={innerStyle}>
+      <span className="quest-icon__spinner" aria-hidden="true" />
     </span>
   ) : null
 
@@ -182,11 +188,20 @@ export function QuestIcon({
           />
         </>
       ) : null}
-      {failed ? (
+      {iconState === 'missing' ? (
         <span className="quest-icon__inner" style={innerStyle}>
-          <span className="quest-icon__fallback" aria-hidden="true">{fallback}</span>
+          {spriteResolution.sprite ? (
+            <span
+              className="quest-icon__img quest-icon__sprite"
+              style={atlasSpriteBackgroundStyle(spriteResolution.sprite, innerPx)}
+              aria-hidden="true"
+            />
+          ) : (
+            <span className="quest-icon__fallback" aria-hidden="true">{fallback}</span>
+          )}
         </span>
       ) : null}
+      {loadingLayer}
       {itemLayer}
     </span>
   )

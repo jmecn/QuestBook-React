@@ -44,10 +44,6 @@ export function QuestExportProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     setReady(false)
     setError(null)
-    setIndex(null)
-    setDict({})
-    setChaptersByFile(new Map())
-    chapterLoadsRef.current.clear()
 
     void (async () => {
       try {

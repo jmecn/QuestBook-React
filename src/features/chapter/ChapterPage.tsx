@@ -5,10 +5,11 @@ import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { useQuestExport } from '@/app/context/QuestExportContext'
 import { QuestDetailPanel } from '@/features/chapter/QuestDetailPanel'
 import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
-import { loadChapterAtlasContext } from '@/shared/lib/quest-atlas/chapter-atlas'
+import { chapterNeedsIconAtlas, loadChapterAtlasContext } from '@/shared/lib/quest-atlas/chapter-atlas'
 import type { ChapterAtlasContext } from '@/shared/lib/quest-atlas/types'
 import { questIdFromHash, setQuestHash } from '@/shared/lib/quest-hash'
 import { questDrawerInsetPx } from '@/shared/lib/viewport-inset'
+import { PageLoading } from '@/shared/ui/PageLoading'
 import type { ChapterData, QuestNode } from '@/shared/types/quest'
 
 const QuestCanvas = lazy(() =>
@@ -39,7 +40,7 @@ export function ChapterPage() {
   const { locale, t } = useI18n()
   const chapterFile = params.get('chapter') ?? ''
 
-  const { globalAtlas } = useQuestGlobalAtlas()
+  const { globalAtlas, loading: globalAtlasLoading } = useQuestGlobalAtlas()
   const {
     index,
     dict,
@@ -47,11 +48,13 @@ export function ChapterPage() {
     catalog,
     ready,
     error,
+    locale: exportLocale,
     ensureChapter,
     ensureChaptersForQuestIds,
   } = useQuestExport()
 
   const [chapterAtlas, setChapterAtlas] = useState<ChapterAtlasContext | null>(null)
+  const [chapterAtlasLoading, setChapterAtlasLoading] = useState(false)
   const [chapterLoading, setChapterLoading] = useState(false)
   const [chapterError, setChapterError] = useState<string | null>(null)
 
@@ -68,7 +71,10 @@ export function ChapterPage() {
   }, [chapterFile, location.hash])
 
   useEffect(() => {
-    if (!ready || !chapterFile) return undefined
+    if (!ready || !chapterFile) {
+      setChapterLoading(false)
+      return undefined
+    }
     let cancelled = false
     setChapterLoading(true)
     setChapterError(null)
@@ -88,14 +94,14 @@ export function ChapterPage() {
           setChapterError(e instanceof Error ? e.message : String(e))
         }
       } finally {
-        if (!cancelled) setChapterLoading(false)
+        setChapterLoading(false)
       }
     })()
 
     return () => {
       cancelled = true
     }
-  }, [chapterFile, ensureChapter, ensureChaptersForQuestIds, ready])
+  }, [chapterFile, ensureChapter, ensureChaptersForQuestIds, exportLocale, ready])
 
   const chapter = useMemo(
     () => chapters.find((ch) => ch.filename === chapterFile) ?? null,
@@ -105,16 +111,41 @@ export function ChapterPage() {
   useEffect(() => {
     if (!chapter) {
       setChapterAtlas(null)
+      setChapterAtlasLoading(false)
       return undefined
     }
+
+    if (!chapterNeedsIconAtlas(chapter)) {
+      setChapterAtlas(null)
+      setChapterAtlasLoading(false)
+      return undefined
+    }
+
+    setChapterAtlas(null)
+    setChapterAtlasLoading(true)
     let cancelled = false
-    void loadChapterAtlasContext(chapter).then((ctx) => {
-      if (!cancelled) setChapterAtlas(ctx)
-    })
+    void loadChapterAtlasContext(chapter)
+      .then((ctx) => {
+        if (cancelled) return
+        setChapterAtlas(ctx)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setChapterAtlas(null)
+      })
+      .finally(() => {
+        if (!cancelled) setChapterAtlasLoading(false)
+      })
     return () => {
       cancelled = true
     }
   }, [chapter])
+
+  const iconsPending = useMemo(() => {
+    if (globalAtlasLoading) return true
+    if (!chapter) return false
+    return chapterNeedsIconAtlas(chapter) && chapterAtlasLoading
+  }, [chapter, chapterAtlasLoading, globalAtlasLoading])
 
   const effectiveSelectedId = useMemo(
     () => normalizeSelectedQuestId(selectedId, chapter, catalog),
@@ -193,8 +224,8 @@ export function ChapterPage() {
     return <p className="page-message page-message--error">{error ?? chapterError}</p>
   }
 
-  if (!ready || !index || chapterLoading || !chapter) {
-    return <p className="page-message">{t('loadingChapter')}</p>
+  if (!ready || !index || chapterLoading || !chapter || iconsPending) {
+    return <PageLoading message={t('loadingChapter')} />
   }
 
   const gridScale = index.gridScale ?? 0.5
@@ -202,7 +233,7 @@ export function ChapterPage() {
   return (
     <div className="chapter-layout">
       <div className="chapter-map">
-        <Suspense fallback={<p className="page-message">{t('loadingChapter')}</p>}>
+        <Suspense fallback={<PageLoading message={t('loadingChapter')} />}>
           <QuestCanvas
             chapter={chapter}
             catalog={catalog}
