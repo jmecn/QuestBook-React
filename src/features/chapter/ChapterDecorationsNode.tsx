@@ -12,6 +12,7 @@ import {
 } from '@/shared/lib/chapter-sprite-frame'
 import { isChapterImageClickable } from '@/shared/lib/chapter-image-click'
 import { chapterImageCanvasAlpha } from '@/shared/lib/chapter-image-alpha-flag'
+import { applyCanvasPixelRendering } from '@/shared/lib/canvas-pixel'
 import { questExportAssetUrl } from '@/shared/lib/quest-export-asset'
 import type { ChapterImage } from '@/shared/types/quest'
 
@@ -141,6 +142,7 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
     const paint = (now: number) => {
       const ctx = canvas.getContext('2d')
       if (!ctx) return
+      applyCanvasPixelRendering(ctx)
       ctx.clearRect(0, 0, bounds.widthPx, bounds.heightPx)
       for (const op of drawOps) {
         const src = decorationSrc(op.image)
@@ -156,7 +158,7 @@ export function ChapterDecorationsNode({ data }: NodeProps<Node<ChapterDecoratio
     if (tickMs == null) return undefined
     const id = window.setInterval(() => paint(Date.now()), tickMs)
     return () => window.clearInterval(id)
-  }, [alphaFlagTick, bounds.heightPx, bounds.widthPx, drawOps, gridScale, ready, tickMs])
+  }, [alphaFlagTick, bounds, drawOps, gridScale, ready, tickMs])
 
   return (
     <canvas
