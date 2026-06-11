@@ -190,7 +190,6 @@ function ChapterImageNode({ data }: NodeProps<Node<ChapterImageNodeData>>) {
     [gridScale, image],
   )
   const src = candidates[index]
-  // Baked PNG (static or animated strip) already has FTB vertex color; raw texture fallback applies paint at draw time.
   const paint = bakedSrc ? undefined : chapterImagePaint(image)
   const spriteStyle = useChapterSpriteStyle(image)
   const animated = spriteStyle != null

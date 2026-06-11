@@ -543,7 +543,6 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   image-rendering: pixelated;
 }
 
-/* Flattened chapter decorations — single canvas, no per-tile DOM alpha seams. */
 .quest-chapter-decorations {
   display: block;
   width: 100%;

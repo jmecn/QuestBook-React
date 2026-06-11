@@ -10,7 +10,6 @@ export interface ChapterDecorationBounds {
   centerY: number
 }
 
-/** Pixel bounds covering all chapter decoration rects (flow coordinates). */
 export function chapterDecorationBounds(
   images: ChapterImage[],
   gridScale: number,
