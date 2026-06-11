@@ -1,4 +1,5 @@
-import { fetchJson } from '@/shared/api/http'
+import { normalizeLocale } from '@/shared/i18n/locale'
+import { loadLocalizedExportJson } from '@/shared/lib/locale-export'
 import { questExportUrl } from '@/shared/lib/site-base'
 import type { NavigateFunction } from 'react-router-dom'
 
@@ -24,8 +25,24 @@ export function normalizedSearchQuery(input: string): string {
   return String(input || '').trim().toLowerCase()
 }
 
+const searchIndexByLocale = new Map<string, Promise<QuestSearchIndex | null>>()
+
+function hasSearchIndex(data: QuestSearchIndex | null): data is QuestSearchIndex {
+  return Boolean(data?.quests?.length)
+}
+
 export async function loadQuestSearchIndex(locale: string): Promise<QuestSearchIndex | null> {
-  return fetchJson<QuestSearchIndex | null>(questExportUrl(`search-index/${locale}.json`), null)
+  const key = normalizeLocale(locale)
+  const existing = searchIndexByLocale.get(key)
+  if (existing) return existing
+
+  const promise = loadLocalizedExportJson<QuestSearchIndex>(
+    (loc) => questExportUrl(`search-index/${loc}.json`),
+    key,
+    hasSearchIndex,
+  )
+  searchIndexByLocale.set(key, promise)
+  return promise
 }
 
 export const QUEST_SEARCH_MAX_RESULTS = 50

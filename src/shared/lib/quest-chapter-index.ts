@@ -1,5 +1,5 @@
-import { fetchJson } from '@/shared/api/http'
-import { FALLBACK_LOCALE, normalizeLocale } from '@/shared/i18n/locale'
+import { normalizeLocale } from '@/shared/i18n/locale'
+import { loadLocalizedExportJson } from '@/shared/lib/locale-export'
 import { questExportUrl } from '@/shared/lib/site-base'
 
 interface SearchIndexQuestRef {
@@ -13,6 +13,10 @@ interface SearchIndexPayload {
 
 const indexByLocale = new Map<string, Promise<Map<string, string>>>()
 
+function hasSearchIndex(data: SearchIndexPayload | null): data is SearchIndexPayload {
+  return Boolean(data?.quests?.length)
+}
+
 function buildQuestChapterMap(data: SearchIndexPayload | null): Map<string, string> {
   const map = new Map<string, string>()
   for (const quest of data?.quests ?? []) {
@@ -23,25 +27,18 @@ function buildQuestChapterMap(data: SearchIndexPayload | null): Map<string, stri
   return map
 }
 
-async function fetchQuestChapterIndex(locale: string): Promise<Map<string, string>> {
-  const data = await fetchJson<SearchIndexPayload | null>(
-    questExportUrl(`search-index/${locale}.json`),
-    null,
-  )
-  if (data) return buildQuestChapterMap(data)
-  if (locale !== FALLBACK_LOCALE) {
-    return fetchQuestChapterIndex(FALLBACK_LOCALE)
-  }
-  return new Map()
-}
-
 /** quest id → chapter filename（来自 search-index，用于按需拉取 link 目标章）。 */
 export async function loadQuestChapterIndex(locale: string): Promise<Map<string, string>> {
   const key = normalizeLocale(locale)
   const existing = indexByLocale.get(key)
   if (existing) return existing
 
-  const promise = fetchQuestChapterIndex(key)
+  const promise = loadLocalizedExportJson<SearchIndexPayload>(
+    (loc) => questExportUrl(`search-index/${loc}.json`),
+    key,
+    hasSearchIndex,
+  ).then((data) => buildQuestChapterMap(data))
+
   indexByLocale.set(key, promise)
   return promise
 }

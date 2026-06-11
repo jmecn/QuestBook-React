@@ -71,19 +71,18 @@ export function mergeLangDicts(
   return { ...fallback, ...primary }
 }
 
+/** 任务文本 lang 表：缺失 locale 文件时以 en_us 为底，再用目标语言覆盖。 */
 export async function loadLangDict(locale: string): Promise<Record<string, string>> {
   const normalized = normalizeLocale(locale)
   const cached = langDictCache.get(normalized)
   if (cached) return cached
 
   const promise = (async () => {
+    const fallback = await loadEnUsDict()
     if (normalized === FALLBACK_LOCALE) {
-      return loadEnUsDict()
+      return fallback
     }
-    const [fallback, primary] = await Promise.all([
-      loadEnUsDict(),
-      fetchLangFile(normalized),
-    ])
+    const primary = await fetchLangFile(normalized)
     return mergeLangDicts(fallback, primary)
   })()
 
