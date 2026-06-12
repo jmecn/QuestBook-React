@@ -1,6 +1,7 @@
 import { normalizeLocale } from '@/shared/i18n/locale'
 import { loadLocalizedExportJson } from '@/shared/lib/locale-export'
 import { questExportUrl } from '@/shared/lib/site-base'
+import { QUEST_QUERY_KEY } from '@/shared/lib/quest-url'
 import type { NavigateFunction } from 'react-router-dom'
 
 export interface QuestSearchRow {
@@ -60,28 +61,29 @@ export function questSearchBreadcrumb(row: QuestSearchRow): string {
 }
 
 export function buildQuestDeepLink(locale: string, chapter: string, questId: string): string {
-  const params = new URLSearchParams()
-  params.set('lang', locale)
-  params.set('chapter', chapter)
-  return `/?${params.toString()}#quest=${encodeURIComponent(questId)}`
+  const params = new URLSearchParams({
+    lang: locale,
+    chapter,
+    [QUEST_QUERY_KEY]: questId,
+  })
+  return `/?${params.toString()}`
 }
 
 export function navigateToQuest(
   navigate: NavigateFunction,
-  locale: string,
-  currentChapter: string,
+  _locale: string,
+  _currentChapter: string,
   chapter: string,
   questId: string,
 ): void {
-  const hash = `#quest=${encodeURIComponent(questId)}`
-  if (chapter === currentChapter) {
-    window.location.hash = hash
-    return
-  }
+  const params = new URLSearchParams({
+    lang: _locale,
+    chapter,
+    [QUEST_QUERY_KEY]: questId,
+  })
   navigate({
     pathname: '/',
-    search: `?lang=${encodeURIComponent(locale)}&chapter=${encodeURIComponent(chapter)}`,
-    hash,
+    search: `?${params.toString()}`,
   })
 }
 

@@ -4,7 +4,6 @@ import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { useQuestExport } from '@/app/context/QuestExportContext'
 import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { QuestIcon } from '@/shared/ui/QuestIcon'
-import { setQuestHash } from '@/shared/lib/quest-hash'
 import { resolveQuestText, resolveQuestRichText, resolveQuestLines } from '@/shared/lib/quest-text'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
 import { QuestHoverLabel } from '@/shared/ui/QuestHoverLabel'
@@ -95,9 +94,9 @@ export function ChapterSidebar() {
   const activeChapter = params.get('chapter') ?? ''
 
   const selectChapter = (filename: string) => {
-    setParams({ lang: locale, chapter: filename })
-    navigate(`/?lang=${locale}&chapter=${filename}`, { replace: true })
-    setQuestHash(null)
+    const next = new URLSearchParams({ lang: locale, chapter: filename })
+    setParams(next, { replace: true })
+    navigate(`/?${next.toString()}`, { replace: true })
   }
 
   if (error) {

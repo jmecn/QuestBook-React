@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { useQuestExport } from '@/app/context/QuestExportContext'
@@ -7,7 +7,7 @@ import { QuestDetailPanel } from '@/features/chapter/QuestDetailPanel'
 import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { chapterNeedsIconAtlas, loadChapterAtlasContext } from '@/shared/lib/quest-atlas/chapter-atlas'
 import type { ChapterAtlasContext } from '@/shared/lib/quest-atlas/types'
-import { questIdFromHash, setQuestHash } from '@/shared/lib/quest-hash'
+import { applyQuestToSearchParams, questIdFromSearchParams } from '@/shared/lib/quest-url'
 import { questDrawerInsetPx } from '@/shared/lib/viewport-inset'
 import { PageLoading } from '@/shared/ui/PageLoading'
 import type { ChapterData, QuestNode } from '@/shared/types/quest'
@@ -35,8 +35,7 @@ function normalizeSelectedQuestId(
 
 export function ChapterPage() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const { locale, t } = useI18n()
   const chapterFile = params.get('chapter') ?? ''
 
@@ -63,12 +62,12 @@ export function ChapterPage() {
   const [drawerInset, setDrawerInset] = useState(0)
 
   const [selectedId, setSelectedId] = useState<string | null>(() =>
-    questIdFromHash(window.location.hash),
+    questIdFromSearchParams(new URLSearchParams(window.location.search)),
   )
 
   useEffect(() => {
-    setSelectedId(questIdFromHash(location.hash || window.location.hash))
-  }, [chapterFile, location.hash])
+    setSelectedId(questIdFromSearchParams(params))
+  }, [chapterFile, params])
 
   useEffect(() => {
     if (!ready || !chapterFile) {
@@ -155,8 +154,8 @@ export function ChapterPage() {
   useEffect(() => {
     if (!effectiveSelectedId || effectiveSelectedId === selectedId) return
     setSelectedId(effectiveSelectedId)
-    setQuestHash(effectiveSelectedId)
-  }, [effectiveSelectedId, selectedId])
+    setParams(applyQuestToSearchParams(params, effectiveSelectedId), { replace: true })
+  }, [effectiveSelectedId, params, selectedId, setParams])
 
   const selectedQuest = effectiveSelectedId
     ? catalog.get(effectiveSelectedId)?.quest ?? (chapter ? findQuest(chapter, effectiveSelectedId) : null)
@@ -167,25 +166,25 @@ export function ChapterPage() {
       setSidebarCollapsed(true)
     }
     setSelectedId(id)
-    setQuestHash(id)
+    setParams(applyQuestToSearchParams(params, id), { replace: true })
   }
 
   const onNavigateQuest = (targetChapter: string, questId: string) => {
     setSelectedId(questId)
-    if (targetChapter === chapterFile) {
-      setQuestHash(questId)
-      return
-    }
+    const next = new URLSearchParams({
+      lang: locale,
+      chapter: targetChapter,
+      quest: questId,
+    })
     navigate({
       pathname: '/',
-      search: `?lang=${encodeURIComponent(locale)}&chapter=${encodeURIComponent(targetChapter)}`,
-      hash: `#quest=${encodeURIComponent(questId)}`,
+      search: `?${next.toString()}`,
     })
   }
 
   const onCloseDetail = () => {
     setSelectedId(null)
-    setQuestHash(null)
+    setParams(applyQuestToSearchParams(params, null), { replace: true })
   }
 
   useEffect(() => {
