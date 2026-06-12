@@ -10,6 +10,7 @@ import {
 import { createPortal } from 'react-dom'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
+import { copyTextToClipboard } from '@/shared/lib/copy-to-clipboard'
 import { formatQuestShareOgTitle } from '@/shared/lib/quest-share-meta'
 import { questSharePreviewText } from '@/shared/lib/quest-share-preview'
 import {
@@ -23,9 +24,17 @@ import '@/styles/quest-share-popover.css'
 
 /** Keep in sync with `.quest-share-popover { width: … }` in quest-share-popover.css */
 const SHARE_POPOVER_WIDTH_PX = 400
+const SHARE_POPOVER_EDGE_PX = 8
+const SHARE_POPOVER_ANCHOR_GAP_PX = 6
+/** Below this width the popover is horizontally centered (phone / narrow drawer). */
+const SHARE_POPOVER_CENTER_MAX_WIDTH_PX = 480
 
 function sharePopoverWidthPx(): number {
-  return Math.min(SHARE_POPOVER_WIDTH_PX, window.innerWidth - 16)
+  return Math.min(SHARE_POPOVER_WIDTH_PX, window.innerWidth - SHARE_POPOVER_EDGE_PX * 2)
+}
+
+function viewportHeightPx(): number {
+  return window.visualViewport?.height ?? window.innerHeight
 }
 
 /** iOS / Material 常见的「托盘 + 向上箭头」分享图标 */
@@ -103,32 +112,66 @@ export function QuestShareButton({
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current
+    const panel = panelRef.current
     if (!anchor) return
+
     const rect = anchor.getBoundingClientRect()
     const width = sharePopoverWidthPx()
-    let left = rect.right - width
-    if (left < 8) left = 8
-    if (left + width > window.innerWidth - 8) {
-      left = window.innerWidth - width - 8
+    const panelHeight = panel?.offsetHeight ?? 280
+    const viewportH = viewportHeightPx()
+    const margin = SHARE_POPOVER_EDGE_PX
+    const gap = SHARE_POPOVER_ANCHOR_GAP_PX
+
+    let left: number
+    if (window.innerWidth <= SHARE_POPOVER_CENTER_MAX_WIDTH_PX) {
+      left = Math.max(margin, (window.innerWidth - width) / 2)
+    } else {
+      left = rect.right - width
+      if (left < margin) left = margin
+      if (left + width > window.innerWidth - margin) {
+        left = window.innerWidth - width - margin
+      }
     }
-    const top = rect.bottom + 6
+
+    let top = rect.bottom + gap
+    if (top + panelHeight > viewportH - margin) {
+      const aboveTop = rect.top - gap - panelHeight
+      if (aboveTop >= margin) {
+        top = aboveTop
+      } else {
+        top = Math.max(margin, viewportH - panelHeight - margin)
+      }
+    }
+
     setPanelStyle({ top, left, width })
   }, [])
 
   useLayoutEffect(() => {
     if (!open) return
-    updatePosition()
-    window.addEventListener('resize', updatePosition)
-    window.addEventListener('scroll', updatePosition, true)
+
+    const reposition = () => updatePosition()
+    reposition()
+    const raf = requestAnimationFrame(reposition)
+
+    window.addEventListener('resize', reposition)
+    window.addEventListener('scroll', reposition, true)
+    const visualViewport = window.visualViewport
+    visualViewport?.addEventListener('resize', reposition)
+    visualViewport?.addEventListener('scroll', reposition)
+
     return () => {
-      window.removeEventListener('resize', updatePosition)
-      window.removeEventListener('scroll', updatePosition, true)
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', reposition)
+      window.removeEventListener('scroll', reposition, true)
+      visualViewport?.removeEventListener('resize', reposition)
+      visualViewport?.removeEventListener('scroll', reposition)
     }
-  }, [open, updatePosition])
+  }, [open, updatePosition, shareUrl])
 
   useEffect(() => {
     if (!open) return
-    const onPointerDown = (event: MouseEvent) => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return
       const target = event.target as Node
       if (anchorRef.current?.contains(target)) return
       if (panelRef.current?.contains(target)) return
@@ -137,10 +180,10 @@ export function QuestShareButton({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
     }
-    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
     return () => {
-      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [open])
@@ -151,13 +194,10 @@ export function QuestShareButton({
 
   const copyShareLink = async () => {
     if (!shareUrl) return
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setShareCopied(true)
-      window.setTimeout(() => setShareCopied(false), 2000)
-    } catch {
-      /* clipboard denied */
-    }
+    const ok = await copyTextToClipboard(shareUrl)
+    if (!ok) return
+    setShareCopied(true)
+    window.setTimeout(() => setShareCopied(false), 2000)
   }
 
   const onNativeShare = async () => {
