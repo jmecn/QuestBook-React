@@ -1,0 +1,35 @@
+.quest-detail__section--comments {
+  margin-top: 1rem;
+}
+
+.quest-gitalk {
+  margin-top: 0.5rem;
+}
+
+.quest-gitalk .gt-header-textarea {
+  color: var(--text);
+  background: var(--header-control-bg, var(--bg));
+}
+
+.quest-gitalk .gt-header-preview {
+  background: var(--panel);
+}
+
+.quest-gitalk .gt-btn {
+  border-color: var(--border);
+}
+
+.quest-gitalk .gt-btn-preview,
+.quest-gitalk .gt-btn-public {
+  background-color: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+.quest-gitalk .gt-container .gt-popup .gt-action.is--active:before {
+  border-top-color: var(--accent);
+}
+
+.quest-gitalk .gt-container .gt-popup .gt-action.is--active:after {
+  background-color: var(--accent);
+}

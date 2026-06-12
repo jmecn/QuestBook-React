@@ -21,6 +21,7 @@
   "detailPrerequisites": "Prerequisites",
   "detailPrerequisitesHidden": "Hidden",
   "detailDependents": "Dependent quests",
+  "detailComments": "Comments",
   "detailNone": "None",
   "switchingLanguage": "Switching language…",
   "searchPlaceholder": "Search quests…",
