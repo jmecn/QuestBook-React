@@ -4,6 +4,8 @@ import { useI18n } from '@/shared/i18n/useI18n'
 import { useBookLayout } from '@/app/context/BookLayoutContext'
 import { useQuestExport } from '@/app/context/QuestExportContext'
 import { QuestDetailPanel } from '@/features/chapter/QuestDetailPanel'
+import { QuestShareButton } from '@/features/chapter/QuestSharePopover'
+import { resolveQuestText } from '@/shared/lib/quest-text'
 import { useQuestGlobalAtlas } from '@/app/context/QuestAtlasContext'
 import { chapterNeedsIconAtlas, loadChapterAtlasContext } from '@/shared/lib/quest-atlas/chapter-atlas'
 import type { ChapterAtlasContext } from '@/shared/lib/quest-atlas/types'
@@ -106,6 +108,12 @@ export function ChapterPage() {
     () => chapters.find((ch) => ch.filename === chapterFile) ?? null,
     [chapterFile, chapters],
   )
+
+  const chapterTitle = useMemo(() => {
+    if (!chapter) return chapterFile
+    const resolved = chapter.title ? resolveQuestText(dict, chapter.title) : ''
+    return resolved || chapterFile
+  }, [chapter, chapterFile, dict])
 
   useEffect(() => {
     if (!chapter) {
@@ -257,6 +265,15 @@ export function ChapterPage() {
           aria-labelledby="quest-detail-title"
         >
           <div className="chapter-detail__toolbar">
+            <div className="chapter-detail__toolbar-actions">
+              <QuestShareButton
+                locale={locale}
+                chapterFilename={chapterFile}
+                chapterTitle={chapterTitle}
+                quest={selectedQuest}
+                dict={dict}
+              />
+            </div>
             <button
               type="button"
               className="chapter-detail__close"

@@ -403,31 +403,7 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   margin: -2px 0 4px;
 }
 
-.chapter-detail__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-  font: inherit;
-  opacity: 0.5;
-}
-
-.chapter-detail__close:hover,
-.chapter-detail__close:focus-visible {
-  color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-  opacity: 1;
-  outline: none;
-}
+/* Toolbar share/close sizing lives in quest-share-popover.css */
 
 .quest-icon__img,
 .quest-chapter-image,

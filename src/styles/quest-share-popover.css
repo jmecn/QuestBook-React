@@ -1,0 +1,294 @@
+.chapter-detail__toolbar {
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.chapter-detail__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chapter-detail__share,
+.chapter-detail__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  opacity: 0.72;
+}
+
+.chapter-detail__share svg {
+  width: 20px;
+  height: 20px;
+}
+
+.chapter-detail__close {
+  font-size: 1.65rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.chapter-detail__share:hover,
+.chapter-detail__share:focus-visible,
+.chapter-detail__share.chapter-detail__share--active,
+.chapter-detail__close:hover,
+.chapter-detail__close:focus-visible {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  opacity: 1;
+  outline: none;
+}
+
+.quest-share-popover__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1199;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.quest-share-popover {
+  position: fixed;
+  z-index: 1200;
+  width: min(400px, calc(100vw - 16px));
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--header-control-bg, var(--tfg-surface-2, var(--panel)));
+  box-shadow:
+    0 4px 12px color-mix(in srgb, var(--text) 10%, transparent),
+    0 16px 40px color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.quest-share-popover__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.quest-share-popover__chapter {
+  margin: 0 0 14px;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.quest-share-popover__preview {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 70%, var(--header-control-bg, var(--bg)));
+}
+
+.quest-share-popover__preview-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+
+.quest-share-popover__preview-body {
+  min-width: 0;
+}
+
+.quest-share-popover__preview-site {
+  margin: 0 0 2px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.quest-share-popover__preview-heading {
+  margin: 0 0 4px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.quest-share-popover__preview-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.quest-share-popover__link-panel {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.quest-share-popover__url-field {
+  position: relative;
+}
+
+.quest-share-popover__url-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--header-control-bg, var(--bg));
+  color: var(--text);
+  font-family: var(--tfg-font-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  overflow-x: auto;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.quest-share-popover__url-input:focus {
+  outline: 2px solid var(--tfg-focus-ring, color-mix(in srgb, var(--accent) 25%, transparent));
+  outline-offset: 0;
+}
+
+.quest-share-popover__url-copy {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  transform: translateY(-50%);
+}
+
+.quest-share-popover__url-copy:hover:not(:disabled),
+.quest-share-popover__url-copy:focus-visible:not(:disabled) {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  outline: none;
+}
+
+.quest-share-popover__url-copy:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quest-share-popover__url-copy.is-copied {
+  color: var(--accent);
+}
+
+.quest-share-popover__actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quest-share-popover__copy-link {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.quest-share-popover__copy-link:hover:not(:disabled),
+.quest-share-popover__copy-link:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 88%, var(--accent));
+  outline: none;
+}
+
+.quest-share-popover__copy-link:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quest-share-popover__copy-link svg {
+  flex-shrink: 0;
+}
+
+.quest-share-popover__native {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  .quest-share-popover__actions {
+    flex-direction: column;
+  }
+
+  .quest-share-popover__copy-link,
+  .quest-share-popover__native {
+    width: 100%;
+  }
+}
+
+.quest-share-popover__native:hover:not(:disabled),
+.quest-share-popover__native:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  outline: none;
+}
+
+.quest-share-popover__native:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quest-share-popover__native svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}

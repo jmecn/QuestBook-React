@@ -27,6 +27,7 @@ async function fetchJsonCached<T>(url: string): Promise<T> {
 }
 
 export interface SiteConfig {
+  siteBaseUrl?: string
   recipeBookBaseUrl?: string
   fieldGuideBaseUrl?: string
 }
