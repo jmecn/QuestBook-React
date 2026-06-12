@@ -12,9 +12,12 @@ import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
 import { QuestDescription } from '@/shared/ui/QuestDescription'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
+import { QuestGitalk } from '@/features/chapter/QuestGitalk'
 
 export interface QuestDetailPanelProps {
   quest: QuestData | null
+  chapterFilename: string
+  chapterTitle: string
   chapters: ChapterData[]
   catalog: Map<string, QuestCatalogEntry>
   dict: Record<string, string>
@@ -125,6 +128,8 @@ function QuestLinkList({
 
 export function QuestDetailPanel({
   quest,
+  chapterFilename,
+  chapterTitle,
   chapters,
   catalog,
   dict,
@@ -247,6 +252,14 @@ export function QuestDetailPanel({
           onNavigateQuest={onNavigateQuest}
         />
       </section>
+
+      <QuestGitalk
+        locale={locale}
+        chapterFilename={chapterFilename}
+        chapterTitle={chapterTitle}
+        questId={quest.id}
+        questTitle={title}
+      />
     </div>
   )
 }

@@ -285,6 +285,8 @@ export function ChapterPage() {
           </div>
           <QuestDetailPanel
             quest={selectedQuest}
+            chapterFilename={chapterFile}
+            chapterTitle={chapterTitle}
             chapters={chapters}
             catalog={catalog}
             dict={dict}

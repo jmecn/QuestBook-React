@@ -21,6 +21,7 @@
   "detailPrerequisites": "前置任务",
   "detailPrerequisitesHidden": "隐藏",
   "detailDependents": "后置任务",
+  "detailComments": "评论",
   "detailNone": "无",
   "switchingLanguage": "正在切换语言…",
   "searchPlaceholder": "搜索任务…",
