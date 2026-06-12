@@ -5,6 +5,7 @@ import { QuestRewardList, QuestTaskList } from '@/features/chapter/QuestDetailIt
 import type { QuestCatalogEntry } from '@/shared/lib/quest-catalog'
 import { resolveDependents, resolvePrerequisites } from '@/shared/lib/quest-catalog'
 import { useQuestDisplayTitle } from '@/shared/lib/quest-display'
+import { shouldHideQuestPrerequisites } from '@/shared/lib/quest-visibility'
 import { fieldGuidePageUrl, fieldGuideSiteBase } from '@/shared/lib/field-guide-links'
 import { resolveQuestRichText } from '@/shared/lib/quest-text'
 import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest-atlas/types'
@@ -225,12 +226,16 @@ export function QuestDetailPanel({
 
       <section className="quest-detail__section quest-detail__section--secondary">
         <h4>{t('detailPrerequisites')}</h4>
-        <QuestLinkList
-          entries={prerequisites}
-          dict={dict}
-          locale={locale}
-          onNavigateQuest={onNavigateQuest}
-        />
+        {shouldHideQuestPrerequisites(quest) ? (
+          <p className="quest-detail__hidden">{t('detailPrerequisitesHidden')}</p>
+        ) : (
+          <QuestLinkList
+            entries={prerequisites}
+            dict={dict}
+            locale={locale}
+            onNavigateQuest={onNavigateQuest}
+          />
+        )}
       </section>
 
       <section className="quest-detail__section quest-detail__section--secondary">

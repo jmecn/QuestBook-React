@@ -894,6 +894,15 @@ html[data-theme="dark"] .quest-zoom-controls__select {
   font-style: italic;
 }
 
+.quest-detail__hidden {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .quest-detail__link {
   border: none;
   padding: 0;

@@ -19,6 +19,7 @@
   "detailTasks": "任务",
   "detailRewards": "奖励",
   "detailPrerequisites": "前置任务",
+  "detailPrerequisitesHidden": "隐藏",
   "detailDependents": "后置任务",
   "detailNone": "无",
   "switchingLanguage": "正在切换语言…",

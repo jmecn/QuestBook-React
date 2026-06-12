@@ -19,6 +19,7 @@
   "detailTasks": "Tasks",
   "detailRewards": "Rewards",
   "detailPrerequisites": "Prerequisites",
+  "detailPrerequisitesHidden": "Hidden",
   "detailDependents": "Dependent quests",
   "detailNone": "None",
   "switchingLanguage": "Switching language…",
