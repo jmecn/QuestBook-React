@@ -25,6 +25,15 @@ export function useTheme() {
   }, [applySyncedState])
 
   useEffect(() => {
+    const root = document.documentElement
+    const syncFromDom = () => setTheme(getActiveTheme())
+
+    const observer = new MutationObserver(syncFromDom)
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== THEME_STORAGE_KEY && event.key !== null) return
       applySyncedState()
