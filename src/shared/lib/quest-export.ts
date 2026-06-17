@@ -26,23 +26,10 @@ async function fetchJsonCached<T>(url: string): Promise<T> {
   return pending as Promise<T>
 }
 
-export interface GitalkSiteConfig {
-  enabled?: boolean
-  clientID?: string
-  clientSecret?: string
-  repo?: string
-  owner?: string
-  admin?: string[]
-  proxy?: string
-  distractionFreeMode?: boolean
-  createIssueManually?: boolean
-}
-
 export interface SiteConfig {
   siteBaseUrl?: string
   recipeBookBaseUrl?: string
   fieldGuideBaseUrl?: string
-  gitalk?: GitalkSiteConfig
 }
 
 export async function loadSiteConfig(): Promise<SiteConfig> {

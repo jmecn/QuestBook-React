@@ -4,26 +4,77 @@
 
 .quest-gitalk {
   margin-top: 0.5rem;
-}
-
-.quest-gitalk .gt-header-textarea {
   color: var(--text);
-  background: var(--header-control-bg, var(--bg));
 }
 
-.quest-gitalk .gt-header-preview {
-  background: var(--panel);
+/* Focus dimmer: Gitalk default is pure #000 — use theme background instead */
+.quest-gitalk .gt-container.gt-input-focused:after {
+  background: var(--bg);
+  opacity: 0.72;
 }
 
-.quest-gitalk .gt-btn {
+.quest-gitalk .gt-container .gt-header-textarea {
+  color: var(--text);
+  background-color: var(--panel);
   border-color: var(--border);
 }
 
-.quest-gitalk .gt-btn-preview,
-.quest-gitalk .gt-btn-public {
-  background-color: var(--text);
-  border-color: var(--text);
-  color: var(--bg);
+.quest-gitalk .gt-container .gt-header-textarea:hover {
+  background-color: var(--tfg-surface-2, var(--panel));
+}
+
+.quest-gitalk .gt-container .gt-header-textarea::placeholder {
+  color: var(--muted);
+}
+
+.quest-gitalk .gt-container .gt-header-preview {
+  color: var(--text);
+  background-color: var(--panel);
+  border-color: var(--border);
+}
+
+.quest-gitalk .gt-container .gt-header-controls-tip {
+  color: var(--accent);
+}
+
+.quest-gitalk .gt-container .gt-btn {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.quest-gitalk .gt-container .gt-btn-preview,
+.quest-gitalk .gt-container .gt-btn-public {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.quest-gitalk .gt-container .gt-btn-preview:hover,
+.quest-gitalk .gt-container .gt-btn-public:hover {
+  background-color: var(--tfg-link-hover, var(--accent));
+  border-color: var(--tfg-link-hover, var(--accent));
+}
+
+.quest-gitalk .gt-container .gt-comments-null,
+.quest-gitalk .gt-container .gt-comment-text,
+.quest-gitalk .gt-container .gt-comment-date {
+  color: var(--muted);
+}
+
+.quest-gitalk .gt-container .gt-comment-content {
+  color: var(--text);
+  background-color: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.quest-gitalk .gt-container .gt-comment-content:hover {
+  box-shadow: none;
+  background-color: var(--tfg-surface-2, var(--panel));
+}
+
+.quest-gitalk .gt-container .gt-comment-username,
+.quest-gitalk .gt-container a {
+  color: var(--tfg-link, var(--accent));
 }
 
 .quest-gitalk .gt-container .gt-popup .gt-action.is--active:before {
@@ -32,4 +83,59 @@
 
 .quest-gitalk .gt-container .gt-popup .gt-action.is--active:after {
   background-color: var(--accent);
+}
+
+/* Gitalk bundles github-markdown-css (light-only); align preview/comment body with theme */
+.quest-gitalk .markdown-body {
+  color: var(--text);
+  background-color: transparent;
+}
+
+.quest-gitalk .markdown-body a {
+  color: var(--tfg-link, var(--accent));
+}
+
+.quest-gitalk .markdown-body p,
+.quest-gitalk .markdown-body li,
+.quest-gitalk .markdown-body blockquote,
+.quest-gitalk .markdown-body h1,
+.quest-gitalk .markdown-body h2,
+.quest-gitalk .markdown-body h3,
+.quest-gitalk .markdown-body h4,
+.quest-gitalk .markdown-body h5,
+.quest-gitalk .markdown-body h6 {
+  color: var(--text);
+}
+
+.quest-gitalk .markdown-body code,
+.quest-gitalk .markdown-body tt {
+  color: var(--text);
+  background-color: var(--tfg-surface-2, var(--panel));
+}
+
+.quest-gitalk .markdown-body pre {
+  color: var(--text);
+  background-color: var(--tfg-surface-2, var(--panel));
+}
+
+.quest-gitalk .markdown-body pre code {
+  background-color: transparent;
+}
+
+.quest-gitalk .markdown-body blockquote {
+  border-left-color: var(--border);
+  color: var(--muted);
+}
+
+.quest-gitalk .markdown-body hr {
+  background-color: var(--border);
+}
+
+.quest-gitalk .markdown-body table tr {
+  background-color: var(--panel);
+  border-color: var(--border);
+}
+
+.quest-gitalk .markdown-body table tr:nth-child(2n) {
+  background-color: var(--tfg-surface-2, var(--panel));
 }

@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/shared/i18n/useI18n'
-import { loadSiteConfig } from '@/shared/lib/quest-export'
-import { buildQuestGitalkOptions, isGitalkConfigured } from '@/shared/lib/quest-gitalk'
+import {
+  buildQuestGitalkOptions,
+  isGitalkConfigured,
+  loadGitalkConfig,
+} from '@/shared/lib/quest-gitalk'
 import 'gitalk/dist/gitalk.css'
 import '@/styles/quest-gitalk.css'
 
@@ -26,7 +29,7 @@ export function QuestGitalk({
 
   useEffect(() => {
     let cancelled = false
-    void loadSiteConfig().then((config) => {
+    void loadGitalkConfig().then((config) => {
       if (!cancelled) setReady(isGitalkConfigured(config))
     })
     return () => {
@@ -41,8 +44,8 @@ export function QuestGitalk({
     let cancelled = false
 
     void (async () => {
-      const siteConfig = await loadSiteConfig()
-      const options = buildQuestGitalkOptions(siteConfig, {
+      const gitalkConfig = await loadGitalkConfig()
+      const options = buildQuestGitalkOptions(gitalkConfig ?? {}, {
         locale,
         chapterFilename,
         chapterTitle,

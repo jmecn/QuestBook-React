@@ -1,5 +1,4 @@
 import type { GitalkOptions } from 'gitalk'
-import type { SiteConfig } from '@/shared/lib/quest-export'
 
 export interface GitalkSiteConfig {
   enabled?: boolean
@@ -12,6 +11,8 @@ export interface GitalkSiteConfig {
   distractionFreeMode?: boolean
   createIssueManually?: boolean
 }
+
+const GITALK_CONFIG_URLS = ['/gitalk-config.json', 'https://wiki.terrafirmagreg.team/gitalk-config.json']
 
 const GITALK_ID_MAX = 49
 
@@ -46,23 +47,34 @@ export function gitalkLanguageForLocale(locale: string): string {
   return GITALK_LANGUAGE[key] ?? 'en'
 }
 
-export function isGitalkConfigured(config: SiteConfig): config is SiteConfig & {
-  gitalk: GitalkSiteConfig & {
-    clientID: string
-    repo: string
-    owner: string
-    admin: string[]
-  }
+export function isGitalkConfigured(
+  config: GitalkSiteConfig | null | undefined,
+): config is GitalkSiteConfig & {
+  clientID: string
+  repo: string
+  owner: string
+  admin: string[]
 } {
-  const g = config.gitalk
-  if (!g || g.enabled === false) return false
-  if (!g.clientID?.trim() || !g.repo?.trim() || !g.owner?.trim()) return false
-  const admin = g.admin?.filter(Boolean) ?? []
+  if (!config || config.enabled === false) return false
+  if (!config.clientID?.trim() || !config.repo?.trim() || !config.owner?.trim()) return false
+  const admin = config.admin?.filter(Boolean) ?? []
   return admin.length > 0
 }
 
+export async function loadGitalkConfig(): Promise<GitalkSiteConfig | null> {
+  for (const url of GITALK_CONFIG_URLS) {
+    try {
+      const res = await fetch(url)
+      if (res.ok) return (await res.json()) as GitalkSiteConfig
+    } catch {
+      // try next
+    }
+  }
+  return null
+}
+
 export function buildQuestGitalkOptions(
-  siteConfig: SiteConfig,
+  gitalkConfig: GitalkSiteConfig,
   input: {
     locale: string
     chapterFilename: string
@@ -72,9 +84,9 @@ export function buildQuestGitalkOptions(
     pageUrl: string
   },
 ): GitalkOptions | null {
-  if (!isGitalkConfigured(siteConfig)) return null
+  if (!isGitalkConfigured(gitalkConfig)) return null
 
-  const g = siteConfig.gitalk!
+  const g = gitalkConfig
   const id = questGitalkIssueId(input.chapterFilename, input.questId)
 
   return {
