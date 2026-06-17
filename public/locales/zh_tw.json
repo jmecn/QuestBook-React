@@ -15,6 +15,7 @@
   "detailRewards": "Rewards",
   "detailPrerequisites": "Prerequisites",
   "detailDependents": "Dependent quests",
+  "detailComments": "評論",
   "detailNone": "None",
   "switchingLanguage": "Switching language…"
 }

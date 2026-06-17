@@ -45,7 +45,7 @@ export function QuestGitalk({
 
     void (async () => {
       const gitalkConfig = await loadGitalkConfig()
-      const options = buildQuestGitalkOptions(gitalkConfig ?? {}, {
+      const options = await buildQuestGitalkOptions(gitalkConfig ?? {}, {
         locale,
         chapterFilename,
         chapterTitle,
@@ -72,7 +72,7 @@ export function QuestGitalk({
   if (!ready) return null
 
   return (
-    <section className="quest-detail__section quest-detail__section--comments">
+    <section className="quest-detail__section quest-detail__section--secondary quest-detail__section--comments">
       <h4>{t('detailComments')}</h4>
       <div ref={containerRef} className="quest-gitalk" />
     </section>

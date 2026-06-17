@@ -121,7 +121,10 @@ export function SiteHeader() {
             </a>
           </nav>
 
-          <label className="header-control header-control--locale">
+          <label
+            className="header-control header-control--locale"
+            title={localeDisplayName(langConfigQuery.data, locale)}
+          >
             <span className="header-locale-icon" aria-hidden="true">
               <LocaleIcon />
             </span>

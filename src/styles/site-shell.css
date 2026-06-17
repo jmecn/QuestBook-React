@@ -182,18 +182,37 @@
 
 .header-control--locale {
   position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+
+.header-control--locale .header-control-label {
+  display: none;
 }
 
 .header-locale-icon {
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--text);
   pointer-events: none;
 }
 
+.header-control--locale .header-select--locale {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .header-select--locale {
-  max-width: 11rem;
+  max-width: none;
 }
 
 .header-control-label {
@@ -369,32 +388,6 @@ html[data-theme="dark"] .header-select {
 
   .header-nav-links {
     display: none;
-  }
-
-  .header-control--locale {
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    justify-content: center;
-    gap: 0;
-  }
-
-  .header-control--locale .header-control-label {
-    display: none;
-  }
-
-  .header-locale-icon {
-    display: inline-flex;
-  }
-
-  .header-control--locale .header-select--locale {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    opacity: 0;
-    cursor: pointer;
   }
 
   .header-icon-button {

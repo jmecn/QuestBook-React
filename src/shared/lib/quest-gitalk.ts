@@ -1,4 +1,5 @@
 import type { GitalkOptions } from 'gitalk'
+import { gitalkHashedId } from '@/shared/lib/gitalk-id'
 
 export interface GitalkSiteConfig {
   enabled?: boolean
@@ -14,13 +15,21 @@ export interface GitalkSiteConfig {
 
 const GITALK_CONFIG_URLS = ['/gitalk-config.json', 'https://wiki.terrafirmagreg.team/gitalk-config.json']
 
-const GITALK_ID_MAX = 49
+function normalizeLocaleKey(locale: string): string {
+  return locale.trim().toLowerCase().replace(/-/g, '_')
+}
 
-/** Stable issue id per quest (< 50 chars for Gitalk). */
-export function questGitalkIssueId(chapterFilename: string, questId: string): string {
-  const raw = `quest/${chapterFilename}/${questId}`
-  if (raw.length <= GITALK_ID_MAX) return raw
-  return raw.slice(0, GITALK_ID_MAX)
+/** Canonical key before hashing (stable across deploys). */
+export function questGitalkRawKey(locale: string, chapterFilename: string, questId: string): string {
+  return `quest/${normalizeLocaleKey(locale)}/${chapterFilename}/${questId}`
+}
+
+export async function questGitalkIssueId(
+  locale: string,
+  chapterFilename: string,
+  questId: string,
+): Promise<string> {
+  return gitalkHashedId('quest', questGitalkRawKey(locale, chapterFilename, questId))
 }
 
 const GITALK_LANGUAGE: Record<string, string> = {
@@ -73,7 +82,7 @@ export async function loadGitalkConfig(): Promise<GitalkSiteConfig | null> {
   return null
 }
 
-export function buildQuestGitalkOptions(
+export async function buildQuestGitalkOptions(
   gitalkConfig: GitalkSiteConfig,
   input: {
     locale: string
@@ -83,11 +92,13 @@ export function buildQuestGitalkOptions(
     questTitle: string
     pageUrl: string
   },
-): GitalkOptions | null {
+): Promise<GitalkOptions | null> {
   if (!isGitalkConfigured(gitalkConfig)) return null
 
   const g = gitalkConfig
-  const id = questGitalkIssueId(input.chapterFilename, input.questId)
+  const localeKey = normalizeLocaleKey(input.locale)
+  const rawKey = questGitalkRawKey(input.locale, input.chapterFilename, input.questId)
+  const id = await questGitalkIssueId(input.locale, input.chapterFilename, input.questId)
 
   return {
     clientID: g.clientID!.trim(),
@@ -100,11 +111,13 @@ export function buildQuestGitalkOptions(
     body: [
       'Quest Book discussion',
       '',
+      `- Key: \`${rawKey}\``,
+      `- Locale: \`${localeKey}\``,
       `- Chapter: \`${input.chapterFilename}\``,
       `- Quest ID: \`${input.questId}\``,
       `- Page: ${input.pageUrl}`,
     ].join('\n'),
-    labels: ['quest-book', input.chapterFilename].filter(Boolean),
+    labels: ['quest-book', localeKey, input.chapterFilename].filter(Boolean),
     language: gitalkLanguageForLocale(input.locale),
     distractionFreeMode: g.distractionFreeMode ?? false,
     createIssueManually: g.createIssueManually ?? false,
