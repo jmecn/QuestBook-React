@@ -117,7 +117,7 @@ export async function buildQuestGitalkOptions(
       `- Quest ID: \`${input.questId}\``,
       `- Page: ${input.pageUrl}`,
     ].join('\n'),
-    labels: ['quest-book', localeKey, input.chapterFilename].filter(Boolean),
+    labels: ['quest-book'],
     language: gitalkLanguageForLocale(input.locale),
     distractionFreeMode: g.distractionFreeMode ?? false,
     createIssueManually: g.createIssueManually ?? false,
