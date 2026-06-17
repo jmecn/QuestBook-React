@@ -17,7 +17,6 @@ import { QuestGiscus } from '@/features/chapter/QuestGiscus'
 export interface QuestDetailPanelProps {
   quest: QuestData | null
   chapterFilename: string
-  chapterTitle: string
   chapters: ChapterData[]
   catalog: Map<string, QuestCatalogEntry>
   dict: Record<string, string>
@@ -129,7 +128,6 @@ function QuestLinkList({
 export function QuestDetailPanel({
   quest,
   chapterFilename,
-  chapterTitle,
   chapters,
   catalog,
   dict,
