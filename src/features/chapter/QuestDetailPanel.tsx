@@ -12,7 +12,7 @@ import type { ChapterAtlasContext, GlobalAtlasContext } from '@/shared/lib/quest
 import type { ChapterData, QuestNode as QuestData } from '@/shared/types/quest'
 import { QuestDescription } from '@/shared/ui/QuestDescription'
 import { QuestRichText } from '@/shared/ui/QuestRichText'
-import { QuestGitalk } from '@/features/chapter/QuestGitalk'
+import { QuestGiscus } from '@/features/chapter/QuestGiscus'
 
 export interface QuestDetailPanelProps {
   quest: QuestData | null
@@ -253,12 +253,10 @@ export function QuestDetailPanel({
         />
       </section>
 
-      <QuestGitalk
+      <QuestGiscus
         locale={locale}
         chapterFilename={chapterFilename}
-        chapterTitle={chapterTitle}
         questId={quest.id}
-        questTitle={title}
       />
     </div>
   )

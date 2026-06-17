@@ -10,7 +10,6 @@ function normalizeSiteRoot(url: string): string {
   return String(url || '').trim().replace(/\/+$/, '')
 }
 
-/** Fallback when site-config.json has no siteBaseUrl (local preview). */
 export function questSiteOriginBase(): string {
   const prefix = siteBase()
   const origin = window.location.origin
@@ -41,6 +40,22 @@ export function questShareShellUrl(
   const root = normalizeSiteRoot(siteBaseUrl)
   const loc = locale.trim().toLowerCase().replace(/-/g, '_')
   return `${root}/share/${loc}/quests/${chapterFilename}/${questId}.html`
+}
+
+export function questSharePathname(
+  siteBaseUrl: string,
+  locale: string,
+  chapterFilename: string,
+  questId: string,
+): string {
+  const shareUrl = questShareShellUrl(siteBaseUrl, locale, chapterFilename, questId)
+  try {
+    return new URL(shareUrl).pathname.replace(/^\//, '')
+  } catch {
+    const rootPath = new URL(siteBaseUrl, 'https://wiki.terrafirmagreg.team').pathname.replace(/\/$/, '')
+    const loc = locale.trim().toLowerCase().replace(/-/g, '_')
+    return `${rootPath.replace(/^\//, '')}/share/${loc}/quests/${chapterFilename}/${questId}.html`
+  }
 }
 
 export function questAppDeepLink(

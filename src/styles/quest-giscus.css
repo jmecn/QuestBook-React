@@ -1,0 +1,10 @@
+.quest-detail__section--comments {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.quest-giscus {
+  margin-top: 0.35rem;
+  min-width: 0;
+}
