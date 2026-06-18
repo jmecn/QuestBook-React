@@ -75,7 +75,7 @@ export function QuestGiscus({ locale, chapterFilename, questId }: QuestGiscusPro
         strict="1"
         theme={theme}
         lang={giscusLang(locale)}
-        reactionsEnabled="1"
+        reactionsEnabled="0"
         emitMetadata="0"
         inputPosition="bottom"
         loading="lazy"
