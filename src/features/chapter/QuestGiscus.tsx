@@ -3,7 +3,12 @@ import Giscus from '@giscus/react'
 import { useI18n } from '@/shared/i18n/useI18n'
 import { loadGiscusConfig, type GiscusConfig } from '@/shared/lib/giscus-config'
 import { giscusLang } from '@/shared/lib/giscus-lang'
-import { questSharePathname, resolveQuestSiteBase } from '@/shared/lib/quest-share-url'
+import {
+  questSharePathname,
+  questShareShellUrl,
+  resolveQuestSiteBase,
+  setGiscusBacklink,
+} from '@/shared/lib/quest-share-url'
 import { useTheme } from '@/shared/hooks/useTheme'
 import type { Theme } from '@/shared/lib/theme'
 import '@/styles/quest-giscus.css'
@@ -35,7 +40,9 @@ export function QuestGiscus({ locale, chapterFilename, questId }: QuestGiscusPro
   useEffect(() => {
     void resolveQuestSiteBase().then((base) => {
       setTerm(questSharePathname(base, locale, chapterFilename, questId))
+      setGiscusBacklink(questShareShellUrl(base, locale, chapterFilename, questId))
     })
+    return () => setGiscusBacklink(null)
   }, [locale, chapterFilename, questId])
 
   useEffect(() => {
@@ -65,6 +72,7 @@ export function QuestGiscus({ locale, chapterFilename, questId }: QuestGiscusPro
         categoryId={cfg.categoryId}
         mapping="specific"
         term={term}
+        strict="1"
         theme={theme}
         lang={giscusLang(locale)}
         reactionsEnabled="1"

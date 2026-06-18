@@ -91,7 +91,7 @@ export function QuestShareButton({
 
   const questTitle = useQuestDisplayTitle(quest, dict, locale)
   const previewText = questSharePreviewText(quest, dict)
-  const shareOgTitle = formatQuestShareOgTitle(questTitle, chapterTitle)
+  const shareOgTitle = formatQuestShareOgTitle(questTitle)
 
   const shareUrl = siteBase
     ? questShareShellUrl(siteBase, locale, chapterFilename, quest.id)

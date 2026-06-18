@@ -50,12 +50,27 @@ export function questSharePathname(
 ): string {
   const shareUrl = questShareShellUrl(siteBaseUrl, locale, chapterFilename, questId)
   try {
-    return new URL(shareUrl).pathname.replace(/^\//, '')
+    return new URL(shareUrl).pathname
   } catch {
     const rootPath = new URL(siteBaseUrl, 'https://wiki.terrafirmagreg.team').pathname.replace(/\/$/, '')
     const loc = locale.trim().toLowerCase().replace(/-/g, '_')
-    return `${rootPath.replace(/^\//, '')}/share/${loc}/quests/${chapterFilename}/${questId}.html`
+    return `${rootPath}/share/${loc}/quests/${chapterFilename}/${questId}.html`
   }
+}
+
+const GISCUS_BACKLINK_META = 'giscus:backlink'
+
+export function setGiscusBacklink(url: string | null): void {
+  const selector = `meta[name="${GISCUS_BACKLINK_META}"]`
+  const existing = document.querySelector<HTMLMetaElement>(selector)
+  if (!url) {
+    existing?.remove()
+    return
+  }
+  const meta = existing ?? document.createElement('meta')
+  meta.name = GISCUS_BACKLINK_META
+  meta.content = url
+  if (!existing) document.head.appendChild(meta)
 }
 
 export function questAppDeepLink(
