@@ -8,6 +8,8 @@ import {
   visibleLocales,
 } from '@/shared/hooks/useLanguageConfig'
 import { siteUrl } from '@/shared/lib/site-base'
+import { useBuildInfo } from '@/shared/hooks/useBuildInfo'
+import { formatModpackVersion } from '@/shared/lib/build-info'
 
 function SearchIcon() {
   return (
@@ -60,6 +62,8 @@ export function SiteHeader() {
   const { locale, setLocale, t } = useI18n()
   const { theme, toggleTheme } = useTheme()
   const langConfigQuery = useLanguageConfig()
+  const buildInfoQuery = useBuildInfo()
+  const modpackVersion = formatModpackVersion(buildInfoQuery.data?.modpack)
   const locales = visibleLocales(langConfigQuery.data)
 
   const goHome = () => {
@@ -83,6 +87,9 @@ export function SiteHeader() {
             }}
           />
           <span className="site-name">{t('appTitle')}</span>
+          {modpackVersion ? (
+            <span className="site-modpack-version">{modpackVersion}</span>
+          ) : null}
         </button>
 
         <div className="site-search">
