@@ -1,5 +1,6 @@
 import type { ChapterData, QuestIndex } from '@/shared/types/quest'
 import { FALLBACK_LOCALE, normalizeLocale } from '@/shared/i18n/locale'
+import { buildItemLabelTable, type ItemsLangData } from '@/shared/lib/item-labels'
 import { questExportUrl, siteUrl } from '@/shared/lib/site-base'
 
 const jsonCache = new Map<string, Promise<unknown>>()
@@ -104,4 +105,21 @@ export async function loadItemNameKeys(): Promise<Record<string, string>> {
     ).then((data) => data.items ?? {}).catch(() => ({}))
   }
   return itemNameKeysPromise
+}
+
+const itemsLangCache = new Map<string, Promise<Record<string, string>>>()
+
+export async function loadItemLabels(locale: string): Promise<Record<string, string>> {
+  const normalized = normalizeLocale(locale)
+  const cached = itemsLangCache.get(normalized)
+  if (cached) return cached
+
+  const promise = fetchJsonCached<ItemsLangData>(
+    questExportUrl(`items-lang/${normalized}.json`),
+  )
+    .then((data) => buildItemLabelTable(data))
+    .catch(() => ({}))
+
+  itemsLangCache.set(normalized, promise)
+  return promise
 }

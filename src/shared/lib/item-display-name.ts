@@ -1,4 +1,5 @@
-import { loadItemNameKeys, loadLangDict } from '@/shared/lib/quest-export'
+import { loadItemLabels, loadItemNameKeys, loadLangDict } from '@/shared/lib/quest-export'
+import { lookupItemLabel } from '@/shared/lib/item-labels'
 import { dottedRegistryId, itemLookupKeys, normalizeRegistryId } from '@/shared/lib/registry-lang-keys'
 import { stripColorCodes } from '@/shared/lib/quest-text'
 import { translateComposedRegistry } from '@/shared/lib/gtceu-translate'
@@ -6,6 +7,7 @@ import { translateComposedRegistry } from '@/shared/lib/gtceu-translate'
 const nameCache = new Map<string, string>()
 const langCache = new Map<string, Record<string, string>>()
 const nameKeysCache: { value: Record<string, string> | null } = { value: null }
+const itemLabelsCache = new Map<string, Record<string, string>>()
 
 function stripRegistryIdFallback(itemId: string): string {
   const bare = normalizeRegistryId(itemId)
@@ -31,6 +33,14 @@ async function nameKeysFor(): Promise<Record<string, string>> {
   const keys = await loadItemNameKeys()
   nameKeysCache.value = keys
   return keys
+}
+
+async function itemLabelsFor(locale: string): Promise<Record<string, string>> {
+  const cached = itemLabelsCache.get(locale)
+  if (cached) return cached
+  const labels = await loadItemLabels(locale)
+  itemLabelsCache.set(locale, labels)
+  return labels
 }
 
 function translateKey(dict: Record<string, string>, key: string): string {
@@ -87,11 +97,23 @@ function resolveComposedLabel(dict: Record<string, string>, itemId: string): str
   return null
 }
 
+async function resolveFromExportedLabels(
+  itemId: string,
+  locale: string,
+): Promise<string | null> {
+  const labels = await itemLabelsFor(locale)
+  const fromExport = lookupItemLabel(labels, itemId)
+  return fromExport ? stripColorCodes(fromExport) : null
+}
+
 export async function resolveRegistryDisplayName(
   registryId: string,
   locale = 'en_us',
 ): Promise<string | null> {
   try {
+    const fromExport = await resolveFromExportedLabels(registryId, locale)
+    if (fromExport) return fromExport
+
     const dict = await langDictFor(locale)
     const nameKeys = await nameKeysFor()
 
@@ -116,6 +138,12 @@ export async function resolveItemDisplayName(
   if (cached) return cached
 
   try {
+    const fromExport = await resolveFromExportedLabels(itemId, locale)
+    if (fromExport) {
+      nameCache.set(key, fromExport)
+      return fromExport
+    }
+
     const dict = await langDictFor(locale)
     const nameKeys = await nameKeysFor()
 
